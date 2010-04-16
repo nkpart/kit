@@ -5,6 +5,11 @@ module Kit.Repository where
   import Network.URI
   import Network.BufferType
   import Data.Maybe
+  import Data.Traversable
+  import Control.Monad
+  import Control.Applicative
+  import System.Directory
+  import System.FilePath.Posix
   import qualified Data.ByteString as BS
 
   kitPath :: Kit -> String
@@ -29,15 +34,27 @@ module Kit.Repository where
       rr <- Network.HTTP.simpleHTTP $ request path
       return $ fmap rspBody $ leftMaybe rr
   
-  download :: String -> FilePath -> IO ()
+  download :: String -> FilePath -> IO (Maybe ())
   download url destination = do
       body <- getBody url
-      fmap (BS.writeFile destination) body
+      sequenceA $ fmap (BS.writeFile destination) body
         
   webRepo :: String -> KitRepository
   webRepo baseUrl = KitRepository save read where
-    save path = download 
-    read path = getBody
-  --   
-  -- 
-  -- fileRepo :: String -> KitRepository
+    save = download 
+    read = getBody
+
+  fileRepo :: String -> KitRepository
+  fileRepo baseDir = KitRepository save read where
+    save src destPath = let srcPath = (baseDir </> src) in
+      Just <$> copyFile srcPath destPath
+    read path = let file = (baseDir </> path) in do
+      exists <- doesFileExist file
+      sequenceA $ justTrue exists $ readFile file
+      
+   
+   
+   
+   
+   
+   
