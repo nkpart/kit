@@ -1,0 +1,12 @@
+Name:                kit
+Version:             0.1
+Description:         XCode/Obj-C dependency manager
+License:             BSD3
+License-file:        LICENSE
+Author:              Nick Partridge
+Maintainer:          nkpart@gmail.com
+Build-Type:          Simple
+Cabal-Version:       >=1.2
+Executable kit
+  Main-is:           Main.hs
+  Build-Depends:     base >= 3 && < 5, HTTP >= 4000.0.9, network, bytestring
