@@ -5,11 +5,13 @@ module Main where
   import Kit.Repository
   import Kit.Kit
   import Kit.Spec
+  import Kit.Package
   import Kit.Client
   import Kit.Util        
   import Data.List
   import Control.Monad.Trans
   import Data.Monoid
+  import qualified Data.Traversable as T
   protoRepo = fileRepo "prototype/server"  
         
   -- given a kit spec, 
@@ -33,7 +35,10 @@ module Main where
   
   handleArgs :: [String] -> IO ()
   handleArgs ["me"] = me
-  
+  handleArgs ["package"] = do
+      mySpec <- unKitIO $ myKitSpec
+      T.for mySpec package
+      return ()
   handleArgs ["show", a, b] = do
           res <- unKitIO $ getKitSpec protoRepo $ Kit a b
           print res
