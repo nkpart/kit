@@ -7,7 +7,8 @@ module Kit.Util where
   import Data.Foldable
   import Control.Applicative
   import Control.Monad
-    
+  import Control.Monad.Trans
+      
   maybeRead :: Read a => String -> Maybe a
   maybeRead = fmap fst . listToMaybe . reads
   
@@ -34,10 +35,17 @@ module Kit.Util where
   
   data KitIO a = KitIO { unKitIO :: (IO (Either [KitError] a)) }
   
+  kitError :: KitError -> KitIO a
+  kitError e = KitIO . return $ Left [e]
+  
+  maybeToKitIO msg mb = maybe (kitError msg) return mb
+  
   instance Monad KitIO where
     (KitIO ioE) >>= f = KitIO $ ioE >>= g
       where g l@(Left v) = return (Left v)
             g (Right v) = unKitIO $ f v
             
-    return v = do
-      KitIO $ return $ Right v
+    return = KitIO . return . Right 
+    
+  instance MonadIO KitIO where
+    liftIO v = KitIO (fmap Right v)

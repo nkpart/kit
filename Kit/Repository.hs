@@ -16,6 +16,7 @@ module Kit.Repository (
   import Data.Maybe
   import Data.Traversable
   import Control.Monad
+  import Control.Monad.Trans
   import Control.Applicative
   import System.Directory
   import System.FilePath.Posix
@@ -30,10 +31,11 @@ module Kit.Repository (
   getKit :: KitRepository -> Kit -> FilePath -> IO (Maybe ())
   getKit kr k fp = repoSave kr (kitPackagePath k) fp
   
-  getKitSpec :: KitRepository -> Kit -> IO (Either KitError KitSpec)
+  getKitSpec :: KitRepository -> Kit -> KitIO [KitSpec]
   getKitSpec kr k = do
-    mbKitStuff <- repoRead kr $ kitSpecPath k
-    return $ maybeToRight ("Missing " ++ kitFileName k) mbKitStuff >>= maybeToRight ("Invalid KitSpec file for " ++ kitFileName k) . maybeRead
+    mbKitStuff <- liftIO $ repoRead kr (kitSpecPath k)
+    maybe (kitError $ "Missing " ++ kitFileName k) f mbKitStuff
+    where f contents = maybeToKitIO ("Invalid KitSpec file for " ++ kitFileName k) $ maybeRead contents
   
   webRepo :: String -> KitRepository
   webRepo baseUrl = KitRepository save read where
@@ -68,10 +70,6 @@ module Kit.Repository (
   download url destination = do
       body <- getBody url
       sequenceA $ fmap (BS.writeFile destination) body
-     
-   
-   
-   
    
    
    

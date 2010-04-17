@@ -1,9 +1,5 @@
-
--- {-XGeneralizedNewtypeDeriving}
-
 module Kit.Client (
-  --getDeps, 
-  KitError, 
+  getDeps, 
   myKitSpec) 
     where
       
@@ -18,38 +14,33 @@ module Kit.Client (
   import Kit.Util
   import Kit.Spec
   
-  getDeps :: KitRepository -> Kit -> IO (Either KitError [Kit])
+  getDeps :: KitRepository -> Kit -> KitIO [Kit]
   getDeps kr kit = do
     spec <- getKitSpec kr kit
-    return $ fmap specDependencies spec
+    return $ spec >>= specDependencies
     
   -- x :: KitRepository -> KitSpec -> IO (Either [KitError] [Kit])
   -- x kr ks = let
   --     deps = specDependencies ks
   --     f = getDeps kr
   --   in
-  --     
-      
+  
+  myKitSpec :: KitIO KitSpec
+  myKitSpec = doRead >>= (\c -> KitIO . return $ parses c)
 
-  specIfExists :: IO (Either KitError FilePath)
+  -- private!
+  specIfExists :: KitIO FilePath
   specIfExists = let kitSpecPath = "KitSpec" in do
-    doesExist <- doesFileExist kitSpecPath
-    return $ maybeToRight "Couldn't find the spec file" (justTrue doesExist kitSpecPath)
+    doesExist <- liftIO $ doesFileExist kitSpecPath
+    maybeToKitIO "Couldn't find the spec file" (justTrue doesExist kitSpecPath)
   
-  doRead :: IO (Either KitError String)
-  doRead = specIfExists >>= traverse readFile
+  doRead :: KitIO String
+  doRead = do
+    fp <- specIfExists
+    contents <- liftIO $ readFile fp
+    return contents
   
-  parses :: String -> Either KitError KitSpec
-  parses contents = maybeToRight "Could not parse spec." $ maybeRead contents
-  
-  myKitSpec :: IO (Either KitError KitSpec)
-  myKitSpec = do
-    contents <- doRead
-    return $ contents >>= parses
-
-
-
-
-  
+  parses :: String -> Either [KitError] KitSpec
+  parses contents = maybeToRight ["Could not parse spec."] $ maybeRead contents
   
   

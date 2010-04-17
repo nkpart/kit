@@ -1,11 +1,12 @@
 module Main where
   import qualified Data.ByteString as BS
-  
+
   import System.Environment
   import Kit.Repository
   import Kit.Kit
   import Kit.Spec
   import Kit.Client
+  import Kit.Util
   
   protoRepo = fileRepo "prototype/server"  
   
@@ -14,19 +15,17 @@ module Main where
   -- extract all kits to directories
   -- manage KitProject
 
-  
   me :: IO ()
   me = do
-    kit <- myKitSpec
-    
-    putStrLn $ show $ kit
+    kit <- unKitIO myKitSpec
+    print kit
   
   handleArgs :: [String] -> IO ()
   handleArgs ["me"] = me
   
   handleArgs ["show", a, b] = do
-          res <- getKitSpec protoRepo $ Kit a b
-          putStrLn . show $ res
+          res <- unKitIO $ getKitSpec protoRepo $ Kit a b
+          print res
           
   handleArgs _ = putStrLn "Usage: none."
     
