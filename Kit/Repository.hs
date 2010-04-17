@@ -31,7 +31,7 @@ module Kit.Repository (
   getKit :: KitRepository -> Kit -> FilePath -> IO (Maybe ())
   getKit kr k fp = repoSave kr (kitPackagePath k) fp
   
-  getKitSpec :: KitRepository -> Kit -> KitIO [KitSpec]
+  getKitSpec :: KitRepository -> Kit -> KitIO KitSpec
   getKitSpec kr k = do
     mbKitStuff <- liftIO $ repoRead kr (kitSpecPath k)
     maybe (kitError $ "Missing " ++ kitFileName k) f mbKitStuff
