@@ -32,13 +32,12 @@ module Kit.Util where
     
   type KitError = String
   
-  type KitIO = IO (Either [KitError] a)
+  data KitIO a = KitIO { unKitIO :: (IO (Either [KitError] a)) }
   
-  instance Monad (KitIO) where
-    ioE >>= f = do
-      e <- ioE
-      g e
-      where g l@(Left _) = return l
-            g (Right v) = f v
+  instance Monad KitIO where
+    (KitIO ioE) >>= f = KitIO $ ioE >>= g
+      where g l@(Left v) = return (Left v)
+            g (Right v) = unKitIO $ f v
             
-    return v = return . Right $ v
+    return v = do
+      KitIO $ return $ Right v
