@@ -1,5 +1,14 @@
-module Kit.Repository where
+module Kit.Repository (
+    getKit,
+    getKitSpec,
+    webRepo,
+    fileRepo,
+    KitRepository
+  ) where
+    
+  import Kit.Spec
   import Kit.Kit
+  import Kit.Util
   import Data.List
   import Network.HTTP
   import Network.URI
@@ -10,20 +19,41 @@ module Kit.Repository where
   import Control.Applicative
   import System.Directory
   import System.FilePath.Posix
+  import Debug.Trace
   import qualified Data.ByteString as BS
 
-  kitPath :: Kit -> String
-  kitPath k = joinS ["kits", kitName k, kitVersion k] "/"
-    where joinS xs x = foldl1 (++) $ intersperse x xs 
-  
   data KitRepository = KitRepository {
-    repoSave :: (String -> FilePath -> IO (Maybe ())),
-    repoRead :: (String -> IO (Maybe String))
+    repoSave :: String -> FilePath -> IO (Maybe ()),
+    repoRead :: String -> IO (Maybe String)
   }
   
-  justTrue :: Bool -> a -> Maybe a
-  justTrue True a = Just a
-  justTrue False _ = Nothing
+  getKit :: KitRepository -> Kit -> FilePath -> IO (Maybe ())
+  getKit kr k fp = repoSave kr (kitPackagePath k) fp
+  
+  getKitSpec :: KitRepository -> Kit -> IO (Either KitError KitSpec)
+  getKitSpec kr k = do
+    mbKitStuff <- repoRead kr $ kitSpecPath k
+    return $ maybeToRight ("Missing " ++ kitFileName k) mbKitStuff >>= maybeToRight ("Invalid KitSpec file for " ++ kitFileName k) . maybeRead
+  
+  webRepo :: String -> KitRepository
+  webRepo baseUrl = KitRepository save read where
+    save = download 
+    read = getBody
+
+  fileRepo :: String -> KitRepository
+  fileRepo baseDir = KitRepository save read where
+    save src destPath = Just <$> copyFile (baseDir </> src) destPath
+    read path = let file = (baseDir </> path) in do
+      exists <- doesFileExist file
+      sequenceA $ justTrue exists $ readFile file
+      
+  -- private!
+  baseKitPath :: Kit -> String
+  baseKitPath k = joinS ["kits", kitName k, kitVersion k] "/"
+    where joinS xs x = foldl1 (++) $ intersperse x xs 
+  
+  kitPackagePath k = baseKitPath k ++ "/" ++ kitFileName k ++ ".tar.gz"
+  kitSpecPath k = baseKitPath k ++ "/" ++ "KitSpec"
   
   getBody :: BufferType a => HStream a => String -> IO (Maybe a)
   getBody path = let
@@ -38,20 +68,7 @@ module Kit.Repository where
   download url destination = do
       body <- getBody url
       sequenceA $ fmap (BS.writeFile destination) body
-        
-  webRepo :: String -> KitRepository
-  webRepo baseUrl = KitRepository save read where
-    save = download 
-    read = getBody
-
-  fileRepo :: String -> KitRepository
-  fileRepo baseDir = KitRepository save read where
-    save src destPath = let srcPath = (baseDir </> src) in
-      Just <$> copyFile srcPath destPath
-    read path = let file = (baseDir </> path) in do
-      exists <- doesFileExist file
-      sequenceA $ justTrue exists $ readFile file
-      
+     
    
    
    

@@ -4,5 +4,5 @@ module Kit.Spec where
   data KitSpec = KitSpec {
     specKit :: Kit,
     specDependencies :: [Kit] 
-  }
+  } deriving (Show, Read)
   
