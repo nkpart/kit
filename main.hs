@@ -27,6 +27,7 @@ module Main where
       deps <- getMyDeps protoRepo
       puts "Dependencies: "
       puts . mconcat . intersperse "\n" $ map (("  * " ++) . kitFileName) deps 
+      liftIO $ mapM (installKit protoRepo) deps
         where p x = liftIO $ print x
               puts x = liftIO $ putStrLn x
   
@@ -39,7 +40,7 @@ module Main where
           
   handleArgs ["install", a, v] = do
     putStrLn $ "Installing " ++ kitFileName kit 
-    unKitIO $ installKit protoRepo kit
+    installKit protoRepo kit
     putStrLn "Done."
       where kit = Kit a v
   handleArgs _ = putStrLn "Usage: none."

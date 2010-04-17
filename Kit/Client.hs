@@ -26,17 +26,17 @@ module Kit.Client (
     deps <- xxx kr spec
     return $ specDependencies spec ++ join deps
 
-  installKit :: KitRepository -> Kit -> KitIO ()
+  installKit :: KitRepository -> Kit -> IO ()
   installKit kr kit = do
-    tmpDir <- liftIO getTemporaryDirectory
+    tmpDir <- getTemporaryDirectory
     fp <- return $ tmpDir </> (kitFileName kit ++ ".tar.gz")
-    liftIO $ fmap fromJust $ getKit kr kit fp
+    fmap fromJust $ getKit kr kit fp
     dest <- return $ "." </> "Kits"
-    sh ("mkdir " ++ dest)
-    liftIO $ setCurrentDirectory dest
+    createDirectoryIfMissing True dest
+    setCurrentDirectory dest
     sh ("tar zxvf " ++ fp)
-    liftIO $ setCurrentDirectory ".."
-      where sh x = liftIO $ system x
+    setCurrentDirectory ".."
+      where sh x = system x
 
   getMyDeps :: KitRepository -> KitIO [Kit]
   getMyDeps kr = do
