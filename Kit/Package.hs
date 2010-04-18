@@ -27,7 +27,6 @@ module Kit.Package where
     b = "xcodeproj" `isSuffixOf` fp
       in a || b
       
-  
   package :: KitSpec -> IO ()
   package spec = do
       tempDir <- getTemporaryDirectory
