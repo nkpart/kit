@@ -2,12 +2,12 @@
 
   Constant sections of the project file
 -}
-module Kit.XCode.ProjectFile where
+module Kit.XCode.ProjectFile (projectPbxProj) where
   
   nl a b = a ++ "\n" ++ b 
   
-  projectPbxProj buildFiles fileRefs classes headers sources = 
-      top `nl` buildFiles `nl` fileRefs `nl` next1 `nl` classes `nl` next2 `nl` headers `nl` next3 `nl` sources `nl` bottom
+  projectPbxProj bfs fileRefsSection classes headers sources = 
+      top `nl` bfs `nl` fileRefsSection `nl` next1 `nl` classes `nl` next2 `nl` headers `nl` next3 `nl` sources `nl` bottom
   
   top = "// !$*UTF8*$!" `nl` 
     "{" `nl`

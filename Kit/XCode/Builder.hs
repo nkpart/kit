@@ -1,13 +1,31 @@
 
-module Kit.XCode.Builder where
+module Kit.XCode.Builder (buildXCodeProject) where
 
   import Data.Monoid
   import Data.List
   import System.FilePath.Posix
   import Kit.XCode.Common
-
+  import Kit.XCode.ProjectFile
+  
+  createBuildFile :: Integer -> FilePath -> PBXBuildFile
+  createBuildFile i path = PBXBuildFile uuid1 $ PBXFileReference uuid2 path
+    where uuid1 = uuid i
+          uuid2 = uuid $ i + 10000000
+  
   buildXCodeProject :: [FilePath] -> [FilePath] -> String
-  buildXCodeProject headers sources = undefined
+  buildXCodeProject headers sources = 
+      projectPbxProj bfs frs classes hs srcs 
+    where
+      sourceStart :: Integer
+      sourceStart = toInteger (length headers + 1)
+      headerBuildFiles = zipWith createBuildFile [1..] headers
+      sourceBuildFiles = zipWith createBuildFile [sourceStart..] sources
+      allBuildFiles = (sourceBuildFiles ++ headerBuildFiles)
+      bfs = buildFileSection allBuildFiles
+      frs = fileReferenceSection $ map buildFileReference allBuildFiles
+      classes = classesSection $ map buildFileReference (sourceBuildFiles ++ headerBuildFiles)
+      hs = headersSection headerBuildFiles
+      srcs = sourcesSection sourceBuildFiles
   
   xxx :: FilePath -> UUID -> UUID -> PBXBuildFile
   xxx fp buildId fileId = PBXBuildFile buildId (PBXFileReference fileId fp)
@@ -70,15 +88,54 @@ module Kit.XCode.Builder where
 	    "D2AAC07E0554694100DB518D /* libKitDeps.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libKitDeps.a; sourceTree = BUILT_PRODUCTS_DIR; };"
     ])
 
-  
   classesSection :: [PBXFileReference] -> String
   classesSection files = lineItem "08FB77AEFE84172EC02AAC07" "Classes" dict
 	    where dict = [
             	    "isa" ~> "PBXGroup",
             	    "children" ~> ("(" ++ (mconcat (intersperse "," (map fileReferenceId files))) ++ ",)"),
             	    "name" ~> "Classes",
-            	    "sourceTree" ~> "<group>"
+            	    "sourceTree" ~> show "<group>"
 	                ]
+	
+	{-/* Begin PBXHeadersBuildPhase section */
+  		D2AAC07A0554694100DB518D /* Headers */ = {
+  			isa = PBXHeadersBuildPhase;
+  			buildActionMask = 2147483647;
+  			files = (
+  				AA747D9F0F9514B9006C5449 /* KitDeps_Prefix.pch in Headers */,
+  				4791C244117A7893001EB278 /* motive.h in Headers */,
+  			);
+  			runOnlyForDeploymentPostprocessing = 0;
+  		};
+  /* End PBXHeadersBuildPhase section */-}                
+  headersSection :: [PBXBuildFile] -> String
+  headersSection bfs = layoutSection "PBXHeadersBuildPhase" [lineItem "D2AAC07A0554694100DB518D" "Headers" [
+    "isa" ~> "PBXHeadersBuildPhase",
+    "buildActionMask" ~> "2147483647",
+    "files" ~> ("(" ++ (mconcat . intersperse "," $ prefixPchUUID : map buildFileId bfs) ++ ",)"),
+    "runOnlyForDeploymentPostprocessing" ~> "0"
+	  ]]
+	  where prefixPchUUID = "AA747D9F0F9514B9006C5449"
+	  
+	{-
+    /* Begin PBXSourcesBuildPhase section */
+    		D2AAC07B0554694100DB518D /* Sources */ = {
+    			isa = PBXSourcesBuildPhase;
+    			buildActionMask = 2147483647;
+    			files = (
+    				47021EC1117A7776003DB5B7 /* motive.m in Sources */,
+    			);
+    			runOnlyForDeploymentPostprocessing = 0;
+    		};
+    /* End PBXSourcesBuildPhase section */
+	-}
+  sourcesSection :: [PBXBuildFile] -> String
+  sourcesSection bfs = layoutSection "PBXSourcesBuildPhase" [lineItem "D2AAC07B0554694100DB518D" "Sources" [
+    "isa" ~> "PBXSourcesBuildPhase",
+    "buildActionMask" ~> "2147483647",
+    "files" ~> ("(" ++ (mconcat . intersperse "," $ map buildFileId bfs) ++ ",)"),
+    "runOnlyForDeploymentPostprocessing" ~> "0"
+    ]]
   
   testBuilder = let
     header = PBXFileReference "1" "fk/fk.h"

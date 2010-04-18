@@ -32,6 +32,7 @@ module Main where
       puts "Dependencies: "
       puts . mconcat . intersperse "\n" $ map (("  * " ++) . kitFileName) deps 
       liftIO $ mapM (installKit protoRepo) deps
+      liftIO $ generateXCodeProject
         where p x = liftIO $ print x
               puts x = liftIO $ putStrLn x
   
@@ -45,7 +46,7 @@ module Main where
           res <- unKitIO $ getKitSpec protoRepo $ Kit a b
           print res
           
-  handleArgs ["test"] = testBuilder
+  -- handleArgs ["test"] = testBuilder
   handleArgs ["install", a, v] = do
     putStrLn $ "Installing " ++ kitFileName kit 
     installKit protoRepo kit

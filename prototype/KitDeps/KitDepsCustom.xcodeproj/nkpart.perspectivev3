@@ -273,7 +273,7 @@
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
-							<string>{{0, 0}, {185, 428}}</string>
+							<string>{{0, 0}, {185, 579}}</string>
 						</dict>
 						<key>PBXTopSmartGroupGIDs</key>
 						<array/>
@@ -283,14 +283,14 @@
 					<key>GeometryConfiguration</key>
 					<dict>
 						<key>Frame</key>
-						<string>{{0, 0}, {202, 446}}</string>
+						<string>{{0, 0}, {202, 597}}</string>
 						<key>GroupTreeTableConfiguration</key>
 						<array>
 							<string>MainColumn</string>
 							<real>185</real>
 						</array>
 						<key>RubberWindowFrame</key>
-						<string>21 268 810 487 0 0 1280 778 </string>
+						<string>21 117 1066 638 0 0 1280 778 </string>
 					</dict>
 					<key>Module</key>
 					<string>PBXSmartGroupTreeModule</string>
@@ -301,12 +301,14 @@
 					<key>Dock</key>
 					<array>
 						<dict>
+							<key>BecomeActive</key>
+							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
 								<string>47021ECB117A787A003DB5B7</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>motive.m</string>
+								<string>KitDeps_Prefix.pch</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -314,15 +316,16 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>47021ECC117A787A003DB5B7</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>motive.m</string>
+										<string>KitDeps_Prefix.pch</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>471C36C6117A7A9C00456D3B</string>
+										<string>478875B6117B0C96005007A4</string>
 										<key>history</key>
 										<array>
 											<string>4791C252117A7A94001EB278</string>
-											<string>4791C254117A7A94001EB278</string>
+											<string>478875B0117B0C3C005007A4</string>
+											<string>478875B1117B0C3C005007A4</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -336,23 +339,21 @@
 							<key>GeometryConfiguration</key>
 							<dict>
 								<key>Frame</key>
-								<string>{{0, 0}, {603, 117}}</string>
+								<string>{{0, 0}, {859, 253}}</string>
 								<key>RubberWindowFrame</key>
-								<string>21 268 810 487 0 0 1280 778 </string>
+								<string>21 117 1066 638 0 0 1280 778 </string>
 							</dict>
 							<key>Module</key>
 							<string>PBXNavigatorGroup</string>
 							<key>Proportion</key>
-							<string>117pt</string>
+							<string>253pt</string>
 						</dict>
 						<dict>
 							<key>Proportion</key>
-							<string>324pt</string>
+							<string>339pt</string>
 							<key>Tabs</key>
 							<array>
 								<dict>
-									<key>BecomeActive</key>
-									<true/>
 									<key>ContentConfiguration</key>
 									<dict>
 										<key>PBXProjectModuleGUID</key>
@@ -363,9 +364,9 @@
 									<key>GeometryConfiguration</key>
 									<dict>
 										<key>Frame</key>
-										<string>{{10, 27}, {603, 297}}</string>
+										<string>{{10, 27}, {859, 312}}</string>
 										<key>RubberWindowFrame</key>
-										<string>21 268 810 487 0 0 1280 778 </string>
+										<string>21 117 1066 638 0 0 1280 778 </string>
 									</dict>
 									<key>Module</key>
 									<string>XCDetailModule</string>
@@ -428,7 +429,7 @@
 						</dict>
 					</array>
 					<key>Proportion</key>
-					<string>603pt</string>
+					<string>859pt</string>
 				</dict>
 			</array>
 			<key>Name</key>
@@ -447,11 +448,11 @@
 			</array>
 			<key>TableOfContents</key>
 			<array>
-				<string>471C36C3117A7A9C00456D3B</string>
+				<string>478875B3117B0C3C005007A4</string>
 				<string>1CA23ED40692098700951B8B</string>
-				<string>471C36C4117A7A9C00456D3B</string>
+				<string>478875B4117B0C3C005007A4</string>
 				<string>47021ECB117A787A003DB5B7</string>
-				<string>471C36C5117A7A9C00456D3B</string>
+				<string>478875B5117B0C3C005007A4</string>
 				<string>1CA23EDF0692099D00951B8B</string>
 				<string>1CA23EE00692099D00951B8B</string>
 				<string>1CA23EE10692099D00951B8B</string>
@@ -624,7 +625,7 @@
 		<string>/Users/nkpart/railscamp/kit/prototype/KitDeps/KitDepsCustom.xcodeproj</string>
 	</array>
 	<key>WindowString</key>
-	<string>21 268 810 487 0 0 1280 778 </string>
+	<string>21 117 1066 638 0 0 1280 778 </string>
 	<key>WindowToolsV3</key>
 	<array>
 		<dict>

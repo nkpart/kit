@@ -35,3 +35,10 @@ module Kit.XCode.Common where
   buildDict ps = g . mconcat . map (\x -> fst x ++ " = " ++ snd x ++ "; ") $ ps
     where g s = "{"  ++ s ++ "}"
   
+  uuid :: Integer -> UUID
+  uuid i = let
+      s = show i
+      lengthS = length s
+      pad = 24 - lengthS
+    in
+      replicate pad '0' ++ s 
