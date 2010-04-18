@@ -29,14 +29,14 @@ module Kit.Client (
   installKit :: KitRepository -> Kit -> IO ()
   installKit kr kit = do
     tmpDir <- getTemporaryDirectory
-    fp <- return $ tmpDir </> (kitFileName kit ++ ".tar.gz")
+    let fp = tmpDir </> (kitFileName kit ++ ".tar.gz")
     fmap fromJust $ getKit kr kit fp
-    dest <- return $ "." </> "Kits"
+    let dest = "." </> "Kits"
     createDirectoryIfMissing True dest
     setCurrentDirectory dest
     sh ("tar zxvf " ++ fp)
     setCurrentDirectory ".."
-      where sh x = system x
+      where sh = system
 
   getMyDeps :: KitRepository -> KitIO [Kit]
   getMyDeps kr = do

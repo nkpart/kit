@@ -8,6 +8,7 @@ module Kit.Package where
   import System.FilePath.Posix
   import System.Directory
   import Control.Monad.Trans
+  import Control.Monad
   import Data.List
   import Data.Maybe  
   import Debug.Trace
@@ -31,12 +32,12 @@ module Kit.Package where
   package spec = do
       tempDir <- getTemporaryDirectory
       cwd <- getCurrentDirectory
-      kd <- return $ tempDir </> kitPath
+      let kd = tempDir </> kitPath
       exists <- doesDirectoryExist kd
-      if (exists) then (removeDirectoryRecursive kd) else (return ())
+      when exists $ removeDirectoryRecursive kd
       createDirectoryIfMissing True kd
       contents <- getDirectoryContents "."
-      mapM (cp kd) (filter toCopy contents)
+      mapM_ (cp kd) (filter toCopy contents)
       setCurrentDirectory tempDir
       sh $ "tar czf " ++ (cwd </> (kitPath ++ ".tar.gz")) ++ " " ++ kitPath
       setCurrentDirectory cwd

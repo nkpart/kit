@@ -1,3 +1,11 @@
+{-
+
+  Exposes the repositories.
+  Allows you to:
+    * copy down kit packages (getKit)
+    * read kit specs (getKitSpec)
+-}
+
 module Kit.Repository (
     getKit,
     getKitSpec,
@@ -29,7 +37,7 @@ module Kit.Repository (
   }
   
   getKit :: KitRepository -> Kit -> FilePath -> IO (Maybe ())
-  getKit kr k fp = repoSave kr (kitPackagePath k) fp
+  getKit kr k = repoSave kr (kitPackagePath k)
   
   getKitSpec :: KitRepository -> Kit -> KitIO KitSpec
   getKitSpec kr k = do

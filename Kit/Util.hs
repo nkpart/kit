@@ -38,7 +38,7 @@ module Kit.Util where
   kitError :: KitError -> KitIO a
   kitError e = KitIO . return $ Left [e]
   
-  maybeToKitIO msg mb = maybe (kitError msg) return mb
+  maybeToKitIO msg = maybe (kitError msg) return
   
   instance Monad KitIO where
     (KitIO ioE) >>= f = KitIO $ ioE >>= g

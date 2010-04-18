@@ -1,13 +1,15 @@
 module Main where
   import qualified Data.ByteString as BS
-        
+
+  import Kit.XCode.Builder
   import System.Environment
   import Kit.Repository
   import Kit.Kit
   import Kit.Spec
   import Kit.Package
   import Kit.Client
-  import Kit.Util        
+  import Kit.Util   
+  import Kit.XCode.Builder     
   import Data.List
   import Control.Monad.Trans
   import Data.Monoid
@@ -43,6 +45,7 @@ module Main where
           res <- unKitIO $ getKitSpec protoRepo $ Kit a b
           print res
           
+  handleArgs ["test"] = testBuilder
   handleArgs ["install", a, v] = do
     putStrLn $ "Installing " ++ kitFileName kit 
     installKit protoRepo kit
