@@ -1,1 +1,10 @@
-KitSpec { specKit = Kit { kitName = "demo", kitVersion = "0.0.1" }, specDependencies = [Kit { kitName = "functionalkit", kitVersion = "0.1" }] }
+KitSpec { 
+  specKit = Kit { 
+    kitName = "demo", kitVersion = "0.0.1" 
+  }, 
+  specDependencies = [
+    Kit { 
+      kitName = "functionalkit", kitVersion = "0.1" 
+    }
+  ] 
+}
