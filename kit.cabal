@@ -9,4 +9,4 @@ Build-Type:          Simple
 Cabal-Version:       >=1.2
 Executable kit
   Main-is:           Main.hs
-  Build-Depends:     base >= 3 && < 5, HTTP >= 4000.0.9, network, bytestring, filepath, directory, transformers, process, json
+  Build-Depends:     base >= 3 && < 5, HTTP >= 4000.0.9, network, bytestring, filepath, directory, transformers, process, json, mtl
