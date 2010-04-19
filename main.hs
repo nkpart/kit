@@ -72,21 +72,8 @@ module Main where
               createDirectoryIfMissing True thisKitDir
               copyFile pkg $ thisKitDir </> pkg
               copyFile "KitSpec" $ thisKitDir </> "KitSpec"
-                   
-  -- DEBUG -- 
-  handleArgs ["show", a, b] = do
-          repo <- defaultLocalRepository
-          res <- unKitIO $ getKitSpec repo $ Kit a b
-          print res
-          
-  handleArgs ["install", a, v] = do
-    putStrLn $ "Installing " ++ kitFileName kit 
-    repo <- defaultLocalRepository
-    installKit repo kit
-    putStrLn "Done."
-      where kit = Kit a v
       
-  handleArgs _ = putStrLn "Usage: none."
+  handleArgs _ = putStrLn "Usage: TODO"
     
   main :: IO ()
   main = do
