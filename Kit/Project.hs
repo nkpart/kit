@@ -51,7 +51,7 @@ module Kit.Project (
     contents <- getDirectoryContents "."
     directories <- filterM doesDirectoryExist contents
     let srcDirs = filter (\d -> not ("." `isPrefixOf` d) && not ("xcodeproj" `isSuffixOf` d) && not ("build" == d)) directories
-    let xcconfig = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ (mconcat . intersperse " " . map (\x -> x </> "src") $ srcDirs)
+    let xcconfig = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ (mconcat . intersperse " "  $ srcDirs >>= (\x -> [kitDir </> x </> "src", x </> "src"]))
     writeFile "Kit.XCConfig" $ xcconfig ++ "\n"
     setCurrentDirectory oldDir
 --    HEADER_SEARCH_PATHS =  /External/three20/src $(SRCROOT)/Source/External/phoenix/Source/External/functionalkit/Source/Main $(SRCROOT)/Source/External/phoenix/Source/External/motive/Source/Main $(SRCROOT)/Source/External/phoenix/Source/Main $(SRCROOT)/Source/External/phoenix/Source/External/asi-http-request/Classes
