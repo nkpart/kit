@@ -1,0 +1,76 @@
+body {
+  margin: 0 auto;
+  width: 500px;
+}
+* {
+  font: 8pt 'Verdana';
+}
+
+h1 {
+  font: 36pt 'Futura';
+  border-bottom: 2px solid black;
+}
+
+h2 {
+  font: 14pt 'Futura';
+}
+
+p, li, dd {
+  line-height: 1.6;
+}
+
+code {
+  font: 8pt 'Monaco';
+}
+
+#main {
+  /*border: 1px solid red;*/
+}
+
+.prompt {
+  color: yellow;
+}
+pre {
+  margin: 0 auto;
+  width: 400px;
+  background: #222;
+  color: white;
+  padding: 1em;
+}
+.instructions {
+  margin: 0 auto;
+  width: 400px;
+  text-align: center;
+  font: 12pt 'Georgia';
+}
+
+strong {
+  font-weight: bold;
+}
+code span.key {
+  color: #00FF00;
+}
+
+#header {
+  position: relative;
+}
+
+#header ul#menu {
+  position: absolute;
+  right: 0;
+  top: -0.8em;
+  list-style-type: none;
+  text-align: right;
+}
+
+ul#menu a {
+    font-weight: bold;
+}
+
+#footer {
+  margin: 1em 0;
+  padding: 0.5em 0;
+  text-align: right;
+  border-top: 2px solid black;
+  color: gray;
+}

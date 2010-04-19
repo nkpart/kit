@@ -1,0 +1,36 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+  "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <title></title>
+    <link rel="stylesheet" href="kit.css" type="text/css" media="screen" charset="utf-8">
+  </head>
+  
+  <body>
+    <div id="header">
+    <h1>kit.</h1>
+    <ul id="menu">
+      <li><a href="about.html">about</a></li>
+      <li><a href="using.html">using</a> | <a href="publishing.html">publishing</a> | <a href="project-spec.html">project spec</a></li>
+      <li><a href="commands.html">command reference</a></li>
+    </ul>
+    </div>
+    
+    <div id="main">
+    <h2>Command Reference</h2>
+    <dl>
+      <dt>me</dt>
+      <dd>
+          <p>Grabs any dependencies specified in the local <code>KitSpec</code>, and extracts them into <code>Kits</code>.</p>
+          <p>An XCode project (<code>Kits/KitDeps.xcodeproj</code>) is then generated. It contains all source files specified in the dependencies and will produce a shared library for linking with a parent project.</p>
+          <p>It will also generate a <code>Kits/KitDeps.xcconfig</code> file. A project that consumes kits should be based on this configuration.</p>
+      </dd>
+      
+      <dt>deploy-local</dt>
+      <dd><p>Bundles up this project into a package: <code>dist/[project name]-[project version].tar.gz</code> (where the name and version are read from <code>KitSpec</code>).</p>
+      <p>
+        The package is then deployed into the local repository: <code>.kit/repository</code>.
+      </p></dd>
+    </dl>
+  </body>
+</html>

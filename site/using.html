@@ -1,0 +1,41 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+  "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <title></title>
+    <link rel="stylesheet" href="kit.css" type="text/css" media="screen" charset="utf-8">
+  </head>
+  
+  <body>
+    <div id="header">
+    <h1>kit.</h1>
+    <ul id="menu">
+      <li><a href="about.html">about</a></li>
+      <li><a href="using.html">using</a> | <a href="publishing.html">publishing</a> | <a href="project-spec.html">project spec</a></li>
+      <li><a href="commands.html">command reference</a></li>
+    </ul>
+    </div>
+    
+    <div id="main">
+    <h2>Consuming Kits</h2>
+    <p>Once you've installed kit, and perhaps got a few kits publishing in your local repository, it's time to start taking advantage of them.</p>
+    
+    <p>Any project that consumes kits will need a <code>KitSpec</code> file in the root of the project:</p>
+    <pre><code><span class="prompt">$</span> cat KitSpec
+{
+      <span class="key">"name"</span>: "your-project"
+    , <span class="key">"version"</span>: "1.0"
+    , <span class="key">"dependencies"</span> : [
+      { <span class="key">"name":</span> "blocks", <span class="key">"version"</span>: "0.9"}
+    ]
+}</code></pre>
+    <p>This project, <code>your-project</code>, is at version 1.0 and depends on <code>blocks-0.9</code>.</p>
+    
+    <p>The next step is to pull in the dependency (or dependencies):</p>
+    <pre><code><span class="prompt">$</span> kit me
+      ... output happens ...
+</code></pre>
+
+    </div>
+  </body>
+</html>
