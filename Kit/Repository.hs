@@ -29,6 +29,8 @@ module Kit.Repository (
   import System.Directory
   import System.FilePath.Posix
   import Debug.Trace
+  import Text.JSON
+  import Kit.JSON
   import qualified Data.ByteString as BS
 
   data KitRepository = KitRepository {
@@ -43,7 +45,9 @@ module Kit.Repository (
   getKitSpec kr k = do
     mbKitStuff <- liftIO $ repoRead kr (kitSpecPath k)
     maybe (kitError $ "Missing " ++ kitFileName k) f mbKitStuff
-    where f contents = maybeToKitIO ("Invalid KitSpec file for " ++ kitFileName k) $ maybeRead contents
+    where f contents = maybeToKitIO ("Invalid KitSpec file for " ++ kitFileName k) $ case (decode contents) of
+                          Ok a -> Just a
+                          Error _ -> Nothing
   
   webRepo :: String -> KitRepository
   webRepo baseUrl = KitRepository save read where

@@ -30,9 +30,12 @@ module Main where
   me :: IO ()
   me = do
         r <- unKitIO g
-        return $ handleFails r
+        handleFails r
         where
-    handleFails r = () -- TODO
+    handleFails (Left e) = do
+      putStrLn . show $ e
+      return ()
+    handleFails (Right _) = return ()
     g = do
       repo <- liftIO $ defaultLocalRepository
       deps <- getMyDeps repo

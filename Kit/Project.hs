@@ -23,6 +23,8 @@ module Kit.Project (
   import Kit.Util
   import Kit.Spec
   import Kit.XCode.Builder
+  import Text.JSON
+  import Kit.JSON
   
   xxx kr spec = mapM (getDeps kr) (specDependencies spec)
   
@@ -97,6 +99,13 @@ module Kit.Project (
     liftIO $ readFile fp
   
   parses :: String -> Either [KitError] KitSpec
-  parses contents = maybeToRight ["Could not parse spec."] $ maybeRead contents
+  parses contents = case (decode contents) of 
+                      Ok a -> Right a 
+                      Error a -> Left [a]
   
-  
+  testParses = 
+    let nl a b = a ++ "\n" ++ b
+        ex1 = "{ \"name\": \"test\", \"version\": \"1.0\", \"dependencies\": [{\"name\": \"d1\", \"version\": \"1.0\"}, {\"name\": \"d2\", \"version\": \"1.0\"}] }"
+        expected = KitSpec (Kit "test" "1.0") [(Kit "d1" "1.0"), (Kit "d2" "1.0")]
+    in
+      undefined

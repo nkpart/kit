@@ -49,3 +49,5 @@ module Kit.Util where
     
   instance MonadIO KitIO where
     liftIO v = KitIO (fmap Right v)
+
+  mLookup a as = maybe (fail $ "No such element: " ++ a) return (lookup a as)  
