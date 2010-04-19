@@ -3,7 +3,7 @@ module Kit.Package where
   import Kit.Kit
   import Kit.Spec
   import Kit.Util
-  import Kit.Client
+  import Kit.Project
   import System.Cmd
   import System.FilePath.Posix
   import System.Directory
@@ -26,7 +26,7 @@ module Kit.Package where
     a = elem fp ["src", "test", "KitSpec"]
     b = "xcodeproj" `isSuffixOf` fp
       in a || b
-      
+  
   package :: KitSpec -> IO ()
   package spec = do
       tempDir <- getTemporaryDirectory

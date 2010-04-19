@@ -1,4 +1,0 @@
-2010-04-18 "--n=20 --w getDirectoryContents"
-2010-04-18 "--n=20 --w tempDir"
-2010-04-18 "--n=20 --w getTemporaryDirectory"
-2010-04-18 "--n=20 --w writeFile"

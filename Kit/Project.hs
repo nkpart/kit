@@ -1,7 +1,8 @@
-module Kit.Client (
+module Kit.Project (
   getDeps,
   getMyDeps,
   installKit,
+  generateXCodeConfig,
   generateXCodeProject,
   myKitSpec)
     where
@@ -11,6 +12,8 @@ module Kit.Client (
   import Control.Applicative
   import Data.Foldable
   import Data.Maybe
+  import Data.List
+  import Data.Monoid
   import System.Directory
   import System.Cmd
   import System.Process
@@ -28,18 +31,31 @@ module Kit.Client (
   generateXCodeProject :: IO ()
   generateXCodeProject = do
     dir <- getCurrentDirectory
+    kitExists <- doesDirectoryExist kitDir
+    when (not kitExists) $ createDirectory kitDir
     setCurrentDirectory kitDir
-    headers <- (readProcess "ruby" ["-e", "puts Dir.glob(\"**/*.h\")"] []) >>= (return . lines)
-    sources <- (readProcess "ruby" ["-e", "puts Dir.glob(\"**/*.m\")"] []) >>= (return . lines)
-    let contents = buildXCodeProject headers sources
+    let find x = fmap (filter (const True) . lines) (readProcess "ruby" ["-e", "puts Dir.glob(\"" ++ x ++ "\")"] [])
+    headers <- find "**/*.h"
+    sources <- find "**/*.m"
     let projDir = "KitDeps.xcodeproj"
     createDirectoryIfMissing True projDir
-    writeFile (projDir </> "project.pbxproj") contents
-    let stuff = "#ifdef __OBJC__\n" ++
-                "    #import <Foundation/Foundation.h>\n" ++
-                "#endif\n"
-    writeFile "KitDeps_Prefix.pch" stuff
+    writeFile (projDir </> "project.pbxproj") $ buildXCodeProject headers sources
+    writeFile "KitDeps_Prefix.pch" $ "#ifdef __OBJC__\n" ++ "    #import <Foundation/Foundation.h>\n" ++ "#endif\n"
     setCurrentDirectory dir
+    
+  generateXCodeConfig :: IO ()
+  generateXCodeConfig = do
+    let base = "$(SRCROOT)" </> "Kits"
+    oldDir <- getCurrentDirectory
+    setCurrentDirectory kitDir
+    contents <- getDirectoryContents "."
+    directories <- filterM doesDirectoryExist contents
+    let srcDirs = filter (\d -> not ("." `isPrefixOf` d) && not ("xcodeproj" `isSuffixOf` d) && not ("build" == d)) directories
+    let xcconfig = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ (mconcat . intersperse " " . map (\x -> x </> "src") $ srcDirs)
+    writeFile "Kit.XCConfig" $ xcconfig ++ "\n"
+    setCurrentDirectory oldDir
+--    HEADER_SEARCH_PATHS =  /External/three20/src $(SRCROOT)/Source/External/phoenix/Source/External/functionalkit/Source/Main $(SRCROOT)/Source/External/phoenix/Source/External/motive/Source/Main $(SRCROOT)/Source/External/phoenix/Source/Main $(SRCROOT)/Source/External/phoenix/Source/External/asi-http-request/Classes
+    
   
   getDeps :: KitRepository -> Kit -> KitIO [Kit]
   getDeps kr kit = do

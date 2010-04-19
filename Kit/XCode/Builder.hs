@@ -63,7 +63,7 @@ module Kit.XCode.Builder (buildXCodeProject) where
           "isa" ~> "PBXFileReference",
           "fileEncoding" ~> "4",
           "lastKnownFileType" ~> (fileTypeBit . fileType $ fileName),
-          "name" ~> fileName,
+          "name" ~> show fileName,
           "path" ~> show path,
           "sourceTree" ~> show "<group>"
         ]
@@ -77,12 +77,14 @@ module Kit.XCode.Builder (buildXCodeProject) where
 
   buildFileSection :: [PBXBuildFile] -> String
   buildFileSection bfs = layoutSection "PBXBuildFile" (map buildFileItem bfs ++ [
+      "4728C530117C02B10027D7D1 /* Kit.XCConfig in Resources */ = {isa = PBXBuildFile; fileRef = 4728C52F117C02B10027D7D1 /* Kit.XCConfig */; };",
       "AA747D9F0F9514B9006C5449 /* KitDeps_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = AA747D9E0F9514B9006C5449 /* KitDeps_Prefix.pch */; };",
       "AACBBE4A0F95108600F1A2B1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AACBBE490F95108600F1A2B1 /* Foundation.framework */; };"
     ])  
     
   fileReferenceSection :: [PBXFileReference] -> String
   fileReferenceSection refs = layoutSection "PBXFileReference" (map fileReferenceItem refs ++ [
+  		"4728C52F117C02B10027D7D1 /* Kit.XCConfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Kit.XCConfig; sourceTree = \"<group>\"; };",
       "AA747D9E0F9514B9006C5449 /* KitDeps_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KitDeps_Prefix.pch; sourceTree = SOURCE_ROOT; };",
 	    "AACBBE490F95108600F1A2B1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };",
 	    "D2AAC07E0554694100DB518D /* libKitDeps.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libKitDeps.a; sourceTree = BUILT_PRODUCTS_DIR; };"
