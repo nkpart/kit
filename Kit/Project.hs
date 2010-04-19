@@ -35,8 +35,8 @@ module Kit.Project (
     when (not kitExists) $ createDirectory kitDir
     setCurrentDirectory kitDir
     let find x = fmap (filter (const True) . lines) (readProcess "ruby" ["-e", "puts Dir.glob(\"" ++ x ++ "\")"] [])
-    headers <- find "**/*.h"
-    sources <- find "**/*.m"
+    headers <- find "**/src/**/*.h"
+    sources <- find "**/src/**/*.m"
     let projDir = "KitDeps.xcodeproj"
     createDirectoryIfMissing True projDir
     writeFile (projDir </> "project.pbxproj") $ buildXCodeProject headers sources
