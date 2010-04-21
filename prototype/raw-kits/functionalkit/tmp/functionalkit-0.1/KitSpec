@@ -1,1 +1,0 @@
-KitSpec { specKit = Kit { kitName = "functionalkit", kitVersion = "0.1" }, specDependencies = [Kit { kitName = "motive", kitVersion = "0.1" }] }
