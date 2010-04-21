@@ -28,3 +28,6 @@ module Kit.JSON where
           in KitSpec <$> myKit <*> f "dependencies"
         where f x = mLookup x jsonObjAssoc >>= readJSON
               jsonObjAssoc = fromJSObject obj
+
+
+  
