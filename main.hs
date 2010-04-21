@@ -10,8 +10,7 @@ module Main where
   import Kit.Spec
   import Kit.Package
   import Kit.Project
-  import Kit.Util   
-  import Kit.XCode.Builder     
+  import Kit.Util    
   import Data.List
   import Control.Monad.Trans
   import Data.Monoid
@@ -33,17 +32,17 @@ module Main where
         handleFails r
         where
     handleFails (Left e) = do
-      putStrLn . show $ e
+      print e
       return ()
     handleFails (Right _) = return ()
     g = do
-      repo <- liftIO $ defaultLocalRepository
+      repo <- liftIO defaultLocalRepository
       deps <- getMyDeps repo
       puts "Dependencies: "
-      puts . mconcat . intersperse "\n" $ map (("  * " ++) . kitFileName) deps 
+      puts . mconcat . intersperse "\n" $ map (("  * " ++) . kitFileName) deps
       liftIO $ mapM (installKit repo) deps
-      liftIO $ generateXCodeProject
-      liftIO $ generateXCodeConfig
+      liftIO generateXCodeProject
+      liftIO $ generateXCodeConfig $ deps |> kitFileName
         where p x = liftIO $ print x
               puts x = liftIO $ putStrLn x
   
@@ -51,12 +50,12 @@ module Main where
   handleArgs ["me"] = me
   
   handleArgs ["package"] = do
-      mySpec <- unKitIO $ myKitSpec
+      mySpec <- unKitIO myKitSpec
       T.for mySpec package
       return ()
       
   handleArgs ["deploy-local"] = do
-    mySpec <- unKitIO $ myKitSpec
+    mySpec <- unKitIO myKitSpec
     T.for mySpec package
     T.for mySpec x
     return ()
