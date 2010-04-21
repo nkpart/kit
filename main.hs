@@ -1,7 +1,9 @@
 module Main where
   import qualified Data.ByteString as BS
 
+  import Text.JSON
   import Kit.XCode.Builder
+  import Kit.Verify
   import System.Environment
   import System.Directory
   import System.FilePath.Posix
@@ -25,36 +27,36 @@ module Main where
   -- download all kits (and deps)
   -- extract all kits to directories
   -- manage KitProject
-        
+  
+  handleFails (Left e) = do
+    print e
+    return ()
+  handleFails (Right _) = return ()
+  
   me :: IO ()
   me = do
         r <- unKitIO g
         handleFails r
-        where
-    handleFails (Left e) = do
-      print e
-      return ()
-    handleFails (Right _) = return ()
-    g = do
-      repo <- liftIO defaultLocalRepository
-      deps <- getMyDeps repo
-      puts "Dependencies: "
-      puts . mconcat . intersperse "\n" $ map (("  * " ++) . kitFileName) deps
-      liftIO $ mapM (installKit repo) deps
-      liftIO generateXCodeProject
-      liftIO $ generateXCodeConfig $ deps |> kitFileName
-        where p x = liftIO $ print x
-              puts x = liftIO $ putStrLn x
+    where g = do
+          repo <- liftIO defaultLocalRepository
+          deps <- getMyDeps repo
+          puts $ "Dependencies: " ++ (mconcat . intersperse ", " $ map kitFileName deps)
+          liftIO $ mapM (installKit repo) deps
+          puts " -> Generating XCode project..."
+          liftIO generateXCodeProject
+          liftIO $ generateXCodeConfig $ deps |> kitFileName
+          puts "Kit complete."
+            where p x = liftIO $ print x
+                  puts x = liftIO $ putStrLn x
   
-  handleArgs :: [String] -> IO ()
-  handleArgs ["me"] = me
-  
-  handleArgs ["package"] = do
+  packageKit :: IO ()
+  packageKit = do
       mySpec <- unKitIO myKitSpec
       T.for mySpec package
       return ()
-      
-  handleArgs ["deploy-local"] = do
+  
+  deployLocal :: IO ()
+  deployLocal = do
     mySpec <- unKitIO myKitSpec
     T.for mySpec package
     T.for mySpec x
@@ -71,7 +73,32 @@ module Main where
               createDirectoryIfMissing True thisKitDir
               copyFile pkg $ thisKitDir </> pkg
               copyFile "KitSpec" $ thisKitDir </> "KitSpec"
-      
+  
+  verify :: KitIO ()
+  verify = do
+      mySpec <- myKitSpec
+      puts "Checking that the kit can be depended upon..."
+      puts " #> Deploying locally"
+      liftIO deployLocal
+      puts " #> Building temporary parent project"
+      tmp <- liftIO getTemporaryDirectory
+      liftIO $ inDirectory tmp $ do
+        let kitVerifyDir = "kit-verify"
+        cleanOrCreate kitVerifyDir
+        inDirectory kitVerifyDir $ do
+          writeFile "KitSpec" $ encode (KitSpec (Kit "verify-kit" "1.0") [specKit mySpec])
+          me
+          getCurrentDirectory >>= putStrLn
+        putStrLn "OK."
+      puts "End checks."
+    where
+      puts = liftIO . putStrLn
+  
+  handleArgs :: [String] -> IO ()
+  handleArgs ["me"] = me
+  handleArgs ["package"] = packageKit
+  handleArgs ["deploy-local"] = deployLocal
+  handleArgs ["verify"] = unKitIO verify >>= handleFails
   handleArgs _ = putStrLn "Usage: TODO"
     
   main :: IO ()
