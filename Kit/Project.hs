@@ -25,6 +25,7 @@ module Kit.Project (
   import Kit.XCode.Builder
   import Text.JSON
   import Kit.JSON
+  import Control.Arrow
   import qualified Data.Traversable as T
   
   xxx kr spec = mapM (getDeps kr) (specDependencies spec)
@@ -59,7 +60,8 @@ module Kit.Project (
       let kitSpecFiles = map (</> "KitSpec") directories
       kitNames <- mapM (\x -> readSpec x |> specKit >>= rc) kitSpecFiles
       let contents = mconcat . intersperse "\n" $ (kitNames >>= maybeToList)
-      let xcconfig = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ (mconcat . intersperse " "  $ directories >>= (\x -> [kitDir </> x </> "src", x </> "src"]))
+      let xcconfig = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ (mconcat . intersperse " "  $ directories >>= (\x -> [kitDir </> x </> "src", x </> "src"])) ++ "\n" ++ "GCC_PRECOMPILE_PREFIX_HEADER = YES\nGCC_PREFIX_HEADER = $(SRCROOT)/KitDeps_Prefix.pch\n"
+      
       liftIO $ writeFile "Kit.xcconfig" $ xcconfig ++ "\n" ++ contents
     return ()
       
@@ -73,6 +75,7 @@ module Kit.Project (
   installKit kr kit = do
       tmpDir <- getTemporaryDirectory
       let fp = tmpDir </> (kitFileName kit ++ ".tar.gz")
+      putStrLn $ " -> Installing " ++ kitFileName kit
       fmap fromJust $ getKit kr kit fp
       let dest = kitDir
       createDirectoryIfMissing True dest
