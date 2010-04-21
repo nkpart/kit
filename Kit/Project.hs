@@ -29,36 +29,31 @@ module Kit.Project (
   xxx kr spec = mapM (getDeps kr) (specDependencies spec)
   
   kitDir = "." </> "Kits"
-  
+    
   generateXCodeProject :: IO ()
   generateXCodeProject = do
-    dir <- getCurrentDirectory
-    kitExists <- doesDirectoryExist kitDir
-    when (not kitExists) $ createDirectory kitDir
-    setCurrentDirectory kitDir
-    let find x = fmap (filter (const True) . lines) (readProcess "ruby" ["-e", "puts Dir.glob(\"" ++ x ++ "\")"] [])
-    headers <- find "**/src/**/*.h"
-    sources <- find "**/src/**/*.m"
-    let projDir = "KitDeps.xcodeproj"
-    createDirectoryIfMissing True projDir
-    writeFile (projDir </> "project.pbxproj") $ buildXCodeProject headers sources
-    writeFile "KitDeps_Prefix.pch" $ "#ifdef __OBJC__\n" ++ "    #import <Foundation/Foundation.h>\n" ++ "#endif\n"
-    setCurrentDirectory dir
+    createDirectoryIfMissing True kitDir
+    inDirectory kitDir $ do
+      let find x = fmap lines (readProcess "ruby" ["-e", "puts Dir.glob(\"" ++ x ++ "\")"] [])
+      headers <- find "**/src/**/*.h"
+      sources <- find "**/src/**/*.m"
+      let projDir = "KitDeps.xcodeproj"
+      createDirectoryIfMissing True projDir
+      writeFile (projDir </> "project.pbxproj") $ buildXCodeProject headers sources
+      writeFile "KitDeps_Prefix.pch" $ "#ifdef __OBJC__\n" ++ "    #import <Foundation/Foundation.h>\n" ++ "#endif\n"
     
-  generateXCodeConfig :: IO ()
-  generateXCodeConfig = do
+  generateXCodeConfig :: [String] -> IO ()
+  generateXCodeConfig kitFileNames = do
     let base = "$(SRCROOT)" </> "Kits"
-    oldDir <- getCurrentDirectory
-    setCurrentDirectory kitDir
-    contents <- getDirectoryContents "."
-    directories <- filterM doesDirectoryExist contents
-    let srcDirs = filter (\d -> not ("." `isPrefixOf` d) && not ("xcodeproj" `isSuffixOf` d) && not ("build" == d)) directories
-    let xcconfig = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ (mconcat . intersperse " "  $ srcDirs >>= (\x -> [kitDir </> x </> "src", x </> "src"]))
-    writeFile "Kit.XCConfig" $ xcconfig ++ "\n"
-    setCurrentDirectory oldDir
---    HEADER_SEARCH_PATHS =  /External/three20/src $(SRCROOT)/Source/External/phoenix/Source/External/functionalkit/Source/Main $(SRCROOT)/Source/External/phoenix/Source/External/motive/Source/Main $(SRCROOT)/Source/External/phoenix/Source/Main $(SRCROOT)/Source/External/phoenix/Source/External/asi-http-request/Classes
-    
-  
+    inDirectory kitDir $ unKitIO $ do
+      directories <- liftIO $ filterM doesDirectoryExist kitFileNames
+      let kitSpecFiles = map (</> "KitSpec") directories
+      kitNames <- mapM (\x -> readSpec x |> specKit |> (\k -> kitFileName k </> (kitName k ++ ".xcconfig"))) kitSpecFiles
+      liftIO $ print kitNames
+      let xcconfig = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ (mconcat . intersperse " "  $ directories >>= (\x -> [kitDir </> x </> "src", x </> "src"]))
+      liftIO $ writeFile "Kit.XCConfig" $ xcconfig ++ "\n"
+    return ()
+      
   getDeps :: KitRepository -> Kit -> KitIO [Kit]
   getDeps kr kit = do
     spec <- getKitSpec kr kit
@@ -67,16 +62,16 @@ module Kit.Project (
 
   installKit :: KitRepository -> Kit -> IO ()
   installKit kr kit = do
-    tmpDir <- getTemporaryDirectory
-    let fp = tmpDir </> (kitFileName kit ++ ".tar.gz")
-    fmap fromJust $ getKit kr kit fp
-    let dest = kitDir
-    createDirectoryIfMissing True dest
-    current <- getCurrentDirectory
-    setCurrentDirectory dest
-    sh ("tar zxvf " ++ fp)
-    setCurrentDirectory current
-      where sh = system
+      tmpDir <- getTemporaryDirectory
+      let fp = tmpDir </> (kitFileName kit ++ ".tar.gz")
+      fmap fromJust $ getKit kr kit fp
+      let dest = kitDir
+      createDirectoryIfMissing True dest
+      inDirectory dest $ do
+        cwd <- getCurrentDirectory
+        sh ("tar zxf " ++ fp)
+      return ()
+    where sh = system
 
   getMyDeps :: KitRepository -> KitIO [Kit]
   getMyDeps kr = do
@@ -84,19 +79,20 @@ module Kit.Project (
     deps <- xxx kr mySpec
     return $ join deps ++ specDependencies mySpec
   
+  readSpec :: FilePath -> KitIO KitSpec
+  readSpec kitSpecPath = readSpecContents kitSpecPath >>= KitIO . return . parses
+  
   myKitSpec :: KitIO KitSpec
-  myKitSpec = doRead >>= (\c -> KitIO . return $ parses c)
+  myKitSpec = readSpec "KitSpec"
 
   -- private!
-  specIfExists :: KitIO FilePath
-  specIfExists = let kitSpecPath = "KitSpec" in do
+  checkExists :: FilePath -> KitIO FilePath
+  checkExists kitSpecPath = do
     doesExist <- liftIO $ doesFileExist kitSpecPath
-    maybeToKitIO "Couldn't find the spec file" (justTrue doesExist kitSpecPath)
+    maybeToKitIO ("Couldn't find the spec at " ++ kitSpecPath) (justTrue doesExist kitSpecPath)
   
-  doRead :: KitIO String
-  doRead = do
-    fp <- specIfExists
-    liftIO $ readFile fp
+  readSpecContents :: FilePath -> KitIO String
+  readSpecContents kitSpecPath = checkExists kitSpecPath >>= liftIO . readFile
   
   parses :: String -> Either [KitError] KitSpec
   parses contents = case (decode contents) of 
@@ -106,6 +102,6 @@ module Kit.Project (
   testParses = 
     let nl a b = a ++ "\n" ++ b
         ex1 = "{ \"name\": \"test\", \"version\": \"1.0\", \"dependencies\": [{\"name\": \"d1\", \"version\": \"1.0\"}, {\"name\": \"d2\", \"version\": \"1.0\"}] }"
-        expected = KitSpec (Kit "test" "1.0") [(Kit "d1" "1.0"), (Kit "d2" "1.0")]
+        expected = KitSpec (Kit "test" "1.0") [Kit "d1" "1.0", Kit "d2" "1.0"]
     in
       undefined

@@ -25,27 +25,24 @@ module Kit.Package where
   toCopy fp = let
     a = elem fp ["src", "test", "KitSpec"]
     b = "xcodeproj" `isSuffixOf` fp
-      in a || b
+    c = "xcconfig" `isSuffixOf` fp
+      in a || b || c
   
   package :: KitSpec -> IO ()
   package spec = do
       tempDir <- getTemporaryDirectory
-      cwd <- getCurrentDirectory
+      current <- getCurrentDirectory
       let kd = tempDir </> kitPath
-      exists <- doesDirectoryExist kd
-      when exists $ removeDirectoryRecursive kd
-      createDirectoryIfMissing True kd
+      cleanOrCreate kd
       contents <- getDirectoryContents "."
-      mapM_ (cp kd) (filter toCopy contents)
-      setCurrentDirectory tempDir
-      sh $ "tar czf " ++ (cwd </> (kitPath ++ ".tar.gz")) ++ " " ++ kitPath
-      setCurrentDirectory cwd
+      mapM_ (cp_r_to kd) (filter toCopy contents)
+      inDirectory tempDir $ sh $ "tar czf " ++ (current </> (kitPath ++ ".tar.gz")) ++ " " ++ kitPath
       return ()
     where
       kitPath = kitFileName . specKit $ spec
       sh c = liftIO $ system (trace c c)
       puts c = liftIO $ putStrLn c
       p c = liftIO $ print c
-      cp kd c = sh $ "cp -r " ++ c ++ " " ++ kd ++ "/"
+      cp_r_to kd c = sh $ "cp -r " ++ c ++ " " ++ kd ++ "/"
   
   

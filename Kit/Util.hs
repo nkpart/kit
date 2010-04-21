@@ -1,6 +1,7 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 
 module Kit.Util where
+  import System.Directory
   import Data.Maybe
   import Data.List
   import Data.Traversable
@@ -9,6 +10,9 @@ module Kit.Util where
   import Control.Monad
   import Control.Monad.Trans
       
+      
+  (|>) ma f = fmap f ma
+        
   maybeRead :: Read a => String -> Maybe a
   maybeRead = fmap fst . listToMaybe . reads
   
@@ -47,7 +51,24 @@ module Kit.Util where
             
     return = KitIO . return . Right 
     
+  instance Functor KitIO where
+    fmap f kio = kio >>= (return . f)
+    
   instance MonadIO KitIO where
     liftIO v = KitIO (fmap Right v)
 
   mLookup a as = maybe (fail $ "No such element: " ++ a) return (lookup a as)  
+  
+  cleanOrCreate :: FilePath -> IO ()
+  cleanOrCreate directory = do
+    exists <- doesDirectoryExist directory
+    when exists $ removeDirectoryRecursive directory
+    createDirectoryIfMissing True directory
+    
+  inDirectory :: FilePath -> IO a -> IO a
+  inDirectory dir actions = do
+    cwd <- getCurrentDirectory
+    setCurrentDirectory dir
+    v <- actions
+    setCurrentDirectory cwd
+    return v
