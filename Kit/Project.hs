@@ -25,6 +25,7 @@ module Kit.Project (
   import Kit.XCode.Builder
   import Text.JSON
   import Kit.JSON
+  import qualified Data.Traversable as T
   
   xxx kr spec = mapM (getDeps kr) (specDependencies spec)
   
@@ -40,18 +41,26 @@ module Kit.Project (
       let projDir = "KitDeps.xcodeproj"
       createDirectoryIfMissing True projDir
       writeFile (projDir </> "project.pbxproj") $ buildXCodeProject headers sources
-      writeFile "KitDeps_Prefix.pch" $ "#ifdef __OBJC__\n" ++ "    #import <Foundation/Foundation.h>\n" ++ "#endif\n"
-    
+      writeFile "KitDeps_Prefix.pch" $ "#ifdef __OBJC__\n" ++ "    #import <Foundation/Foundation.h>\n    #import <UIKit/UIKit.h>\n" ++ "#endif\n"
+
+  readConfig :: Kit -> IO (Maybe String)
+  readConfig kit = let fp = kitFileName kit </> (kitName kit ++ ".xcconfig")
+        in do
+          exists <- doesFileExist fp
+          mb <- T.sequence (fmap readFile $ justTrue exists fp)
+          return $ fmap (\x -> "// " ++ kitFileName kit ++ "\n" ++  x) mb
+        
   generateXCodeConfig :: [String] -> IO ()
   generateXCodeConfig kitFileNames = do
     let base = "$(SRCROOT)" </> "Kits"
+    let rc = liftIO . readConfig
     inDirectory kitDir $ unKitIO $ do
       directories <- liftIO $ filterM doesDirectoryExist kitFileNames
       let kitSpecFiles = map (</> "KitSpec") directories
-      kitNames <- mapM (\x -> readSpec x |> specKit |> (\k -> kitFileName k </> (kitName k ++ ".xcconfig"))) kitSpecFiles
-      liftIO $ print kitNames
+      kitNames <- mapM (\x -> readSpec x |> specKit >>= rc) kitSpecFiles
+      let contents = mconcat . intersperse "\n" $ (kitNames >>= maybeToList)
       let xcconfig = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ (mconcat . intersperse " "  $ directories >>= (\x -> [kitDir </> x </> "src", x </> "src"]))
-      liftIO $ writeFile "Kit.XCConfig" $ xcconfig ++ "\n"
+      liftIO $ writeFile "Kit.xcconfig" $ xcconfig ++ "\n" ++ contents
     return ()
       
   getDeps :: KitRepository -> Kit -> KitIO [Kit]
