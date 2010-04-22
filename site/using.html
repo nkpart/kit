@@ -18,7 +18,6 @@
     
     <div id="main">
     <h2>Consuming Kits</h2>
-    <p>Once you've installed kit, and perhaps got a few kits publishing in your local repository, it's time to start taking advantage of them.</p>
     
     <p>Any project that consumes kits will need a <code>KitSpec</code> file in the root of the project:</p>
     <pre><code><span class="prompt">$</span> cat KitSpec
@@ -29,12 +28,23 @@
       { <span class="key">"name":</span> "blocks", <span class="key">"version"</span>: "0.9"}
     ]
 }</code></pre>
-    <p>This project, <code>your-project</code>, is at version 1.0 and depends on <code>blocks-0.9</code>.</p>
+    <p>The <code>KitSpec</code> file is in JSON, and must contain <code>name</code>, <code>version</code> and <code>dependencies</code> (however this can be an empty list).</p>
     
-    <p>The next step is to pull in the dependency (or dependencies):</p>
+    <p>The next step is to pull in the dependencies:</p>
     <pre><code><span class="prompt">$</span> kit me
       ... output happens ...
 </code></pre>
+
+    <p>Next, set up your project to depend on the Kit:</p>
+    <ol>
+      <li>Drag the KitDeps XCode project and the <code>Kit.xcconfig</code> file into your project.</li>
+      <li>Set your project configuration to be based on <code>Kit.xcconfig</code>. If you already use a base config, add this to your configuration file: <code>#include "Kits/Kit.xcconfig"</code></li>
+      <li>For each of your targets, add KitDeps as a direct dependency.</li>
+      <li>Add <code>libKitDeps.a</code> as a linked item for each target.</li>
+    </ol>
+
+    <p>The Kit.xcconfig includes all the build configuration needed for each kit. Most importantly, it sets HEADER_SEARCH_PATH so that each kit's source directory is referenced. If you set this parameter yourself, make sure to append to it. eg.</p>
+    <p><pre><code>HEADER_SEARCH_PATH = $(HEADER_SEARCH_PATH) /your/path</code></pre></p>
 
     </div>
   </body>

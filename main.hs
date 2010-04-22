@@ -1,22 +1,25 @@
 module Main where
   import qualified Data.ByteString as BS
 
-  import Text.JSON
-  import Kit.XCode.Builder
-  import Kit.Verify
-  import System.Environment
-  import System.Directory
-  import System.FilePath.Posix
-  import Kit.Repository
+  import Control.Monad.Trans
+  import Data.List
+  import Data.Maybe
+  import Data.Monoid
   import Kit.Kit
-  import Kit.Spec
   import Kit.Package
   import Kit.Project
+  import Kit.Repository
+  import Kit.Spec
   import Kit.Util    
-  import Data.List
-  import Control.Monad.Trans
-  import Data.Monoid
+  import Kit.Verify
+  import Kit.XCode.Builder
   import qualified Data.Traversable as T
+  import System.Cmd
+  import System.Directory
+  import System.Environment
+  import System.FilePath.Posix
+  import Text.JSON
+
   
   defaultLocalRepoPath = do
       home <- getHomeDirectory
@@ -26,7 +29,7 @@ module Main where
   -- given a kit spec, 
   -- download all kits (and deps)
   -- extract all kits to directories
-  -- manage KitProject
+  -- manage KitProjects
   
   handleFails (Left e) = do
     print e
@@ -74,8 +77,8 @@ module Main where
               copyFile pkg $ thisKitDir </> pkg
               copyFile "KitSpec" $ thisKitDir </> "KitSpec"
   
-  verify :: KitIO ()
-  verify = do
+  verify :: Maybe String -> KitIO ()
+  verify sdk = do
       mySpec <- myKitSpec
       puts "Checking that the kit can be depended upon..."
       puts " #> Deploying locally"
@@ -88,7 +91,8 @@ module Main where
         inDirectory kitVerifyDir $ do
           writeFile "KitSpec" $ encode (KitSpec (Kit "verify-kit" "1.0") [specKit mySpec])
           me
-          getCurrentDirectory >>= putStrLn
+          inDirectory "Kits" $ do
+            system $ "xcodebuild -sdk " ++ (fromMaybe "iphonesimulator3.0" sdk)
         putStrLn "OK."
       puts "End checks."
     where
@@ -98,7 +102,8 @@ module Main where
   handleArgs ["me"] = me
   handleArgs ["package"] = packageKit
   handleArgs ["deploy-local"] = deployLocal
-  handleArgs ["verify"] = unKitIO verify >>= handleFails
+  handleArgs ["verify"] = unKitIO (verify Nothing) >>= handleFails
+  handleArgs ["verify", sdk] = unKitIO (verify $ Just sdk) >>= handleFails
   handleArgs ["create-spec", name, version] = do
     let kit =(Kit name version)
     let spec = KitSpec kit []
