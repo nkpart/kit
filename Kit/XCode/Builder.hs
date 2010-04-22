@@ -6,6 +6,7 @@ module Kit.XCode.Builder (buildXCodeProject) where
   import System.FilePath.Posix
   import Kit.XCode.Common
   import Kit.XCode.ProjectFile
+  import Kit.Util
   
   createBuildFile :: Integer -> FilePath -> PBXBuildFile
   createBuildFile i path = PBXBuildFile uuid1 $ PBXFileReference uuid2 path
@@ -44,7 +45,6 @@ module Kit.XCode.Builder (buildXCodeProject) where
               "isa" ~> "PBXBuildFile",
               "fileRef" ~> (fileReferenceId fr ++ " /* " ++ fileReferenceName fr ++ " */")
             ]
-
 
   fileTypeBit :: FileType -> String
   fileTypeBit Header = "sourcecode.c.h"
@@ -114,7 +114,7 @@ module Kit.XCode.Builder (buildXCodeProject) where
   headersSection bfs = layoutSection "PBXHeadersBuildPhase" [lineItem "D2AAC07A0554694100DB518D" "Headers" [
     "isa" ~> "PBXHeadersBuildPhase",
     "buildActionMask" ~> "2147483647",
-    "files" ~> ("(" ++ (mconcat . intersperse "," $ prefixPchUUID : map buildFileId bfs) ++ ",)"),
+    "files" ~> ("(" ++ (stringJoin "," $ prefixPchUUID : map buildFileId bfs) ++ ",)"),
     "runOnlyForDeploymentPostprocessing" ~> "0"
 	  ]]
 	  where prefixPchUUID = "AA747D9F0F9514B9006C5449"
@@ -135,7 +135,7 @@ module Kit.XCode.Builder (buildXCodeProject) where
   sourcesSection bfs = layoutSection "PBXSourcesBuildPhase" [lineItem "D2AAC07B0554694100DB518D" "Sources" [
     "isa" ~> "PBXSourcesBuildPhase",
     "buildActionMask" ~> "2147483647",
-    "files" ~> ("(" ++ (mconcat . intersperse "," $ map buildFileId bfs) ++ ",)"),
+    "files" ~> ("(" ++ (stringJoin "," $ map buildFileId bfs) ++ ",)"),
     "runOnlyForDeploymentPostprocessing" ~> "0"
     ]]
   

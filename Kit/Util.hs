@@ -8,6 +8,7 @@ module Kit.Util where
   import Data.Foldable
   import Control.Applicative
   import Control.Monad
+  import Data.Monoid
   import Control.Monad.Trans
       
       
@@ -72,3 +73,6 @@ module Kit.Util where
     v <- actions
     setCurrentDirectory cwd
     return v
+    
+  stringJoin :: String -> [String] -> String
+  stringJoin x = mconcat . intersperse x

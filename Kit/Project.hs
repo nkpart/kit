@@ -25,15 +25,23 @@ module Kit.Project (
   import Kit.XCode.Builder
   import Text.JSON
   import Kit.JSON
-  import Control.Arrow
   import qualified Data.Traversable as T
   
   xxx kr spec = mapM (getDeps kr) (specDependencies spec)
   
   kitDir = "." </> "Kits"
     
-  generateXCodeProject :: IO ()
-  generateXCodeProject = do
+  
+  generatePrefixHeader :: [FilePath] -> IO String
+  generatePrefixHeader kitFileNames = do
+      ca <- readMany kitFileNames "Prefix.pch" $ \s -> do
+        exists <- doesFileExist s
+        T.for (justTrue exists s) readFile
+        --readFile s >>= (return . Just)
+      return $ stringJoin "\n" ca
+      
+  generateXCodeProject :: [FilePath] -> IO ()
+  generateXCodeProject kitFileNames = do
     createDirectoryIfMissing True kitDir
     inDirectory kitDir $ do
       let find x = fmap lines (readProcess "ruby" ["-e", "puts Dir.glob(\"" ++ x ++ "\")"] [])
@@ -42,7 +50,8 @@ module Kit.Project (
       let projDir = "KitDeps.xcodeproj"
       createDirectoryIfMissing True projDir
       writeFile (projDir </> "project.pbxproj") $ buildXCodeProject headers sources
-      writeFile "KitDeps_Prefix.pch" $ "#ifdef __OBJC__\n" ++ "    #import <Foundation/Foundation.h>\n    #import <UIKit/UIKit.h>\n" ++ "#endif\n"
+      header <- generatePrefixHeader kitFileNames 
+      writeFile "KitDeps_Prefix.pch" $ "#ifdef __OBJC__\n" ++ "    #import <Foundation/Foundation.h>\n    #import <UIKit/UIKit.h>\n" ++ "#endif\n" ++ header ++ "\n"
 
   readConfig :: Kit -> IO (Maybe String)
   readConfig kit = let fp = kitFileName kit </> (kitName kit ++ ".xcconfig")
@@ -51,17 +60,19 @@ module Kit.Project (
           mb <- T.sequence (fmap readFile $ justTrue exists fp)
           return $ fmap (\x -> "// " ++ kitFileName kit ++ "\n" ++  x) mb
         
-  generateXCodeConfig :: [String] -> IO ()
+  readMany :: MonadIO m => [FilePath] -> FilePath -> (String -> m (Maybe a)) -> m [a]
+  readMany dirs fileInDir f = do
+    directories <- liftIO $ filterM doesDirectoryExist dirs
+    let kitSpecFiles = map (</> fileInDir) directories
+    kitContents <- mapM (f) kitSpecFiles
+    return $ kitContents >>= maybeToList
+
+  generateXCodeConfig :: [FilePath] -> IO ()
   generateXCodeConfig kitFileNames = do
-    let base = "$(SRCROOT)" </> "Kits"
-    let rc = liftIO . readConfig
     inDirectory kitDir $ unKitIO $ do
-      directories <- liftIO $ filterM doesDirectoryExist kitFileNames
-      let kitSpecFiles = map (</> "KitSpec") directories
-      kitNames <- mapM (\x -> readSpec x |> specKit >>= rc) kitSpecFiles
-      let contents = mconcat . intersperse "\n" $ (kitNames >>= maybeToList)
-      let xcconfig = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ (mconcat . intersperse " "  $ directories >>= (\x -> [kitDir </> x </> "src", x </> "src"])) ++ "\n" ++ "GCC_PRECOMPILE_PREFIX_HEADER = YES\nGCC_PREFIX_HEADER = $(SRCROOT)/KitDeps_Prefix.pch\n"
-      
+      ca <- readMany kitFileNames "KitSpec" (\x -> readSpec x |> specKit >>= (liftIO . readConfig))
+      let contents = stringJoin "\n" ca
+      let xcconfig = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ (stringJoin " "  $ kitFileNames >>= (\x -> [kitDir </> x </> "src", x </> "src"])) ++ "\n" ++ "GCC_PRECOMPILE_PREFIX_HEADER = YES\nGCC_PREFIX_HEADER = $(SRCROOT)/KitDeps_Prefix.pch\n"
       liftIO $ writeFile "Kit.xcconfig" $ xcconfig ++ "\n" ++ contents
     return ()
       

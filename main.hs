@@ -40,10 +40,10 @@ module Main where
     where g = do
           repo <- liftIO defaultLocalRepository
           deps <- getMyDeps repo
-          puts $ "Dependencies: " ++ (mconcat . intersperse ", " $ map kitFileName deps)
+          puts $ "Dependencies: " ++ (stringJoin ", " $ map kitFileName deps)
           liftIO $ mapM (installKit repo) deps
           puts " -> Generating XCode project..."
-          liftIO generateXCodeProject
+          liftIO $ generateXCodeProject $ deps |> kitFileName
           liftIO $ generateXCodeConfig $ deps |> kitFileName
           puts "Kit complete."
             where p x = liftIO $ print x
@@ -99,6 +99,13 @@ module Main where
   handleArgs ["package"] = packageKit
   handleArgs ["deploy-local"] = deployLocal
   handleArgs ["verify"] = unKitIO verify >>= handleFails
+  handleArgs ["create-spec", name, version] = do
+    let kit =(Kit name version)
+    let spec = KitSpec kit []
+    putStrLn $ "Kit create: " ++ kitFileName kit
+    writeFile "KitSpec" $ encode spec
+    return ()
+    
   handleArgs _ = putStrLn "Usage: TODO"
     
   main :: IO ()

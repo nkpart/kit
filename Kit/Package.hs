@@ -26,7 +26,8 @@ module Kit.Package where
     a = elem fp ["src", "test", "KitSpec"]
     b = "xcodeproj" `isSuffixOf` fp
     c = "xcconfig" `isSuffixOf` fp
-      in a || b || c
+    d = ".pch" `isSuffixOf` fp
+      in a || b || c || d
   
   package :: KitSpec -> IO ()
   package spec = do
