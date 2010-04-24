@@ -1,6 +1,7 @@
 module Main where
   import qualified Data.ByteString as BS
 
+  import Kit.Cmd
   import Control.Monad.Trans
   import Data.List
   import Data.Maybe
@@ -13,6 +14,7 @@ module Main where
   import Kit.Util    
   import Kit.Verify
   import Kit.XCode.Builder
+  import Kit.Cmd
   import qualified Data.Traversable as T
   import System.Cmd
   import System.Directory

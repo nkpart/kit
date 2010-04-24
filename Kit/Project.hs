@@ -91,7 +91,6 @@ module Kit.Project (
       let dest = kitDir
       createDirectoryIfMissing True dest
       inDirectory dest $ do
-        cwd <- getCurrentDirectory
         sh ("tar zxf " ++ fp)
       return ()
     where sh = system
