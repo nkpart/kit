@@ -64,7 +64,7 @@ module Kit.Project (
   readMany dirs fileInDir f = do
     directories <- liftIO $ filterM doesDirectoryExist dirs
     let kitSpecFiles = map (</> fileInDir) directories
-    kitContents <- mapM (f) kitSpecFiles
+    kitContents <- mapM f kitSpecFiles
     return $ kitContents >>= maybeToList
 
   generateXCodeConfig :: [FilePath] -> IO ()
@@ -90,8 +90,7 @@ module Kit.Project (
       fmap fromJust $ getKit kr kit fp
       let dest = kitDir
       createDirectoryIfMissing True dest
-      inDirectory dest $ do
-        sh ("tar zxf " ++ fp)
+      inDirectory dest $ sh ("tar zxf " ++ fp)
       return ()
     where sh = system
 

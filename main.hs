@@ -1,7 +1,6 @@
 module Main where
   import qualified Data.ByteString as BS
 
-  import Kit.Cmd
   import Control.Monad.Trans
   import Data.List
   import Data.Maybe
@@ -12,9 +11,7 @@ module Main where
   import Kit.Repository
   import Kit.Spec
   import Kit.Util    
-  import Kit.Verify
   import Kit.XCode.Builder
-  import Kit.Cmd
   import qualified Data.Traversable as T
   import System.Cmd
   import System.Directory
@@ -22,24 +19,18 @@ module Main where
   import System.FilePath.Posix
   import Text.JSON
 
-  
   defaultLocalRepoPath = do
       home <- getHomeDirectory
       return $ home </> ".kit" </> "repository"
   defaultLocalRepository = fmap fileRepo defaultLocalRepoPath
-        
-  -- given a kit spec, 
-  -- download all kits (and deps)
-  -- extract all kits to directories
-  -- manage KitProjects
   
   handleFails (Left e) = do
     print e
     return ()
   handleFails (Right _) = return ()
   
-  me :: IO ()
-  me = do
+  update :: IO ()
+  update = do
         r <- unKitIO g
         handleFails r
     where g = do
@@ -65,7 +56,7 @@ module Main where
     mySpec <- unKitIO myKitSpec
     T.for mySpec package
     T.for mySpec x
-    return ()
+    handleFails mySpec
       where
         x :: KitSpec -> IO ()
         x spec = let 
@@ -79,41 +70,53 @@ module Main where
               copyFile pkg $ thisKitDir </> pkg
               copyFile "KitSpec" $ thisKitDir </> "KitSpec"
   
-  verify :: Maybe String -> KitIO ()
-  verify sdk = do
-      mySpec <- myKitSpec
-      puts "Checking that the kit can be depended upon..."
-      puts " #> Deploying locally"
-      liftIO deployLocal
-      puts " #> Building temporary parent project"
-      tmp <- liftIO getTemporaryDirectory
-      liftIO $ inDirectory tmp $ do
-        let kitVerifyDir = "kit-verify"
-        cleanOrCreate kitVerifyDir
-        inDirectory kitVerifyDir $ do
-          writeFile "KitSpec" $ encode (KitSpec (Kit "verify-kit" "1.0") [specKit mySpec])
-          me
-          inDirectory "Kits" $ do
-            system $ "xcodebuild -sdk " ++ (fromMaybe "iphonesimulator3.0" sdk)
-        putStrLn "OK."
-      puts "End checks."
+  verify :: Maybe String -> IO ()
+  verify sdk = (unKitIO f >>= handleFails)
     where
+      f = do
+        mySpec <- myKitSpec
+        puts "Checking that the kit can be depended upon..."
+        puts " #> Deploying locally"
+        liftIO deployLocal
+        puts " #> Building temporary parent project"
+        tmp <- liftIO getTemporaryDirectory
+        liftIO $ inDirectory tmp $ do
+          let kitVerifyDir = "kit-verify"
+          cleanOrCreate kitVerifyDir
+          inDirectory kitVerifyDir $ do
+            writeFile "KitSpec" $ encode (KitSpec (Kit "verify-kit" "1.0") [specKit mySpec])
+            update
+            inDirectory "Kits" $ do
+              system $ "xcodebuild -sdk " ++ (fromMaybe "iphonesimulator3.0" sdk)
+          putStrLn "OK."
+        puts "End checks."
       puts = liftIO . putStrLn
-  
-  handleArgs :: [String] -> IO ()
-  handleArgs ["me"] = me
-  handleArgs ["package"] = packageKit
-  handleArgs ["deploy-local"] = deployLocal
-  handleArgs ["verify"] = unKitIO (verify Nothing) >>= handleFails
-  handleArgs ["verify", sdk] = unKitIO (verify $ Just sdk) >>= handleFails
-  handleArgs ["create-spec", name, version] = do
+      
+  createSpec :: String -> String -> IO ()
+  createSpec name version = do
     let kit =(Kit name version)
     let spec = KitSpec kit []
-    putStrLn $ "Kit create: " ++ kitFileName kit
     writeFile "KitSpec" $ encode spec
+    putStrLn $ "Created KitSpec for " ++ kitFileName kit
     return ()
+  
+  handleArgs :: [String] -> IO ()
+  handleArgs ["update"] = update
+  handleArgs ["package"] = packageKit
+  handleArgs ["publish-local"] = deployLocal
+  handleArgs ["verify"] = verify Nothing
+  handleArgs ["verify", sdk] = verify $ Just sdk
+  handleArgs ["create-spec", name, version] = createSpec name version
     
-  handleArgs _ = putStrLn "Usage: TODO"
+  handleArgs _ = putStrLn f where
+    f = "Usage: kit command [arguments]" `nl`
+        "Commands:" `nl`
+        "\tupdate\t\t\t\tCreate an Xcode project to wrap the dependencies defined in ./KitSpec" `nl`
+        "\tcreate-spec NAME VERSION\tWrite out a KitSpec file using the given name and version." `nl`
+        "\tpackage\t\t\t\tCreate a tar.gz wrapping this kit" `nl`
+        "\tverify [SDK]\t\t\tPackage this kit, then attempt to use it as a dependency in an empty project." `nl`
+        "\tpublish-local\t\t\tPackage this kit, then deploy it to the local repository (~/.kit/repository)" 
+    nl a b = a ++ "\n" ++ b
     
   main :: IO ()
   main = do
