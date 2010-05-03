@@ -1,7 +1,0 @@
-{
-    "name": "demo"
-  , "version": "0.1"
-  , "dependencies": [
-      { "name": "functionalkit", "version": "0.1" }
-  ]
-}
