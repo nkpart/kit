@@ -44,7 +44,7 @@ module Kit.XCode.ProjectFile (projectPbxProj) where
     				"32C88DFF0371C24200C91783 /* Other Sources */," `nl`
     				"0867D69AFE84028FC02AAC07 /* Frameworks */," `nl`
     				"034768DFFF38A50411DB9C8B /* Products */," `nl`
-    				"4728C52F117C02B10027D7D1 /* Kit.XCConfig */," `nl`
+    				"4728C52F117C02B10027D7D1 /* Kit.xcconfig */," `nl`
     			");" `nl`
     			"name = KitDeps;" `nl`
     			"sourceTree = \"<group>\";" `nl`
@@ -139,7 +139,7 @@ module Kit.XCode.ProjectFile (projectPbxProj) where
         		"};" `nl`
         		"1DEB922308733DC00010E9CD /* Debug */ = {" `nl`
         			"isa = XCBuildConfiguration;" `nl`
-        			"baseConfigurationReference = 4728C52F117C02B10027D7D1 /* Kit.XCConfig */;" `nl`
+        			"baseConfigurationReference = 4728C52F117C02B10027D7D1 /* Kit.xcconfig */;" `nl`
         			"buildSettings = {" `nl`
         				"ARCHS = \"$(ARCHS_STANDARD_32_BIT)\";" `nl`
         				"GCC_C_LANGUAGE_STANDARD = c99;" `nl`
@@ -154,7 +154,7 @@ module Kit.XCode.ProjectFile (projectPbxProj) where
         		"};" `nl`
         		"1DEB922408733DC00010E9CD /* Release */ = {" `nl`
         			"isa = XCBuildConfiguration;" `nl`
-        			"baseConfigurationReference = 4728C52F117C02B10027D7D1 /* Kit.XCConfig */;" `nl`
+        			"baseConfigurationReference = 4728C52F117C02B10027D7D1 /* Kit.xcconfig */;" `nl`
         			"buildSettings = {" `nl`
         				"ARCHS = \"$(ARCHS_STANDARD_32_BIT)\";" `nl`
         				"GCC_C_LANGUAGE_STANDARD = c99;" `nl`

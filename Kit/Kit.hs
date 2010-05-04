@@ -1,5 +1,6 @@
 module Kit.Kit where
-  
+  import System.FilePath.Posix
+    
   data Kit = Kit {
     kitName :: String,
     kitVersion :: String
@@ -7,3 +8,6 @@ module Kit.Kit where
 
   kitFileName :: Kit -> String
   kitFileName k = kitName k ++ "-" ++ kitVersion k
+
+  kitConfig :: Kit -> String
+  kitConfig kit = kitFileName kit </> (kitName kit ++ ".xcconfig")

@@ -1,6 +1,7 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 
 module Kit.Util where
+  import System.Process
   import System.Directory
   import Data.Maybe
   import Data.List
@@ -73,6 +74,9 @@ module Kit.Util where
     v <- actions
     setCurrentDirectory cwd
     return v
+  
+  glob :: String -> IO [String]
+  glob pattern = fmap lines (readProcess "ruby" ["-e", "puts Dir.glob(\"" ++ pattern ++ "\")"] [])
     
-  stringJoin :: String -> [String] -> String
+  stringJoin :: Monoid a => a -> [a] -> a
   stringJoin x = mconcat . intersperse x
