@@ -48,7 +48,7 @@ module Kit.Project (
     createDirectoryIfMissing True kitDir
     inDirectory kitDir $ do
       headers <- glob "**/src/**/*.h"
-      sources <- glob "**/src/**/*.m"
+      sources <- (\a b c -> a ++ b ++ c) <$> glob "**/src/**/*.m" <*> glob "**/src/**/*.mm" <*> glob "**/src/**/*.c"
       createDirectoryIfMissing True projectDir
       writeFile projectFile $ buildXCodeProject headers sources
       combinedHeader <- generatePrefixHeader kitFileNames

@@ -12,6 +12,8 @@ module Kit.XCode.Common where
   fileType :: String -> FileType
   fileType x | ".h" `isSuffixOf` x = Header
   fileType x | ".m" `isSuffixOf` x = Source
+  fileType x | ".mm" `isSuffixOf` x = Source
+  fileType x | ".c" `isSuffixOf` x = Source
   fileType _ = Unknown
   
   (~>) = (,)
