@@ -17,7 +17,6 @@ module Kit.XCode.Builder (buildXCodeProject) where
   buildXCodeProject headers sources = 
       projectPbxProj bfs frs classes hs srcs 
     where
-      sourceStart :: Integer
       sourceStart = toInteger (length headers + 1)
       headerBuildFiles = zipWith createBuildFile [1..] headers
       sourceBuildFiles = zipWith createBuildFile [sourceStart..] sources

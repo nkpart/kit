@@ -9,5 +9,5 @@ module Kit.Kit where
   kitFileName :: Kit -> String
   kitFileName k = kitName k ++ "-" ++ kitVersion k
 
-  kitConfig :: Kit -> String
-  kitConfig kit = kitFileName kit </> (kitName kit ++ ".xcconfig")
+  kitConfigFile :: Kit -> String
+  kitConfigFile kit = kitFileName kit </> (kitName kit ++ ".xcconfig")

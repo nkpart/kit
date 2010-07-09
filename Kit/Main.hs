@@ -66,7 +66,7 @@ module Kit.Main where
             in do
               repo <- defaultLocalRepoPath
               let thisKitDir = repo </> "kits" </> kitName k </> kitVersion k
-              createDirectoryIfMissing True thisKitDir
+              mkdir_p thisKitDir
               copyFile pkg $ thisKitDir </> pkg
               copyFile "KitSpec" $ thisKitDir </> "KitSpec"
   
@@ -84,10 +84,10 @@ module Kit.Main where
           let kitVerifyDir = "kit-verify"
           cleanOrCreate kitVerifyDir
           inDirectory kitVerifyDir $ do
-            writeFile "KitSpec" $ encode (KitSpec (Kit "verify-kit" "1.0") [specKit mySpec])
+            writeFile "KitSpec" $ encode (KitSpec (Kit "verify-kit" "1.0") $ defaultConfiguration{kitConfigDependencies=[specKit mySpec]})
             update
             inDirectory "Kits" $ do
-              system $ "xcodebuild -sdk " ++ (fromMaybe "iphonesimulator3.0" sdk)
+              system $ "xcodebuild -sdk " ++ (fromMaybe "iphonesimulator4.0" sdk)
           putStrLn "OK."
         puts "End checks."
       puts = liftIO . putStrLn
@@ -95,7 +95,7 @@ module Kit.Main where
   createSpec :: String -> String -> IO ()
   createSpec name version = do
     let kit =(Kit name version)
-    let spec = KitSpec kit []
+    let spec = KitSpec kit defaultConfiguration
     writeFile "KitSpec" $ encode spec
     putStrLn $ "Created KitSpec for " ++ kitFileName kit
     return ()
@@ -122,7 +122,7 @@ module Kit.Main where
   kitMain = do
       localRepo <- defaultLocalRepository
       path <- defaultLocalRepoPath
-      createDirectoryIfMissing True path
+      mkdir_p path
       args <- getArgs
       handleArgs args
 

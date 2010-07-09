@@ -194,5 +194,5 @@ module Kit.XCode.ProjectFile (projectPbxProj) where
   
   
   main = do
-    putStrLn $ top `nl` next1 `nl` bottom
+    putStrLn $ projectPbxProj "" "" "" "" ""
     

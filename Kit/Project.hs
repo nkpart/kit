@@ -22,11 +22,10 @@ module Kit.Project (
   import Kit.Util
   import Kit.Spec
   import Kit.XCode.Builder
+  import Kit.XCode.XCConfig
   import Text.JSON
   import Kit.JSON
   import qualified Data.Traversable as T
-  
-  xxx kr spec = mapM (getDeps kr) (specDependencies spec)
   
   kitDir = "." </> "Kits"
   projectDir = "KitDeps.xcodeproj"
@@ -45,38 +44,46 @@ module Kit.Project (
       
   generateXCodeProject :: [FilePath] -> IO ()
   generateXCodeProject kitFileNames = do
-    createDirectoryIfMissing True kitDir
+    mkdir_p kitDir
     inDirectory kitDir $ do
-      headers <- glob "**/src/**/*.h"
+      let find tpe inDir = glob (inDir ++ "/src/**/*" ++ tpe)
+      let find' tpe = fmap join . T.for kitFileNames $ find tpe
+      headers <- find' ".h"
       sources <- (\a b c -> a ++ b ++ c) <$> glob "**/src/**/*.m" <*> glob "**/src/**/*.mm" <*> glob "**/src/**/*.c"
-      createDirectoryIfMissing True projectDir
+      mkdir_p projectDir
       writeFile projectFile $ buildXCodeProject headers sources
       combinedHeader <- generatePrefixHeader kitFileNames
       writeFile prefixFile $ prefixDefault ++ combinedHeader ++ "\n"
 
-  readConfig :: Kit -> IO (Maybe String)
-  readConfig kit = do
-          exists <- doesFileExist fp
-          contents <- T.sequence (fmap readFile $ justTrue exists fp)
-          return $ fmap prependKitName contents
+
+  readConfig' :: Kit -> IO (Maybe XCConfig)
+  readConfig' kit = do
+    exists <- doesFileExist fp
+    contents <- T.sequence (fmap readFile $ justTrue exists fp)
+    return $ fmap (fileContentsToXCC $ kitName kit) contents
         where
-          fp = kitConfig kit
-          prependKitName c = "// " ++ kitFileName kit ++ "\n" ++ c
+          fp = kitConfigFile kit
 
   generateXCodeConfig :: [FilePath] -> IO ()
   generateXCodeConfig kitFileNames = do
     inDirectory kitDir $ unKitIO $ do
-      ca <- readMany kitFileNames "KitSpec" (\x -> readSpec x |> specKit >>= (liftIO . readConfig))
-      let contents = stringJoin "\n" ca
+      ca <- readMany kitFileNames "KitSpec" (\x -> readSpec x |> specKit >>= (liftIO . readConfig'))
+      let combinedConfig = multiConfig "KitConfig" ca
+      let contents = configToString combinedConfig
       let xcconfig = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ (stringJoin " "  $ kitFileNames >>= (\x -> [kitDir </> x </> "src", x </> "src"])) ++ "\n" ++ "GCC_PRECOMPILE_PREFIX_HEADER = YES\nGCC_PREFIX_HEADER = $(SRCROOT)/KitDeps_Prefix.pch\n"
       liftIO $ writeFile "Kit.xcconfig" $ xcconfig ++ "\n" ++ contents
     return ()
       
+  depsForSpec :: KitRepository -> KitSpec -> KitIO [Kit]
+  depsForSpec kr spec = do
+      deps <- mapM (getDeps kr) (specDependencies spec)
+      return $ specDependencies spec ++ join deps      
+  
   getDeps :: KitRepository -> Kit -> KitIO [Kit]
-  getDeps kr kit = do
-    spec <- getKitSpec kr kit
-    deps <- xxx kr spec
-    return $ specDependencies spec ++ join deps
+  getDeps kr kit = getKitSpec kr kit >>= depsForSpec kr
+
+  getMyDeps :: KitRepository -> KitIO [Kit]
+  getMyDeps kr = myKitSpec >>= depsForSpec kr
 
   installKit :: KitRepository -> Kit -> IO ()
   installKit kr kit = do
@@ -85,16 +92,11 @@ module Kit.Project (
       putStrLn $ " -> Installing " ++ kitFileName kit
       fmap fromJust $ getKit kr kit fp
       let dest = kitDir
-      createDirectoryIfMissing True dest
+      mkdir_p dest
       inDirectory dest $ sh ("tar zxf " ++ fp)
       return ()
     where sh = system
 
-  getMyDeps :: KitRepository -> KitIO [Kit]
-  getMyDeps kr = do
-    mySpec <- myKitSpec
-    deps <- xxx kr mySpec
-    return $ join deps ++ specDependencies mySpec
   
   readSpec :: FilePath -> KitIO KitSpec
   readSpec kitSpecPath = readSpecContents kitSpecPath >>= KitIO . return . parses
