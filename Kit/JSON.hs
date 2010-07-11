@@ -25,10 +25,7 @@ module Kit.JSON where
 
       readJSON (JSObject obj) = 
           let myKit = Kit <$> f "name" <*> f "version"
-              deps = f "dependencies"
-              sourceDir = f "sourceDir" <|> pure "src"
-           in KitSpec <$> myKit <*> (KitConfiguration <$> deps <*> sourceDir)
+              myConfig = (KitConfiguration <$> f "dependencies" <*> (f "sourceDir" <|> pure "src"))
+           in KitSpec <$> myKit <*> myConfig
         where f x = mLookup x jsonObjAssoc >>= readJSON
               jsonObjAssoc = fromJSObject obj
-              
-  

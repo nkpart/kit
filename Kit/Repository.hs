@@ -25,9 +25,6 @@ module Kit.Repository (
   import Data.Traversable
   import Control.Monad
   import Control.Monad.Trans
-  import Control.Applicative
-  import System.Directory
-  import System.FilePath.Posix
   import Debug.Trace
   import Text.JSON
   import Kit.JSON

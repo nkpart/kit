@@ -3,7 +3,6 @@ module Kit.XCode.Builder (buildXCodeProject) where
 
   import Data.Monoid
   import Data.List
-  import System.FilePath.Posix
   import Kit.XCode.Common
   import Kit.XCode.ProjectFile
   import Kit.Util

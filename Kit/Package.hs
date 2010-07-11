@@ -5,8 +5,6 @@ module Kit.Package (package) where
   import Kit.Util
   import Kit.Project
   import System.Cmd
-  import System.FilePath.Posix
-  import System.Directory
   import Control.Monad.Trans
   import Control.Monad
   import Data.List
@@ -15,7 +13,7 @@ module Kit.Package (package) where
   
   {-
     Package format
-     src/
+     src/ | configurable source dir
      test/
      KitSpec
      *.codeproj
@@ -23,7 +21,7 @@ module Kit.Package (package) where
   
   fileBelongsInPackage :: KitConfiguration -> FilePath -> Bool
   fileBelongsInPackage config fp = let
-    a = elem fp [sourceDir config, "src", "test", "KitSpec"]
+    a = elem fp [sourceDir config, "test", "KitSpec"]
     b = "xcodeproj" `isSuffixOf` fp
     c = "xcconfig" `isSuffixOf` fp
     d = ".pch" `isSuffixOf` fp

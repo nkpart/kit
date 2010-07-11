@@ -1,17 +1,22 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 
-module Kit.Util where
+module Kit.Util(
+  module Kit.Util, 
+  module Control.Applicative, 
+  module System.FilePath.Posix,
+  module System.Directory
+  ) where
+  import System.FilePath.Posix
   import System.Process
   import System.Directory
   import Data.Maybe
   import Data.List
-  import Data.Traversable
+  import qualified Data.Traversable as T
   import Data.Foldable
   import Control.Applicative
   import Control.Monad
   import Data.Monoid
   import Control.Monad.Trans
-      
       
   (|>) ma f = fmap f ma
         
@@ -34,7 +39,7 @@ module Kit.Util where
     foldr f z (Left c) = z
     foldr f z (Right a) = f a z
     
-  instance Traversable (Either c) where
+  instance T.Traversable (Either c) where
     sequenceA = either (pure . Left) (Right <$>)
     
   type KitError = String
@@ -83,3 +88,11 @@ module Kit.Util where
     
   stringJoin :: Monoid a => a -> [a] -> a
   stringJoin x = mconcat . intersperse x
+  
+  -- For each directory that exists, execute the function with the given filepath
+  readMany :: MonadIO m => [FilePath] -> FilePath -> (String -> m (Maybe a)) -> m [a]
+  readMany dirs fileInDir f = do
+    directories <- liftIO $ filterM doesDirectoryExist dirs
+    let kitSpecFiles = map (</> fileInDir) directories
+    kitContents <- mapM f kitSpecFiles
+    return $ catMaybes kitContents

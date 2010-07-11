@@ -1,5 +1,5 @@
 module Kit.Kit where
-  import System.FilePath.Posix
+  import Kit.Util
     
   data Kit = Kit {
     kitName :: String,

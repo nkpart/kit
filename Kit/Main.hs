@@ -10,13 +10,11 @@ module Kit.Main where
   import Kit.Project
   import Kit.Repository
   import Kit.Spec
-  import Kit.Util    
+  import Kit.Util  
   import Kit.XCode.Builder
   import qualified Data.Traversable as T
   import System.Cmd
-  import System.Directory
   import System.Environment
-  import System.FilePath.Posix
   import Text.JSON
 
   defaultLocalRepoPath = do
@@ -30,20 +28,18 @@ module Kit.Main where
   handleFails (Right _) = return ()
   
   update :: IO ()
-  update = do
-        r <- unKitIO g
-        handleFails r
-    where g = do
-          repo <- liftIO defaultLocalRepository
-          deps <- getMyDeps repo
-          puts $ "Dependencies: " ++ (stringJoin ", " $ map kitFileName deps)
-          liftIO $ mapM (installKit repo) deps
-          puts " -> Generating XCode project..."
-          liftIO $ generateXCodeProject $ deps |> kitFileName
-          liftIO $ generateXCodeConfig $ deps |> kitFileName
-          puts "Kit complete."
-            where p x = liftIO $ print x
-                  puts x = liftIO $ putStrLn x
+  update = unKitIO g >>= handleFails
+      where g = do
+              repo <- liftIO defaultLocalRepository
+              deps <- getMyDeps repo
+              puts $ "Dependencies: " ++ (stringJoin ", " $ map kitFileName deps)
+              liftIO $ mapM (installKit repo) deps
+              puts " -> Generating XCode project..."
+              liftIO $ generateXCodeProject $ deps |> kitFileName
+              liftIO $ generateXCodeConfig $ deps |> kitFileName
+              puts "Kit complete."
+                where p x = liftIO $ print x
+                      puts x = liftIO $ putStrLn x
   
   packageKit :: IO ()
   packageKit = do

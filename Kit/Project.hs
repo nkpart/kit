@@ -14,15 +14,14 @@ module Kit.Project (
   import Data.Maybe
   import Data.List
   import Data.Monoid
-  import System.Directory
   import System.Cmd
-  import System.FilePath.Posix
   import Kit.Kit
   import Kit.Repository
   import Kit.Util
   import Kit.Spec
   import Kit.XCode.Builder
   import Kit.XCode.XCConfig
+  import Kit.XCode.Prefix
   import Text.JSON
   import Kit.JSON
   import qualified Data.Traversable as T
@@ -32,15 +31,6 @@ module Kit.Project (
   prefixFile = "KitDeps_Prefix.pch"
   projectFile = projectDir </> "project.pbxproj"
   prefixDefault = "#ifdef __OBJC__\n" ++ "    #import <Foundation/Foundation.h>\n    #import <UIKit/UIKit.h>\n" ++ "#endif\n"
-  
-  kitPrefixFile = "Prefix.pch"
-  
-  generatePrefixHeader :: [FilePath] -> IO String
-  generatePrefixHeader kitFileNames = do
-      ca <- readMany kitFileNames kitPrefixFile $ \s -> do
-        exists <- doesFileExist s
-        T.for (justTrue exists s) readFile
-      return $ stringJoin "\n" ca
       
   generateXCodeProject :: [FilePath] -> IO ()
   generateXCodeProject kitFileNames = do
@@ -54,7 +44,6 @@ module Kit.Project (
       writeFile projectFile $ buildXCodeProject headers sources
       combinedHeader <- generatePrefixHeader kitFileNames
       writeFile prefixFile $ prefixDefault ++ combinedHeader ++ "\n"
-
 
   readConfig' :: Kit -> IO (Maybe XCConfig)
   readConfig' kit = do
@@ -97,7 +86,6 @@ module Kit.Project (
       return ()
     where sh = system
 
-  
   readSpec :: FilePath -> KitIO KitSpec
   readSpec kitSpecPath = readSpecContents kitSpecPath >>= KitIO . return . parses
   
@@ -115,12 +103,6 @@ module Kit.Project (
   
   parses :: String -> Either [KitError] KitSpec
   parses contents = case (decode contents) of 
-                      Ok a -> Right a 
+                      Ok a -> Right a
                       Error a -> Left [a]
-    
-  readMany :: MonadIO m => [FilePath] -> FilePath -> (String -> m (Maybe a)) -> m [a]
-  readMany dirs fileInDir f = do
-    directories <- liftIO $ filterM doesDirectoryExist dirs
-    let kitSpecFiles = map (</> fileInDir) directories
-    kitContents <- mapM f kitSpecFiles
-    return $ catMaybes kitContents
+  
