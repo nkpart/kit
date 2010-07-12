@@ -1,6 +1,8 @@
 Name:                kit
 Version:             0.2
-Description:         XCode/Obj-C dependency manager
+Synopsis:            A dependency manager for XCode (Objective-C) projects
+Description:         A dependency manager for XCode (Objective-C) projects
+Category:            Development
 License:             BSD3
 License-file:        LICENSE
 Author:              Nick Partridge
@@ -9,5 +11,6 @@ Build-Type:          Simple
 Cabal-Version:       >=1.2
 Executable kit
   Main-is:           Main.hs
+  Other-Modules:     Kit.JSON,  Kit.Kit,  Kit.Main,  Kit.Package,  Kit.Project,  Kit.Repository,  Kit.Spec,  Kit.Util,  Kit.XCode.Builder,  Kit.XCode.Common,  Kit.XCode.Prefix,  Kit.XCode.ProjectFile, Kit.XCode.XCConfig
   Build-Depends:     base >= 3 && < 5, HTTP >= 4000.0.9, network, bytestring, filepath, directory, process, json, mtl, cmdargs, MissingH, containers, QuickCheck
   
