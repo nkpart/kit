@@ -63,6 +63,13 @@ module Kit.Util(
     
   instance MonadIO KitIO where
     liftIO v = KitIO (fmap Right v)
+    
+  instance Applicative KitIO where
+    pure = return
+    mf <*> ma = do
+      f <- mf
+      a <- ma
+      return $ f a
 
   mLookup a as = maybe (fail $ "No such element: " ++ a) return (lookup a as)  
   
