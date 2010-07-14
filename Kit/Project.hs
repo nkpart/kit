@@ -26,12 +26,28 @@ module Kit.Project (
   import Kit.JSON
   import qualified Data.Traversable as T
   
+  -- Paths
   kitDir = "." </> "Kits"
   projectDir = "KitDeps.xcodeproj"
   prefixFile = "KitDeps_Prefix.pch"
   projectFile = projectDir </> "project.pbxproj"
+  
   prefixDefault = "#ifdef __OBJC__\n" ++ "    #import <Foundation/Foundation.h>\n    #import <UIKit/UIKit.h>\n" ++ "#endif\n"
-      
+    
+    
+  -- Represents an extracted project
+  -- Headers, Sources, Config, Prefix content
+  data KitDepExploded = KitDepExploded [String] [String] (Maybe XCConfig) (Maybe String)
+  
+  readKitDep :: Kit -> KitIO KitDepExploded
+  readKitDep kit = 
+    let kitDir = kitFileName kit
+        headers = error("todo")
+        sources = error("todo")
+        config = error("todo")
+        prefix = error("todo")
+    in  KitDepExploded <$> headers <*> sources <*> config <*> prefix
+  
   generateXCodeProject :: [FilePath] -> IO ()
   generateXCodeProject kitFileNames = do
     mkdir_p kitDir
