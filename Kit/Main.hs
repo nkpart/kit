@@ -35,7 +35,7 @@ module Kit.Main where
               puts $ "Dependencies: " ++ (stringJoin ", " $ map kitFileName deps)
               liftIO $ mapM (installKit repo) deps
               puts " -> Generating XCode project..."
-              liftIO $ generateXCodeProject $ deps |> kitFileName
+              liftIO $ generateXCodeProject deps
               liftIO $ generateXCodeConfig $ deps |> kitFileName
               puts "Kit complete. You may need to restart XCode for it to pick up any changes."
                 where p x = liftIO $ print x

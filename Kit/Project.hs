@@ -36,20 +36,21 @@ module Kit.Project (
     
   -- Represents an extracted project
   -- Headers, Sources, Config, Prefix content
-  data KitDepExploded = KitDepExploded [String] [String] (Maybe XCConfig) (Maybe String)
+  data KitContents = KitContents [String] [String] -- (Maybe XCConfig) (Maybe String)
   
-  readKitDep :: Kit -> IO KitDepExploded
-  readKitDep kit = 
+  readKitContents :: KitSpec -> IO KitContents
+  readKitContents (KitSpec kit spec)  = 
     let kitDir = kitFileName kit
         find tpe = glob ((kitDir </> "src/**/*") ++ tpe)
         headers = find ".h"
         sources = find ".m"
-        config = error("todo")
-        prefix = error("todo")
-    in  KitDepExploded <$> headers <*> sources <*> config <*> prefix
+        --config = error("todo")
+        --prefix = error("todo")
+    in  KitContents <$> headers <*> sources -- <*> config <*> prefix
   
-  generateXCodeProject :: [FilePath] -> IO ()
-  generateXCodeProject kitFileNames = do
+  generateXCodeProject :: [Kit] -> IO ()
+  generateXCodeProject deps = do
+    let kitFileNames = deps |> kitFileName
     mkdir_p kitDir
     inDirectory kitDir $ do
       let find tpe inDir = glob (inDir ++ "/src/**/*" ++ tpe)

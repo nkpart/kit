@@ -1,9 +1,11 @@
 module Kit.Kit where
   import Kit.Util
     
+  type Version = String
+  
   data Kit = Kit {
     kitName :: String,
-    kitVersion :: String
+    kitVersion :: Version
   } deriving (Eq, Show, Ord, Read)
 
   kitFileName :: Kit -> String
