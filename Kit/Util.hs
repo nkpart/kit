@@ -70,8 +70,6 @@ module Kit.Util(
       f <- mf
       a <- ma
       return $ f a
-
-  mLookup a as = maybe (fail $ "No such element: " ++ a) return (lookup a as)  
   
   mkdir_p :: FilePath -> IO ()
   mkdir_p = createDirectoryIfMissing True
