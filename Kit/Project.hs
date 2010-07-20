@@ -34,16 +34,16 @@ module Kit.Project (
   
   prefixDefault = "#ifdef __OBJC__\n" ++ "    #import <Foundation/Foundation.h>\n    #import <UIKit/UIKit.h>\n" ++ "#endif\n"
     
-    
   -- Represents an extracted project
   -- Headers, Sources, Config, Prefix content
   data KitDepExploded = KitDepExploded [String] [String] (Maybe XCConfig) (Maybe String)
   
-  readKitDep :: Kit -> KitIO KitDepExploded
+  readKitDep :: Kit -> IO KitDepExploded
   readKitDep kit = 
     let kitDir = kitFileName kit
-        headers = error("todo")
-        sources = error("todo")
+        find tpe = glob ((kitDir </> "src/**/*") ++ tpe)
+        headers = find ".h"
+        sources = find ".m"
         config = error("todo")
         prefix = error("todo")
     in  KitDepExploded <$> headers <*> sources <*> config <*> prefix
