@@ -36,7 +36,6 @@ module Kit.Main where
               liftIO $ mapM (installKit repo) deps
               puts " -> Generating XCode project..."
               liftIO $ generateXCodeProject deps
-              liftIO $ generateXCodeConfig $ deps |> kitFileName
               puts "Kit complete. You may need to restart XCode for it to pick up any changes."
                 where p x = liftIO $ print x
                       puts x = liftIO $ putStrLn x

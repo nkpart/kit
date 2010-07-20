@@ -2,7 +2,6 @@ module Kit.Project (
   getDeps,
   getMyDeps,
   installKit,
-  generateXCodeConfig,
   generateXCodeProject,
   myKitSpec)
     where
@@ -31,12 +30,13 @@ module Kit.Project (
   projectDir = "KitDeps.xcodeproj"
   prefixFile = "KitDeps_Prefix.pch"
   projectFile = projectDir </> "project.pbxproj"
+  xcodeConfigFile = "Kit.xcconfig"
   
   prefixDefault = "#ifdef __OBJC__\n" ++ "    #import <Foundation/Foundation.h>\n    #import <UIKit/UIKit.h>\n" ++ "#endif\n"
     
   -- Represents an extracted project
   -- Headers, Sources, Config, Prefix content
-  data KitContents = KitContents { contentHeaders :: [String], contentSources :: [String] } -- (Maybe XCConfig) (Maybe String)
+  data KitContents = KitContents { contentHeaders :: [String], contentSources :: [String], contentConfig :: Maybe XCConfig, contentPrefix :: Maybe String }
   
   readKitContents :: Kit -> IO KitContents
   readKitContents kit  = 
@@ -44,13 +44,12 @@ module Kit.Project (
         find tpe = glob ((kitDir </> "src/**/*") ++ tpe)
         headers = find ".h"
         sources = fmap join $ T.sequence [find ".m", find ".mm", find ".c"]
-        --config = error("todo")
-        --prefix = error("todo")
-    in  KitContents <$> headers <*> sources -- <*> config <*> prefix
+        config = readConfig' kit
+        prefix = return Nothing
+    in  KitContents <$> headers <*> sources <*> config <*> prefix
   
   generateXCodeProject :: [Kit] -> IO ()
   generateXCodeProject deps = do
-    let kitFileNames = deps |> kitFileName
     mkdir_p kitDir
     inDirectory kitDir $ do
       kitsContents <- T.for deps readKitContents
@@ -60,6 +59,14 @@ module Kit.Project (
       writeFile projectFile $ buildXCodeProject headers sources
       combinedHeader <- generatePrefixHeader kitFileNames
       writeFile prefixFile $ prefixDefault ++ combinedHeader ++ "\n"
+      createConfig kitsContents
+    where kitFileNames = deps |> kitFileName
+          createConfig cs = do
+            let configs = catMaybes $ cs |> contentConfig
+            let combinedConfig = multiConfig "KitConfig" configs
+            let kitHeaders = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ (stringJoin " "  $ kitFileNames >>= (\x -> [kitDir </> x </> "src", x </> "src"])) ++ "\n" ++ "GCC_PRECOMPILE_PREFIX_HEADER = YES\nGCC_PREFIX_HEADER = $(SRCROOT)/KitDeps_Prefix.pch\n"
+            writeFile xcodeConfigFile $ kitHeaders ++ "\n" ++ configToString combinedConfig
+        
 
   readConfig' :: Kit -> IO (Maybe XCConfig)
   readConfig' kit = do
@@ -68,16 +75,6 @@ module Kit.Project (
     return $ fmap (fileContentsToXCC $ kitName kit) contents
         where
           fp = kitConfigFile kit
-
-  generateXCodeConfig :: [FilePath] -> IO ()
-  generateXCodeConfig kitFileNames = do
-    inDirectory kitDir $ unKitIO $ do
-      ca <- readMany kitFileNames "KitSpec" (\x -> readSpec x |> specKit >>= (liftIO . readConfig'))
-      let combinedConfig = multiConfig "KitConfig" ca
-      let contents = configToString combinedConfig
-      let xcconfig = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ (stringJoin " "  $ kitFileNames >>= (\x -> [kitDir </> x </> "src", x </> "src"])) ++ "\n" ++ "GCC_PRECOMPILE_PREFIX_HEADER = YES\nGCC_PREFIX_HEADER = $(SRCROOT)/KitDeps_Prefix.pch\n"
-      liftIO $ writeFile "Kit.xcconfig" $ xcconfig ++ "\n" ++ contents
-    return ()
       
   depsForSpec :: KitRepository -> KitSpec -> KitIO [Kit]
   depsForSpec kr spec = do
