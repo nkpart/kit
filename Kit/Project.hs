@@ -36,14 +36,14 @@ module Kit.Project (
     
   -- Represents an extracted project
   -- Headers, Sources, Config, Prefix content
-  data KitContents = KitContents [String] [String] -- (Maybe XCConfig) (Maybe String)
+  data KitContents = KitContents { contentHeaders :: [String], contentSources :: [String] } -- (Maybe XCConfig) (Maybe String)
   
-  readKitContents :: KitSpec -> IO KitContents
-  readKitContents (KitSpec kit spec)  = 
+  readKitContents :: Kit -> IO KitContents
+  readKitContents kit  = 
     let kitDir = kitFileName kit
         find tpe = glob ((kitDir </> "src/**/*") ++ tpe)
         headers = find ".h"
-        sources = find ".m"
+        sources = fmap join $ T.sequence [find ".m", find ".mm", find ".c"]
         --config = error("todo")
         --prefix = error("todo")
     in  KitContents <$> headers <*> sources -- <*> config <*> prefix
@@ -53,10 +53,9 @@ module Kit.Project (
     let kitFileNames = deps |> kitFileName
     mkdir_p kitDir
     inDirectory kitDir $ do
-      let find tpe inDir = glob (inDir ++ "/src/**/*" ++ tpe)
-      let find' tpe = fmap join . T.for kitFileNames $ find tpe
-      headers <- find' ".h"
-      sources <- (\a b c -> a ++ b ++ c) <$> glob "**/src/**/*.m" <*> glob "**/src/**/*.mm" <*> glob "**/src/**/*.c"
+      kitsContents <- T.for deps readKitContents
+      let headers = kitsContents >>= contentHeaders
+      let sources = kitsContents >>= contentSources
       mkdir_p projectDir
       writeFile projectFile $ buildXCodeProject headers sources
       combinedHeader <- generatePrefixHeader kitFileNames
