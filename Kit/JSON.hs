@@ -12,7 +12,8 @@ module Kit.JSON where
           ]
 
       readJSON (JSObject obj) = Kit <$> f "name" <*> f "version"
-        where f = jsonLookup obj
+        where f x = mLookup x jsonObjAssoc >>= readJSON
+              jsonObjAssoc = fromJSObject obj
   
   instance JSON KitSpec where
       showJSON spec = makeObj
@@ -26,10 +27,9 @@ module Kit.JSON where
           let myKit = Kit <$> f "name" <*> f "version"
               myConfig = (KitConfiguration <$> f "dependencies" <*> (f "sourceDir" <|> pure "src"))
            in KitSpec <$> myKit <*> myConfig
-        where f = jsonLookup obj
+        where f x = mLookup x jsonObjAssoc >>= readJSON
+              jsonObjAssoc = fromJSObject obj
   
   mLookup :: Monad m => String -> [(String, b)] -> m b
   mLookup a as = maybe (fail $ "No such element: " ++ a) return (lookup a as)
-  
-  jsonLookup obj key = mLookup key (fromJSObject obj) >>= readJSON
   
