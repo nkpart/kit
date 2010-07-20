@@ -37,7 +37,7 @@ module Kit.Main where
               puts " -> Generating XCode project..."
               liftIO $ generateXCodeProject $ deps |> kitFileName
               liftIO $ generateXCodeConfig $ deps |> kitFileName
-              puts "Kit complete."
+              puts "Kit complete. You may need to restart XCode for it to pick up any changes."
                 where p x = liftIO $ print x
                       puts x = liftIO $ putStrLn x
   
