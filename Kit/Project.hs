@@ -83,7 +83,7 @@ module Kit.Project (
   depsForSpec :: KitRepository -> KitSpec -> KitIO [Kit]
   depsForSpec kr spec = do
       deps <- mapM (getDeps kr) (specDependencies spec)
-      return $ specDependencies spec ++ join deps      
+      return . nub . sort $ specDependencies spec ++ join deps -- TODO Check for conflicting versions
   
   getDeps :: KitRepository -> Kit -> KitIO [Kit]
   getDeps kr kit = getKitSpec kr kit >>= depsForSpec kr
