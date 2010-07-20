@@ -20,7 +20,6 @@ module Kit.Project (
   import Kit.Spec
   import Kit.XCode.Builder
   import Kit.XCode.XCConfig
-  import Kit.XCode.Prefix
   import Text.JSON
   import Kit.JSON
   import qualified Data.Traversable as T
@@ -45,7 +44,7 @@ module Kit.Project (
         headers = find ".h"
         sources = fmap join $ T.sequence [find ".m", find ".mm", find ".c"]
         config = readConfig' kit
-        prefix = return Nothing
+        prefix = readHeader kit
     in  KitContents <$> headers <*> sources <*> config <*> prefix
   
   generateXCodeProject :: [Kit] -> IO ()
@@ -57,24 +56,35 @@ module Kit.Project (
       let sources = kitsContents >>= contentSources
       mkdir_p projectDir
       writeFile projectFile $ buildXCodeProject headers sources
-      combinedHeader <- generatePrefixHeader kitFileNames
-      writeFile prefixFile $ prefixDefault ++ combinedHeader ++ "\n"
+      createHeader kitsContents
       createConfig kitsContents
     where kitFileNames = deps |> kitFileName
+          createHeader cs = do
+            let headers = catMaybes $ cs |> contentPrefix
+            let combinedHeader = stringJoin "\n" headers
+            writeFile prefixFile $ prefixDefault ++ combinedHeader ++ "\n"            
           createConfig cs = do
             let configs = catMaybes $ cs |> contentConfig
             let combinedConfig = multiConfig "KitConfig" configs
             let kitHeaders = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ (stringJoin " "  $ kitFileNames >>= (\x -> [kitDir </> x </> "src", x </> "src"])) ++ "\n" ++ "GCC_PRECOMPILE_PREFIX_HEADER = YES\nGCC_PREFIX_HEADER = $(SRCROOT)/KitDeps_Prefix.pch\n"
             writeFile xcodeConfigFile $ kitHeaders ++ "\n" ++ configToString combinedConfig
         
+  
+  kitPrefixFile = "Prefix.pch"
 
+  readHeader :: Kit -> IO (Maybe String)
+  readHeader kit = do
+    let fp = kitFileName kit </> kitPrefixFile
+    exists <- doesFileExist fp
+    contents <- T.sequence (fmap readFile $ justTrue exists fp)
+    return contents
+    
   readConfig' :: Kit -> IO (Maybe XCConfig)
   readConfig' kit = do
+    let fp = kitConfigFile kit
     exists <- doesFileExist fp
     contents <- T.sequence (fmap readFile $ justTrue exists fp)
     return $ fmap (fileContentsToXCC $ kitName kit) contents
-        where
-          fp = kitConfigFile kit
       
   depsForSpec :: KitRepository -> KitSpec -> KitIO [Kit]
   depsForSpec kr spec = do
