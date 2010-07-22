@@ -43,7 +43,7 @@ module Kit.Project (
         find tpe = glob ((kitDir </> "src/**/*") ++ tpe)
         headers = find ".h"
         sources = fmap join $ T.sequence [find ".m", find ".mm", find ".c"]
-        config = readConfig' kit
+        config = readConfig kit
         prefix = readHeader kit
     in  KitContents <$> headers <*> sources <*> config <*> prefix
   
@@ -52,13 +52,15 @@ module Kit.Project (
     mkdir_p kitDir
     inDirectory kitDir $ do
       kitsContents <- T.for deps readKitContents
-      let headers = kitsContents >>= contentHeaders
-      let sources = kitsContents >>= contentSources
-      mkdir_p projectDir
-      writeFile projectFile $ buildXCodeProject headers sources
+      createProjectFile kitsContents
       createHeader kitsContents
       createConfig kitsContents
     where kitFileNames = deps |> kitFileName
+          createProjectFile cs = do
+            let headers = cs >>= contentHeaders
+            let sources = cs >>= contentSources
+            mkdir_p projectDir
+            writeFile projectFile $ buildXCodeProject headers sources
           createHeader cs = do
             let headers = catMaybes $ cs |> contentPrefix
             let combinedHeader = stringJoin "\n" headers
@@ -68,7 +70,6 @@ module Kit.Project (
             let combinedConfig = multiConfig "KitConfig" configs
             let kitHeaders = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ (stringJoin " "  $ kitFileNames >>= (\x -> [kitDir </> x </> "src", x </> "src"])) ++ "\n" ++ "GCC_PRECOMPILE_PREFIX_HEADER = YES\nGCC_PREFIX_HEADER = $(SRCROOT)/KitDeps_Prefix.pch\n"
             writeFile xcodeConfigFile $ kitHeaders ++ "\n" ++ configToString combinedConfig
-        
   
   kitPrefixFile = "Prefix.pch"
 
@@ -79,8 +80,8 @@ module Kit.Project (
     contents <- T.sequence (fmap readFile $ justTrue exists fp)
     return contents
     
-  readConfig' :: Kit -> IO (Maybe XCConfig)
-  readConfig' kit = do
+  readConfig :: Kit -> IO (Maybe XCConfig)
+  readConfig kit = do
     let fp = kitConfigFile kit
     exists <- doesFileExist fp
     contents <- T.sequence (fmap readFile $ justTrue exists fp)

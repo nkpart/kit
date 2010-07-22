@@ -48,7 +48,7 @@ module Kit.Repository (
   
   webRepo :: String -> KitRepository
   webRepo baseUrl = KitRepository save read where
-    save = download 
+    save = download
     read = getBody
 
   fileRepo :: String -> KitRepository
@@ -70,7 +70,7 @@ module Kit.Repository (
   getBody path = let
       request = defaultGETRequest_ . fromJust . parseURI
       checkResponse r = justTrue (rspCode r == (2,0,0)) r
-      leftMaybe = either (const Nothing) Just 
+      leftMaybe = either (const Nothing) Just
     in do
       rr <- Network.HTTP.simpleHTTP $ request path
       return $ fmap rspBody $ leftMaybe rr

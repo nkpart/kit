@@ -18,7 +18,7 @@ module Kit.Util(
   import Data.Monoid
   import Control.Monad.Trans
       
-  (|>) ma f = fmap f ma
+  ma |> f = fmap f ma
         
   maybeRead :: Read a => String -> Maybe a
   maybeRead = fmap fst . listToMaybe . reads
@@ -34,36 +34,36 @@ module Kit.Util(
   maybeToLeft :: b -> Maybe a -> Either a b
   maybeToLeft _ (Just a) = Left a
   maybeToLeft b Nothing = Right b
-  
+
   instance Foldable (Either c) where
     foldr f z (Left c) = z
     foldr f z (Right a) = f a z
-    
+
   instance T.Traversable (Either c) where
     sequenceA = either (pure . Left) (Right <$>)
-    
+
   type KitError = String
-  
+
   data KitIO a = KitIO { unKitIO :: (IO (Either [KitError] a)) }
-  
+
   kitError :: KitError -> KitIO a
   kitError e = KitIO . return $ Left [e]
-  
+
   maybeToKitIO msg = maybe (kitError msg) return
-  
+
   instance Monad KitIO where
     (KitIO ioE) >>= f = KitIO $ ioE >>= g
       where g l@(Left v) = return (Left v)
             g (Right v) = unKitIO $ f v
-            
+
     return = KitIO . return . Right 
-    
+
   instance Functor KitIO where
     fmap f kio = kio >>= (return . f)
-    
+  
   instance MonadIO KitIO where
     liftIO v = KitIO (fmap Right v)
-    
+  
   instance Applicative KitIO where
     pure = return
     mf <*> ma = do
@@ -79,7 +79,7 @@ module Kit.Util(
     exists <- doesDirectoryExist directory
     when exists $ removeDirectoryRecursive directory
     mkdir_p directory
-    
+  
   inDirectory :: FilePath -> IO a -> IO a
   inDirectory dir actions = do
     cwd <- getCurrentDirectory
@@ -90,14 +90,7 @@ module Kit.Util(
   
   glob :: String -> IO [String]
   glob pattern = fmap lines (readProcess "ruby" ["-e", "puts Dir.glob(\"" ++ pattern ++ "\")"] [])
-    
+  
   stringJoin :: Monoid a => a -> [a] -> a
   stringJoin x = mconcat . intersperse x
   
-  -- For each directory that exists, execute the function with the given filepath
-  readMany :: MonadIO m => [FilePath] -> FilePath -> (String -> m (Maybe a)) -> m [a]
-  readMany dirs fileInDir f = do
-    directories <- liftIO $ filterM doesDirectoryExist dirs
-    let kitSpecFiles = map (</> fileInDir) directories
-    kitContents <- mapM f kitSpecFiles
-    return $ catMaybes kitContents
