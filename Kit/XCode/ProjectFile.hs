@@ -3,20 +3,19 @@
   Constant sections of the project file
 -}
 module Kit.XCode.ProjectFile (projectPbxProj) where
-  
-  nl a b = a ++ "\n" ++ b 
-  
-  projectPbxProj bfs fileRefsSection classes headers sources = 
+  nl a b = a ++ "\n" ++ b
+
+  projectPbxProj bfs fileRefsSection classes headers sources =
       top `nl` bfs `nl` fileRefsSection `nl` next1 `nl` classes `nl` next2 `nl` headers `nl` next3 `nl` sources `nl` bottom
-  
-  top = "// !$*UTF8*$!" `nl` 
+
+  top = "// !$*UTF8*$!" `nl`
     "{" `nl`
     " archiveVersion = 1;" `nl`
     " classes = {" `nl`
     " };" `nl`
     " objectVersion = 45;" `nl`
     " objects = {"
-  
+
   next1 = "/* Begin PBXFrameworksBuildPhase section */" `nl`
     		"D2AAC07C0554694100DB518D /* Frameworks */ = {" `nl`
     			"isa = PBXFrameworksBuildPhase;" `nl`
@@ -67,7 +66,7 @@ module Kit.XCode.ProjectFile (projectPbxProj) where
         			"sourceTree = \"<group>\";" `nl`
         		"};" `nl`
         "/* End PBXGroup section */"
-        
+
   next3 = "/* Begin PBXNativeTarget section */" `nl`
         		"D2AAC07D0554694100DB518D /* KitDeps */ = {" `nl`
         			"isa = PBXNativeTarget;" `nl`
@@ -103,7 +102,7 @@ module Kit.XCode.ProjectFile (projectPbxProj) where
         			");" `nl`
         		"};" `nl`
         "/* End PBXProject section */"
-  
+
   bottom = "/* Begin XCBuildConfiguration section */" `nl`
         		"1DEB921F08733DC00010E9CD /* Debug */ = {" `nl`
         			"isa = XCBuildConfiguration;" `nl`
@@ -191,8 +190,8 @@ module Kit.XCode.ProjectFile (projectPbxProj) where
         	"};" `nl`
         	"rootObject = 0867D690FE84028FC02AAC07 /* Project object */;" `nl`
         "}"
-  
-  
+
+
   main = do
     putStrLn $ projectPbxProj "" "" "" "" ""
-    
+
