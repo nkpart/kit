@@ -29,7 +29,6 @@ data XCBuildConfiguration = XCBuildConfiguration
 instance ProjectPListItem PBXGroup where
   writeEntry group = do
     childUUIDs <- mapM writeEntry (groupChildren group)
-    --childUUIDs <- mapM write childrenItems
     write $ obj [
           "isa" ~=~ val "PBXGroup"
         , "name" ~=~ (val . groupName) group
@@ -37,11 +36,7 @@ instance ProjectPListItem PBXGroup where
         , "children" ~=~ (arr $ map val (childUUIDs ++ groupChildrenExtra group))
       ]
 
-
--- Need a stack with a reader monad? IO (UUIDGen -> a)
-
 type PLObjects = [(UUID, PListType)]
-
 -- Consume UUIDs from state, write out other objects to be added to the plist
 newtype PL a = PL { unPL :: WriterT PLObjects (State [UUID]) a }
               deriving (Monad, MonadState [UUID], MonadWriter PLObjects)
