@@ -87,20 +87,13 @@ module Kit.Project (
     contents <- T.sequence (fmap readFile $ justTrue exists fp)
     return $ fmap (fileContentsToXCC $ kitName kit) contents
 
-  depsForSpec :: KitRepository -> KitSpec -> KitIO [Kit]
-  depsForSpec kr spec = do
-      deps <- mapM (getDeps kr) (specDependencies spec)
-      return . nub . sort $ specDependencies spec ++ join deps -- TODO Check for conflicting versions
-      where getDeps kr kit = getKitSpec kr kit >>= depsForSpec kr
-
-
   refineDeps :: Tree Kit -> [Kit]
   refineDeps = nub . concat . reverse . drop 1 . levels
 
   depsForSpec' :: KitRepository -> KitSpec -> KitIO [Kit]
   depsForSpec' kr spec = do
       tree <- unfoldTreeM (unfoldDeps kr) spec
-      -- todo: check for dups, check for conflicts
+      -- todo: check for conflicts
       return $ refineDeps tree
 
   unfoldDeps :: KitRepository -> KitSpec -> KitIO (Kit, [KitSpec])

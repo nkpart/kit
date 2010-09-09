@@ -1,8 +1,8 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 
 module Kit.Util(
-  module Kit.Util, 
-  module Control.Applicative, 
+  module Kit.Util,
+  module Control.Applicative,
   module System.FilePath.Posix,
   module System.Directory
   ) where
@@ -17,20 +17,20 @@ module Kit.Util(
   import Control.Monad
   import Data.Monoid
   import Control.Monad.Trans
-      
+
   ma |> f = fmap f ma
-        
+
   maybeRead :: Read a => String -> Maybe a
   maybeRead = fmap fst . listToMaybe . reads
-  
+
   justTrue :: Bool -> a -> Maybe a
   justTrue True a = Just a
   justTrue False _ = Nothing
-  
+
   maybeToRight :: b -> Maybe a -> Either b a
   maybeToRight _ (Just a) = Right a
   maybeToRight b Nothing = Left b
-  
+
   maybeToLeft :: b -> Maybe a -> Either a b
   maybeToLeft _ (Just a) = Left a
   maybeToLeft b Nothing = Right b
@@ -56,30 +56,30 @@ module Kit.Util(
       where g l@(Left v) = return (Left v)
             g (Right v) = unKitIO $ f v
 
-    return = KitIO . return . Right 
+    return = KitIO . return . Right
 
   instance Functor KitIO where
     fmap f kio = kio >>= (return . f)
-  
+
   instance MonadIO KitIO where
     liftIO v = KitIO (fmap Right v)
-  
+
   instance Applicative KitIO where
     pure = return
     mf <*> ma = do
       f <- mf
       a <- ma
       return $ f a
-  
+
   mkdir_p :: FilePath -> IO ()
   mkdir_p = createDirectoryIfMissing True
-  
+
   cleanOrCreate :: FilePath -> IO ()
   cleanOrCreate directory = do
     exists <- doesDirectoryExist directory
     when exists $ removeDirectoryRecursive directory
     mkdir_p directory
-  
+
   inDirectory :: FilePath -> IO a -> IO a
   inDirectory dir actions = do
     cwd <- getCurrentDirectory
@@ -87,10 +87,11 @@ module Kit.Util(
     v <- actions
     setCurrentDirectory cwd
     return v
-  
+
   glob :: String -> IO [String]
   glob pattern = fmap lines (readProcess "ruby" ["-e", "puts Dir.glob(\"" ++ pattern ++ "\")"] [])
-  
+
   stringJoin :: Monoid a => a -> [a] -> a
   stringJoin x = mconcat . intersperse x
-  
+
+
