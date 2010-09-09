@@ -1,16 +1,15 @@
 module Kit.Package (package) where
 
-  import Kit.Kit
-  import Kit.Spec
+  import Kit.Model
   import Kit.Util
   import Kit.Project
   import System.Cmd
   import Control.Monad.Trans
   import Control.Monad
   import Data.List
-  import Data.Maybe  
+  import Data.Maybe
   import Debug.Trace
-  
+
   {-
     Package format
      src/ | configurable source dir
@@ -18,7 +17,7 @@ module Kit.Package (package) where
      KitSpec
      *.codeproj
   -}
-  
+
   fileBelongsInPackage :: KitConfiguration -> FilePath -> Bool
   fileBelongsInPackage config fp = let
     a = elem fp [sourceDir config, "test", "KitSpec"]
@@ -26,7 +25,7 @@ module Kit.Package (package) where
     c = "xcconfig" `isSuffixOf` fp
     d = ".pch" `isSuffixOf` fp
       in a || b || c || d
-  
+
   package :: KitSpec -> IO ()
   package spec = do
       tempDir <- getTemporaryDirectory
@@ -43,5 +42,5 @@ module Kit.Package (package) where
       puts c = liftIO $ putStrLn c
       p c = liftIO $ print c
       cp_r_to kd c = sh $ "cp -r " ++ c ++ " " ++ kd ++ "/"
-  
-  
+
+

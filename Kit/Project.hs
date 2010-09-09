@@ -14,14 +14,12 @@ module Kit.Project (
   import Data.Tree
   import Data.Monoid
   import System.Cmd
-  import Kit.Kit
+  import Kit.Model
   import Kit.Repository
   import Kit.Util
-  import Kit.Spec
   import Kit.XCode.Builder
   import Kit.XCode.XCConfig
   import Text.JSON
-  import Kit.JSON
   import qualified Data.Traversable as T
 
   -- Paths

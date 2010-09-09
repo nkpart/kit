@@ -6,11 +6,10 @@ module Kit.Main where
   import Data.List
   import Data.Maybe
   import Data.Monoid
-  import Kit.Kit
+  import Kit.Model
   import Kit.Package
   import Kit.Project
   import Kit.Repository
-  import Kit.Spec
   import Kit.Util
   import Kit.XCode.Builder
   import qualified Data.Traversable as T

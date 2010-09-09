@@ -14,8 +14,7 @@ module Kit.Repository (
     KitRepository
   ) where
 
-  import Kit.Spec
-  import Kit.Kit
+  import Kit.Model
   import Kit.Util
   import Data.List
   import Network.HTTP
@@ -26,7 +25,6 @@ module Kit.Repository (
   import Control.Monad
   import Control.Monad.Trans
   import Text.JSON
-  import Kit.JSON
   import qualified Data.ByteString as BS
 
   data KitRepository = KitRepository {

@@ -6,10 +6,10 @@ license: BSD3
 license-file: LICENSE
 copyright:
 maintainer: nkpart@gmail.com
-build-depends: HTTP >=4000.0.9, MissingH -any, QuickCheck -any,
-               base >=3 && <5, bytestring -any, cmdargs >=0.3, containers -any,
-               directory -any, filepath -any, json -any, mtl -any, network -any,
-               process -any
+build-depends: process -any, network -any, mtl -any, json -any,
+               filepath -any, directory -any, containers -any, cmdargs >=0.3,
+               bytestring -any, base >=3 && <5, QuickCheck -any, MissingH -any,
+               HTTP >=4000.0.9
 stability:
 homepage:
 package-url:
@@ -41,10 +41,10 @@ includes:
 install-includes:
 include-dirs:
 hs-source-dirs: .
-other-modules: Kit.JSON Kit.Kit Kit.Main Kit.Package Kit.Project
-               Kit.Repository Kit.Spec Kit.Util Kit.XCode.Builder Kit.XCode.Common
-               Kit.XCode.OldPList Kit.XCode.PBXProject Kit.XCode.ProjectFile
-               Kit.XCode.XCConfig
+other-modules: Kit.Model Kit.Main Kit.Package
+               Kit.Project Kit.Repository Kit.Util Kit.XCode.Builder
+               Kit.XCode.Common Kit.XCode.OldPList Kit.XCode.PBXProject
+               Kit.XCode.ProjectFile Kit.XCode.XCConfig
 ghc-prof-options:
 ghc-shared-options:
 ghc-options:
