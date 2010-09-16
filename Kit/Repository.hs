@@ -16,12 +16,13 @@ module Kit.Repository (
 
   import Kit.Model
   import Kit.Util
-  import Data.List
+
   import Network.HTTP
   import Network.URI
   import Network.BufferType
+  import qualified Data.List as L
   import Data.Maybe
-  import Data.Traversable
+  import qualified Data.Traversable as T
   import Control.Monad
   import Control.Monad.Trans
   import Text.JSON
@@ -53,12 +54,12 @@ module Kit.Repository (
     save src destPath = Just <$> copyFile (baseDir </> src) destPath
     read path = let file = (baseDir </> path) in do
       exists <- doesFileExist file
-      sequenceA $ justTrue exists $ readFile file
+      T.sequenceA $ justTrue exists $ readFile file
 
   -- private!
   baseKitPath :: Kit -> String
   baseKitPath k = joinS ["kits", kitName k, kitVersion k] "/"
-    where joinS xs x = foldl1 (++) $ intersperse x xs
+    where joinS xs x = foldl1 (++) $ L.intersperse x xs
 
   kitPackagePath k = baseKitPath k ++ "/" ++ kitFileName k ++ ".tar.gz"
   kitSpecPath k = baseKitPath k ++ "/" ++ "KitSpec"
@@ -75,7 +76,7 @@ module Kit.Repository (
   download :: String -> FilePath -> IO (Maybe ())
   download url destination = do
       body <- getBody url
-      sequenceA $ fmap (BS.writeFile destination) body
+      T.sequenceA $ fmap (BS.writeFile destination) body
 
 
 

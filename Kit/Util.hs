@@ -18,7 +18,7 @@ module Kit.Util(
   import Data.Monoid
   import Control.Monad.Trans
 
-  ma |> f = fmap f ma
+--  ma |> f = fmap f ma
 
   maybeRead :: Read a => String -> Maybe a
   maybeRead = fmap fst . listToMaybe . reads

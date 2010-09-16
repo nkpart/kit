@@ -53,18 +53,18 @@ module Kit.Project (
       createProjectFile kitsContents
       createHeader kitsContents
       createConfig kitsContents
-    where kitFileNames = deps |> kitFileName
+    where kitFileNames = map kitFileName deps
           createProjectFile cs = do
             let headers = cs >>= contentHeaders
             let sources = cs >>= contentSources
             mkdir_p projectDir
             writeFile projectFile $ buildXCodeProject headers sources
           createHeader cs = do
-            let headers = catMaybes $ cs |> contentPrefix
+            let headers = mapMaybe contentPrefix cs
             let combinedHeader = stringJoin "\n" headers
             writeFile prefixFile $ prefixDefault ++ combinedHeader ++ "\n"
           createConfig cs = do
-            let configs = catMaybes $ cs |> contentConfig
+            let configs = mapMaybe contentConfig cs
             let combinedConfig = multiConfig "KitConfig" configs
             let kitHeaders = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ (stringJoin " "  $ kitFileNames >>= (\x -> [kitDir </> x </> "src", x </> "src"])) ++ "\n" ++ "GCC_PRECOMPILE_PREFIX_HEADER = YES\nGCC_PREFIX_HEADER = $(SRCROOT)/KitDeps_Prefix.pch\n"
             writeFile xcodeConfigFile $ kitHeaders ++ "\n" ++ configToString combinedConfig
