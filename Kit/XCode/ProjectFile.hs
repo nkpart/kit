@@ -161,7 +161,7 @@ module Kit.XCode.ProjectFile (projectPbxProj) where
         				"GCC_WARN_UNUSED_VARIABLE = YES;" `nl`
         				"OTHER_LDFLAGS = \"-ObjC\";" `nl`
         				"PREBINDING = NO;" `nl`
-        				"SDKROOT = iphoneos4.0;" `nl`
+        				"SDKROOT = iphoneos4.1;" `nl`
         			"};" `nl`
         			"name = Release;" `nl`
         		"};" `nl`
