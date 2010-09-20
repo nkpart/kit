@@ -25,6 +25,7 @@ module Kit.Repository (
   import qualified Data.Traversable as T
   import Control.Monad
   import Control.Monad.Trans
+  import Control.Monad.Error
   import Text.JSON
   import qualified Data.ByteString as BS
 
@@ -39,7 +40,7 @@ module Kit.Repository (
   getKitSpec :: KitRepository -> Kit -> KitIO KitSpec
   getKitSpec kr k = do
     mbKitStuff <- liftIO $ repoRead kr (kitSpecPath k)
-    maybe (kitError $ "Missing " ++ kitFileName k) f mbKitStuff
+    maybe (throwError $ "Missing " ++ kitFileName k) f mbKitStuff
     where f contents = maybeToKitIO ("Invalid KitSpec file for " ++ kitFileName k) $ case (decode contents) of
                           Ok a -> Just a
                           Error _ -> Nothing

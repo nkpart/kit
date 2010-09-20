@@ -7,6 +7,7 @@ module Kit.Project (
 
   import Control.Monad.Trans
   import Control.Monad
+  import Control.Monad.Error
   import Control.Applicative
   import qualified Data.Foldable as F
   import Data.Maybe
@@ -117,7 +118,7 @@ module Kit.Project (
     where sh = system
 
   readSpec :: FilePath -> KitIO KitSpec
-  readSpec kitSpecPath = readSpecContents kitSpecPath >>= KitIO . return . parses
+  readSpec kitSpecPath = readSpecContents kitSpecPath >>= ErrorT . return . parses
 
   myKitSpec :: KitIO KitSpec
   myKitSpec = readSpec "KitSpec"
@@ -131,8 +132,8 @@ module Kit.Project (
   readSpecContents :: FilePath -> KitIO String
   readSpecContents kitSpecPath = checkExists kitSpecPath >>= liftIO . readFile
 
-  parses :: String -> Either [KitError] KitSpec
+  parses :: String -> Either KitError KitSpec
   parses contents = case (decode contents) of
                       Ok a -> Right a
-                      Error a -> Left [a]
+                      Error a -> Left a
 

@@ -3,6 +3,7 @@ module Kit.Main where
   import qualified Data.ByteString as BS
 
   import Control.Monad.Trans
+  import Control.Monad.Error
   import Data.List
   import Data.Maybe
   import Data.Monoid
@@ -30,9 +31,12 @@ module Kit.Main where
   defaultLocalRepository = fmap fileRepo defaultLocalRepoPath
 
   handleFails (Left e) = do
-    print e
+    putStrLn $ "kit error: " ++ e
     return ()
   handleFails (Right _) = return ()
+
+
+  unKitIO = runErrorT
 
   doUpdate :: IO ()
   doUpdate = unKitIO g >>= handleFails

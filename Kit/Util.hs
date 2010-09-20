@@ -17,6 +17,7 @@ module Kit.Util(
   import Control.Monad
   import Data.Monoid
   import Control.Monad.Trans
+  import Control.Monad.Error
 
 --  ma |> f = fmap f ma
 
@@ -44,32 +45,9 @@ module Kit.Util(
 
   type KitError = String
 
-  data KitIO a = KitIO { unKitIO :: (IO (Either [KitError] a)) }
+  type KitIO a = ErrorT KitError IO a
 
-  kitError :: KitError -> KitIO a
-  kitError e = KitIO . return $ Left [e]
-
-  maybeToKitIO msg = maybe (kitError msg) return
-
-  instance Monad KitIO where
-    (KitIO ioE) >>= f = KitIO $ ioE >>= g
-      where g l@(Left v) = return (Left v)
-            g (Right v) = unKitIO $ f v
-
-    return = KitIO . return . Right
-
-  instance Functor KitIO where
-    fmap f kio = kio >>= (return . f)
-
-  instance MonadIO KitIO where
-    liftIO v = KitIO (fmap Right v)
-
-  instance Applicative KitIO where
-    pure = return
-    mf <*> ma = do
-      f <- mf
-      a <- ma
-      return $ f a
+  maybeToKitIO msg = maybe (throwError msg) return
 
   mkdir_p :: FilePath -> IO ()
   mkdir_p = createDirectoryIfMissing True
