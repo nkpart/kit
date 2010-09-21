@@ -14,31 +14,26 @@ module Kit.Util(
   import qualified Data.Traversable as T
   import Data.Foldable
   import Control.Applicative
-  import Control.Monad
+
   import Data.Monoid
-  import Control.Monad.Trans
   import Control.Monad.Error
 
---  ma |> f = fmap f ma
+  import System.FilePath.Glob
 
   maybeRead :: Read a => String -> Maybe a
   maybeRead = fmap fst . listToMaybe . reads
 
   justTrue :: Bool -> a -> Maybe a
-  justTrue True a = Just a
-  justTrue False _ = Nothing
+  justTrue p a = if p then Just a else Nothing
 
   maybeToRight :: b -> Maybe a -> Either b a
-  maybeToRight _ (Just a) = Right a
-  maybeToRight b Nothing = Left b
+  maybeToRight v = maybe (Left v) Right
 
   maybeToLeft :: b -> Maybe a -> Either a b
-  maybeToLeft _ (Just a) = Left a
-  maybeToLeft b Nothing = Right b
+  maybeToLeft v = maybe (Right v) Left
 
   instance Foldable (Either c) where
-    foldr f z (Left c) = z
-    foldr f z (Right a) = f a z
+    foldr f z = either (const z) (\v -> f v z)
 
   instance T.Traversable (Either c) where
     sequenceA = either (pure . Left) (Right <$>)
@@ -67,7 +62,7 @@ module Kit.Util(
     return v
 
   glob :: String -> IO [String]
-  glob pattern = fmap lines (readProcess "ruby" ["-e", "puts Dir.glob(\"" ++ pattern ++ "\")"] [])
+  glob pattern = globDir1 (compile pattern) ""
 
   stringJoin :: Monoid a => a -> [a] -> a
   stringJoin x = mconcat . intersperse x

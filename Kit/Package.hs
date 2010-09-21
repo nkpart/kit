@@ -18,9 +18,9 @@ module Kit.Package (package) where
      *.codeproj
   -}
 
-  fileBelongsInPackage :: KitConfiguration -> FilePath -> Bool
+  fileBelongsInPackage :: KitSpec -> FilePath -> Bool
   fileBelongsInPackage config fp = let
-    a = elem fp [sourceDir config, "test", "KitSpec"]
+    a = elem fp [specSourceDir config, "test", "KitSpec"]
     b = "xcodeproj" `isSuffixOf` fp
     c = "xcconfig" `isSuffixOf` fp
     d = ".pch" `isSuffixOf` fp
@@ -33,7 +33,7 @@ module Kit.Package (package) where
       let kd = tempDir </> kitPath
       cleanOrCreate kd
       contents <- getDirectoryContents "."
-      mapM_ (cp_r_to kd) (filter (fileBelongsInPackage . specConfiguration $ spec) contents)
+      mapM_ (cp_r_to kd) (filter (fileBelongsInPackage spec) contents)
       inDirectory tempDir $ sh $ "tar czf " ++ (current </> (kitPath ++ ".tar.gz")) ++ " " ++ kitPath
       return ()
     where

@@ -30,16 +30,13 @@ module Kit.Main where
       return $ home </> ".kit" </> "repository"
   defaultLocalRepository = fmap fileRepo defaultLocalRepoPath
 
-  handleFails (Left e) = do
-    putStrLn $ "kit error: " ++ e
-    return ()
-  handleFails (Right _) = return ()
+  handleFails :: Either KitError a -> IO ()
+  handleFails = either (putStrLn . ("kit error: " ++)) (\x -> return ())
 
-
-  unKitIO = runErrorT
+  run f = runErrorT f >>= handleFails
 
   doUpdate :: IO ()
-  doUpdate = unKitIO g >>= handleFails
+  doUpdate = run g
       where g = do
               repo <- liftIO defaultLocalRepository
               deps <- getMyDeps repo
@@ -53,13 +50,13 @@ module Kit.Main where
 
   doPackageKit :: IO ()
   doPackageKit = do
-      mySpec <- unKitIO myKitSpec
+      mySpec <- runErrorT myKitSpec
       T.for mySpec package
       return ()
 
   doDeployLocal :: IO ()
   doDeployLocal = do
-    mySpec <- unKitIO myKitSpec
+    mySpec <- runErrorT myKitSpec
     T.for mySpec package
     T.for mySpec x
     handleFails mySpec
@@ -77,7 +74,7 @@ module Kit.Main where
               copyFile "KitSpec" $ thisKitDir </> "KitSpec"
 
   doVerify :: String -> IO ()
-  doVerify sdk = (unKitIO f >>= handleFails)
+  doVerify sdk = run f
     where
       f = do
         mySpec <- myKitSpec
@@ -90,7 +87,7 @@ module Kit.Main where
           let kitVerifyDir = "kit-verify"
           cleanOrCreate kitVerifyDir
           inDirectory kitVerifyDir $ do
-            writeFile "KitSpec" $ encode (KitSpec (Kit "verify-kit" "1.0") $ defaultConfiguration{kitConfigDependencies=[specKit mySpec]})
+            writeFile "KitSpec" $ encode . defaultSpecForKit $ Kit "verify-kit" "1.0"
             doUpdate
             inDirectory "Kits" $ do
               system $ "xcodebuild -sdk " ++ sdk
@@ -101,7 +98,7 @@ module Kit.Main where
   doCreateSpec :: String -> String -> IO ()
   doCreateSpec name version = do
     let kit =(Kit name version)
-    let spec = KitSpec kit defaultConfiguration
+    let spec = defaultSpecForKit kit
     writeFile "KitSpec" $ encode spec
     putStrLn $ "Created KitSpec for " ++ kitFileName kit
     return ()

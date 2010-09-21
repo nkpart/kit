@@ -6,19 +6,12 @@ module Kit.Model where
 
   data KitSpec = KitSpec {
     specKit :: Kit,
-    specConfiguration :: KitConfiguration
+    specDependencies :: [Kit],
+    specSourceDir :: FilePath
   } deriving (Show, Read)
 
-  data KitConfiguration = KitConfiguration {
-    kitConfigDependencies :: [Kit],
-    sourceDir :: FilePath
-  } deriving (Show, Read)
-
-  specDependencies :: KitSpec -> [Kit]
-  specDependencies = kitConfigDependencies . specConfiguration
-
-  defaultConfiguration :: KitConfiguration
-  defaultConfiguration = KitConfiguration [] "src"
+  --defaultConfiguration :: KitConfiguration
+  --defaultConfiguration = KitConfiguration [] "src"
 
   type Version = String
 
@@ -32,6 +25,9 @@ module Kit.Model where
 
   kitConfigFile :: Kit -> String
   kitConfigFile kit = kitFileName kit </> (kitName kit ++ ".xcconfig")
+
+  defaultSpecForKit :: Kit -> KitSpec
+  defaultSpecForKit kit = KitSpec kit [] "src"
 
   instance JSON Kit where
       showJSON kit = makeObj
@@ -53,8 +49,8 @@ module Kit.Model where
 
       readJSON (JSObject obj) =
           let myKit = Kit <$> f "name" <*> f "version"
-              myConfig = (KitConfiguration <$> f "dependencies" <*> (f "sourceDir" <|> pure "src"))
-           in KitSpec <$> myKit <*> myConfig
+              -- myConfig = (KitConfiguration <$> )
+           in KitSpec <$> myKit <*> f "dependencies" <*> (f "sourceDir" <|> pure "src")
         where f x = mLookup x jsonObjAssoc >>= readJSON
               jsonObjAssoc = fromJSObject obj
 
