@@ -6,15 +6,15 @@ module Kit.XCode.Builder (buildXCodeProject) where
   import Kit.XCode.Common
   import Kit.XCode.ProjectFile
   import Kit.Util
-  
+
   createBuildFile :: Integer -> FilePath -> PBXBuildFile
   createBuildFile i path = PBXBuildFile uuid1 $ PBXFileReference uuid2 path
     where uuid1 = uuid i
           uuid2 = uuid $ i + 10000000
-  
+
   buildXCodeProject :: [FilePath] -> [FilePath] -> String
-  buildXCodeProject headers sources = 
-      projectPbxProj bfs frs classes hs srcs 
+  buildXCodeProject headers sources =
+      projectPbxProj bfs frs classes hs srcs
     where
       sourceStart = toInteger (length headers + 1)
       headerBuildFiles = zipWith createBuildFile [1..] headers
@@ -25,7 +25,7 @@ module Kit.XCode.Builder (buildXCodeProject) where
       classes = classesSection $ map buildFileReference (sourceBuildFiles ++ headerBuildFiles)
       hs = headersSection headerBuildFiles
       srcs = sourcesSection sourceBuildFiles
-  
+
   xxx :: FilePath -> UUID -> UUID -> PBXBuildFile
   xxx fp buildId fileId = PBXBuildFile buildId (PBXFileReference fileId fp)
 
@@ -65,9 +65,9 @@ module Kit.XCode.Builder (buildXCodeProject) where
           "path" ~> show path,
           "sourceTree" ~> show "<group>"
         ]
-      
+
   layoutSection :: String -> [String] -> String
-  layoutSection name body = let 
+  layoutSection name body = let
       front  = "/* Begin " ++ name ++ " section */"
       middle = map ("    " ++) body
       back   = "/* End " ++ name ++ " section */"
@@ -78,8 +78,8 @@ module Kit.XCode.Builder (buildXCodeProject) where
       "4728C530117C02B10027D7D1 /* Kit.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 4728C52F117C02B10027D7D1 /* Kit.xcconfig */; };",
       "AA747D9F0F9514B9006C5449 /* KitDeps_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = AA747D9E0F9514B9006C5449 /* KitDeps_Prefix.pch */; };",
       "AACBBE4A0F95108600F1A2B1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AACBBE490F95108600F1A2B1 /* Foundation.framework */; };"
-    ])  
-    
+    ])
+
   fileReferenceSection :: [PBXFileReference] -> String
   fileReferenceSection refs = layoutSection "PBXFileReference" (map fileReferenceItem refs ++ [
   		"4728C52F117C02B10027D7D1 /* Kit.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Kit.xcconfig; sourceTree = \"<group>\"; };",
@@ -107,7 +107,7 @@ module Kit.XCode.Builder (buildXCodeProject) where
   			);
   			runOnlyForDeploymentPostprocessing = 0;
   		};
-  /* End PBXHeadersBuildPhase section */-}                
+  /* End PBXHeadersBuildPhase section */-}
   headersSection :: [PBXBuildFile] -> String
   headersSection bfs = layoutSection "PBXHeadersBuildPhase" [lineItem "D2AAC07A0554694100DB518D" "Headers" [
     "isa" ~> "PBXHeadersBuildPhase",
@@ -116,7 +116,7 @@ module Kit.XCode.Builder (buildXCodeProject) where
     "runOnlyForDeploymentPostprocessing" ~> "0"
 	  ]]
 	  where prefixPchUUID = "AA747D9F0F9514B9006C5449"
-	  
+	
 	{-
     /* Begin PBXSourcesBuildPhase section */
     		D2AAC07B0554694100DB518D /* Sources */ = {
@@ -136,7 +136,7 @@ module Kit.XCode.Builder (buildXCodeProject) where
     "files" ~> ("(" ++ (stringJoin "," $ map buildFileId bfs) ++ ",)"),
     "runOnlyForDeploymentPostprocessing" ~> "0"
     ]]
-  
+
   testBuilder = let
     header = PBXFileReference "1" "fk/fk.h"
     source = PBXFileReference "2" "fk/fk.m"

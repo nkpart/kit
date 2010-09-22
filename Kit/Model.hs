@@ -10,9 +10,6 @@ module Kit.Model where
     specSourceDir :: FilePath
   } deriving (Show, Read)
 
-  --defaultConfiguration :: KitConfiguration
-  --defaultConfiguration = KitConfiguration [] "src"
-
   type Version = String
 
   data Kit = Kit {

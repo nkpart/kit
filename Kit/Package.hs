@@ -30,11 +30,13 @@ module Kit.Package (package) where
   package spec = do
       tempDir <- getTemporaryDirectory
       current <- getCurrentDirectory
+      distDir <- fmap (</> "dist") getCurrentDirectory
       let kd = tempDir </> kitPath
       cleanOrCreate kd
       contents <- getDirectoryContents "."
       mapM_ (cp_r_to kd) (filter (fileBelongsInPackage spec) contents)
-      inDirectory tempDir $ sh $ "tar czf " ++ (current </> (kitPath ++ ".tar.gz")) ++ " " ++ kitPath
+      mkdir_p distDir
+      inDirectory tempDir $ sh $ "tar czf " ++ (distDir </> (kitPath ++ ".tar.gz")) ++ " " ++ kitPath
       return ()
     where
       kitPath = kitFileName . specKit $ spec
