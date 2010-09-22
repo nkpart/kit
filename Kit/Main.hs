@@ -87,7 +87,8 @@ module Kit.Main where
           let kitVerifyDir = "kit-verify"
           cleanOrCreate kitVerifyDir
           inDirectory kitVerifyDir $ do
-            writeFile "KitSpec" $ encode . defaultSpecForKit $ Kit "verify-kit" "1.0"
+            let verifySpec = (defaultSpecForKit $ Kit "verify-kit" "1.0"){ specDependencies = [specKit mySpec] }
+            writeFile "KitSpec" $ encode verifySpec
             doUpdate
             inDirectory "Kits" $ do
               system $ "xcodebuild -sdk " ++ sdk
