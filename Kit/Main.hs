@@ -36,8 +36,7 @@ module Kit.Main where
   run f = runErrorT f >>= handleFails
 
   doUpdate :: IO ()
-  doUpdate = run g
-      where g = do
+  doUpdate = run $ do
               repo <- liftIO defaultLocalRepository
               deps <- getMyDeps repo
               puts $ "Dependencies: " ++ (stringJoin ", " $ map kitFileName deps)
@@ -64,8 +63,7 @@ module Kit.Main where
         x :: KitSpec -> IO ()
         x spec = let
               k = specKit spec
-              kf = kitFileName . specKit $ spec
-              pkg = (kf ++ ".tar.gz")
+              pkg = (kitFileName k ++ ".tar.gz")
             in do
               repo <- defaultLocalRepoPath
               let thisKitDir = repo </> "kits" </> kitName k </> kitVersion k
@@ -74,9 +72,7 @@ module Kit.Main where
               copyFile "KitSpec" $ thisKitDir </> "KitSpec"
 
   doVerify :: String -> IO ()
-  doVerify sdk = run f
-    where
-      f = do
+  doVerify sdk = run $ do
         mySpec <- myKitSpec
         puts "Checking that the kit can be depended upon..."
         puts " #> Deploying locally"
@@ -94,7 +90,7 @@ module Kit.Main where
               system $ "xcodebuild -sdk " ++ sdk
           putStrLn "OK."
         puts "End checks."
-      puts = liftIO . putStrLn
+       where puts = liftIO . putStrLn
 
   doCreateSpec :: String -> String -> IO ()
   doCreateSpec name version = do
