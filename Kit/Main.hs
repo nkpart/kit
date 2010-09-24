@@ -68,7 +68,7 @@ module Kit.Main where
               repo <- defaultLocalRepoPath
               let thisKitDir = repo </> "kits" </> kitName k </> kitVersion k
               mkdir_p thisKitDir
-              copyFile pkg $ thisKitDir </> pkg
+              copyFile ("dist" </> pkg) $ thisKitDir </> pkg
               copyFile "KitSpec" $ thisKitDir </> "KitSpec"
 
   doVerify :: String -> IO ()
