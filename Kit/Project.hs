@@ -29,6 +29,8 @@ module Kit.Project (
   prefixFile = "KitDeps_Prefix.pch"
   projectFile = projectDir </> "project.pbxproj"
   xcodeConfigFile = "Kit.xcconfig"
+  kitUpdateMakeFilePath = "Makefile"
+  kitUpdateMakeFile = "kit: Kits/Kit.xcconfig\nKits/Kit.xcconfig: KitSpec\n\tkit update\n"
 
   prefixDefault = "#ifdef __OBJC__\n" ++ "    #import <Foundation/Foundation.h>\n    #import <UIKit/UIKit.h>\n" ++ "#endif\n"
 
@@ -70,6 +72,7 @@ module Kit.Project (
             let kitHeaders = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ (stringJoin " "  $ kitFileNames >>= (\x -> [kitDir </> x </> "src", x </> "src"]))
             let prefixHeaders = "GCC_PRECOMPILE_PREFIX_HEADER = YES\nGCC_PREFIX_HEADER = $(SRCROOT)/KitDeps_Prefix.pch\n"
             writeFile xcodeConfigFile $ kitHeaders ++ "\n" ++  prefixHeaders ++ "\n" ++ configToString combinedConfig
+            writeFile kitUpdateMakeFilePath kitUpdateMakeFile
 
   kitPrefixFile = "Prefix.pch"
 
