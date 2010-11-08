@@ -117,7 +117,7 @@ module Kit.Main where
                     help "Create a tar.gz wrapping this kit"
       , PublishLocal &= explicit &= CA.name "publish-local" &=
                     help "Package this kit, then deploy it to the local repository (~/.kit/repository)"
-      , Verify { sdk = "iphonesimulator4.0" &= typ "SDK" &= help "iphoneos3.1, iphonesimulator4.0, etc."} &=
+      , Verify { sdk = "iphonesimulator4.0" &= typ "SDK" &= help "iphoneos, iphonesimulator4.0, etc."} &=
                     help "Package this kit, then attempt to use it as a dependency in an empty project. This will assert that the kit and all its dependencies can be compiled together."
     ] &= program "kit"
       &= summary ("Kit v" ++ appVersion ++ ". It's a dependency manager for Objective-C projects built with XCode.")
