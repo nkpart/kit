@@ -6,8 +6,7 @@ module Kit.XCode.XCConfig where
   import Data.Maybe
   import Data.Either
   import Data.List
-  
-  import Data.String.Utils
+  import Data.Char (isSpace)
 
   type XCCSetting = (String, String)
   type XCCInclude = String
@@ -15,6 +14,9 @@ module Kit.XCode.XCConfig where
   data XCConfig = XCC { configName :: String, configSettings :: M.Map String String, configIncludes :: [XCCInclude] } deriving (Eq, Show)
   
   includeStart = "#include "
+  
+  strip :: String -> String
+  strip = f . f where f = reverse . dropWhile isSpace
   
   parseLine :: String -> Maybe (Either XCCSetting XCCInclude)
   parseLine l | includeStart `isPrefixOf` l = Just . Right . fromJust $ stripPrefix includeStart l
