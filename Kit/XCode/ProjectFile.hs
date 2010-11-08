@@ -87,6 +87,8 @@ module Kit.XCode.ProjectFile (projectPbxProj) where
         		"};" `nl`
         "/* End PBXNativeTarget section */" `nl`
         "" `nl`
+        kitUpdateTarget `nl`
+        "/* End PBXLegacyTarget section */" `nl`
         "/* Begin PBXProject section */" `nl`
         		"0867D690FE84028FC02AAC07 /* Project object */ = {" `nl`
         			"isa = PBXProject;" `nl`
@@ -99,6 +101,7 @@ module Kit.XCode.ProjectFile (projectPbxProj) where
         			"projectRoot = \"\";" `nl`
         			"targets = (" `nl`
         				"D2AAC07D0554694100DB518D /* KitDeps */," `nl`
+        				"470E2D641287730A0084AE6F /* KitUpdate */," `nl`
         			");" `nl`
         		"};" `nl`
         "/* End PBXProject section */"
@@ -187,11 +190,53 @@ module Kit.XCode.ProjectFile (projectPbxProj) where
         			"defaultConfigurationName = Release;" `nl`
         		"};" `nl`
         "/* End XCConfigurationList section */" `nl`
+            
         	"};" `nl`
         	"rootObject = 0867D690FE84028FC02AAC07 /* Project object */;" `nl`
         "}"
 
-
+  kitUpdateTarget = "/* Begin PBXLegacyTarget section */" `nl`
+        "470E2D641287730A0084AE6F /* KitUpdate */ = {" `nl`
+        "isa = PBXLegacyTarget;" `nl`
+        "buildArgumentsString = \"\";" `nl`
+        " buildConfigurationList = 470E2D721287731E0084AE6F /* Build configuration list for PBXLegacyTarget \"KitUpdate\" */;" `nl`
+        " buildPhases = (" `nl`
+        " );" `nl`
+        " buildToolPath = /usr/bin/make;" `nl`
+        " buildWorkingDirectory = \"\";" `nl`
+        " dependencies = (" `nl`
+        " );" `nl`
+        " name = KitUpdate;" `nl`
+        " passBuildSettingsInEnvironment = 1;" `nl`
+        " productName = KitUpdate;" `nl`
+        " };" `nl`
+        "470E2D721287731E0084AE6F /* Build configuration list for PBXLegacyTarget \"KitUpdate\" */ = {" `nl`
+      " isa = XCConfigurationList;" `nl`
+      " buildConfigurations = (" `nl`
+      " 470E2D651287730B0084AE6F /* Debug */," `nl`
+      " 470E2D661287730B0084AE6F /* Release */," `nl`
+      " );" `nl`
+      " defaultConfigurationIsVisible = 0;" `nl`
+      " defaultConfigurationName = Debug;" `nl`
+      "};" `nl`
+      "470E2D651287730B0084AE6F /* Debug */ = {" `nl`
+      " isa = XCBuildConfiguration;" `nl`
+      " buildSettings = {" `nl`
+      " COPY_PHASE_STRIP = NO;" `nl`
+      " GCC_DYNAMIC_NO_PIC = NO;" `nl`
+      " GCC_OPTIMIZATION_LEVEL = 0;" `nl`
+      " PRODUCT_NAME = KitUpdate;" `nl`
+      " };" `nl`
+      " name = Debug;" `nl`
+      "};" `nl`
+      "470E2D661287730B0084AE6F /* Release */ = {" `nl`
+      " isa = XCBuildConfiguration;" `nl`
+      " buildSettings = {" `nl`
+      " PRODUCT_NAME = KitUpdate;" `nl`
+      " };" `nl`
+      " name = Release;" `nl`
+      "};"
+  
   main = do
     putStrLn $ projectPbxProj "" "" "" "" ""
 

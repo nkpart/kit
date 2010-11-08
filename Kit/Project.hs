@@ -30,7 +30,7 @@ module Kit.Project (
   projectFile = projectDir </> "project.pbxproj"
   xcodeConfigFile = "Kit.xcconfig"
   kitUpdateMakeFilePath = "Makefile"
-  kitUpdateMakeFile = "kit: Kits/Kit.xcconfig\nKits/Kit.xcconfig: KitSpec\n\tkit update\n"
+  kitUpdateMakeFile = "kit: Kit.xcconfig\nKit.xcconfig: ../KitSpec\n\tcd .. && kit update && exit 1\n"
 
   prefixDefault = "#ifdef __OBJC__\n" ++ "    #import <Foundation/Foundation.h>\n    #import <UIKit/UIKit.h>\n" ++ "#endif\n"
 
