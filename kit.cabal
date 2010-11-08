@@ -1,25 +1,25 @@
-name: kit
-version: 0.4.4
-cabal-version: >=1.2
-build-type: Simple
-license: BSD3
-license-file: LICENSE
-maintainer: nkpart@gmail.com
-build-depends: process -any, network -any, mtl -any, json -any,
-               filepath -any, directory -any, containers -any, cmdargs >=0.3,
-               bytestring -any, base >=3 && <5, QuickCheck -any, MissingH -any,
-               HTTP >=4000.0.9, Glob >= 0.5
-synopsis: A dependency manager for XCode (Objective-C) projects
-description: A dependency manager for XCode (Objective-C) projects
-category: Development
-author: Nick Partridge
+name:           kit
+version:        0.4.4
+cabal-version:  >=1.2
+build-type:     Simple
+license:        BSD3
+license-file:   LICENSE
+maintainer:     nkpart@gmail.com
+build-depends:  process -any, network -any, mtl -any, json -any,
+                filepath -any, directory -any, containers -any, cmdargs >=0.3,
+                bytestring -any, base >=3 && <5, QuickCheck -any, MissingH -any,
+                HTTP >=4000.0.9, Glob >= 0.5
+synopsis:       A dependency manager for XCode (Objective-C) projects
+description:    A dependency manager for XCode (Objective-C) projects
+category:       Development
+author:         Nick Partridge
 
-executable: kit
-main-is: Main.hs
-buildable: True
+executable:     kit
+main-is:        Main.hs
+buildable:      True
 
 hs-source-dirs: .
-other-modules: Kit.Model Kit.Main Kit.Package
-               Kit.Project Kit.Repository Kit.Util Kit.XCode.Builder
-               Kit.XCode.Common Kit.XCode.OldPList Kit.XCode.PBXProject
-               Kit.XCode.ProjectFile Kit.XCode.XCConfig
+other-modules:  Kit.Model Kit.Main Kit.Package
+                Kit.Project Kit.Repository Kit.Util Kit.XCode.Builder
+                Kit.XCode.Common Kit.XCode.OldPList Kit.XCode.PBXProject
+                Kit.XCode.ProjectFile Kit.XCode.XCConfig
