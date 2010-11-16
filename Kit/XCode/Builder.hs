@@ -5,6 +5,7 @@ module Kit.XCode.Builder (buildXCodeProject) where
   import Data.List
   import Kit.XCode.Common
   import Kit.XCode.ProjectFile
+  import Kit.XCode.OldPList
   import Kit.Util
 
   createBuildFile :: Integer -> FilePath -> PBXBuildFile
@@ -39,9 +40,9 @@ module Kit.XCode.Builder (buildXCodeProject) where
                         ft Source = "Sources"
                         bit = ft . fileType . fileReferencePath $ fr
                     in fileReferenceName fr ++ " in " ++ bit
-          dict = [
-              "isa" ~> "PBXBuildFile",
-              "fileRef" ~> (fileReferenceId fr ++ " /* " ++ fileReferenceName fr ++ " */")
+          dict = obj [
+              "isa" ~> val "PBXBuildFile",
+              "fileRef" ~> PListValue (fileReferenceId fr) (Just $ fileReferenceName fr)
             ]
 
   fileTypeBit :: FileType -> String
@@ -57,13 +58,13 @@ module Kit.XCode.Builder (buildXCodeProject) where
       fid = fileReferenceId fr
       path = fileReferencePath fr
       fileName = fileReferenceName fr
-      dict = [
-          "isa" ~> "PBXFileReference",
-          "fileEncoding" ~> "4",
-          "lastKnownFileType" ~> (fileTypeBit . fileType $ fileName),
-          "name" ~> show fileName,
-          "path" ~> show path,
-          "sourceTree" ~> show "<group>"
+      dict = obj [
+          "isa" ~> val "PBXFileReference",
+          "fileEncoding" ~> val "4",
+          "lastKnownFileType" ~> val (fileTypeBit . fileType $ fileName),
+          "name" ~> val fileName,
+          "path" ~> val path,
+          "sourceTree" ~> val "<group>"
         ]
 
   layoutSection :: String -> [String] -> String
@@ -90,11 +91,11 @@ module Kit.XCode.Builder (buildXCodeProject) where
 
   classesSection :: [PBXFileReference] -> String
   classesSection files = lineItem "08FB77AEFE84172EC02AAC07" "Classes" dict
-	    where dict = [
-            	    "isa" ~> "PBXGroup",
-            	    "children" ~> ("(" ++ (mconcat (intersperse "," (map fileReferenceId files))) ++ ",)"),
-            	    "name" ~> "Classes",
-            	    "sourceTree" ~> show "<group>"
+	    where dict = obj [
+            	    "isa" ~> val "PBXGroup",
+            	    "children" ~> val ("(" ++ (mconcat (intersperse "," (map fileReferenceId files))) ++ ",)"),
+            	    "name" ~> val "Classes",
+            	    "sourceTree" ~> val "<group>"
 	                ]
 	
 	{-/* Begin PBXHeadersBuildPhase section */
@@ -109,11 +110,11 @@ module Kit.XCode.Builder (buildXCodeProject) where
   		};
   /* End PBXHeadersBuildPhase section */-}
   headersSection :: [PBXBuildFile] -> String
-  headersSection bfs = layoutSection "PBXHeadersBuildPhase" [lineItem "D2AAC07A0554694100DB518D" "Headers" [
-    "isa" ~> "PBXHeadersBuildPhase",
-    "buildActionMask" ~> "2147483647",
-    "files" ~> ("(" ++ (stringJoin "," $ prefixPchUUID : map buildFileId bfs) ++ ",)"),
-    "runOnlyForDeploymentPostprocessing" ~> "0"
+  headersSection bfs = layoutSection "PBXHeadersBuildPhase" [lineItem "D2AAC07A0554694100DB518D" "Headers" $ obj [
+    "isa" ~> val "PBXHeadersBuildPhase",
+    "buildActionMask" ~> val "2147483647",
+    "files" ~> arr (val prefixPchUUID : map (val . buildFileId) bfs),
+    "runOnlyForDeploymentPostprocessing" ~> val "0"
 	  ]]
 	  where prefixPchUUID = "AA747D9F0F9514B9006C5449"
 	
@@ -130,11 +131,11 @@ module Kit.XCode.Builder (buildXCodeProject) where
     /* End PBXSourcesBuildPhase section */
 	-}
   sourcesSection :: [PBXBuildFile] -> String
-  sourcesSection bfs = layoutSection "PBXSourcesBuildPhase" [lineItem "D2AAC07B0554694100DB518D" "Sources" [
-    "isa" ~> "PBXSourcesBuildPhase",
-    "buildActionMask" ~> "2147483647",
-    "files" ~> ("(" ++ (stringJoin "," $ map buildFileId bfs) ++ ",)"),
-    "runOnlyForDeploymentPostprocessing" ~> "0"
+  sourcesSection bfs = layoutSection "PBXSourcesBuildPhase" [lineItem "D2AAC07B0554694100DB518D" "Sources" $ obj [
+    "isa" ~> val "PBXSourcesBuildPhase",
+    "buildActionMask" ~> val "2147483647",
+    "files" ~>  arr (map (val . buildFileId) bfs),
+    "runOnlyForDeploymentPostprocessing" ~> val "0"
     ]]
 
   testBuilder = let

@@ -2,9 +2,9 @@ module Kit.XCode.Common where
   import Data.Monoid
   import Data.List
   import System.FilePath.Posix
-          
+  import Kit.XCode.OldPList 
+  
   type UUID = String
-  type Dict = [(String, String)]
   
   data FileType = Header | Source | Unknown
   
@@ -14,8 +14,6 @@ module Kit.XCode.Common where
   fileType x | ".mm" `isSuffixOf` x = Source
   fileType x | ".c" `isSuffixOf` x = Source
   fileType _ = Unknown
-  
-  (~>) = (,)
   
   data PBXBuildFile = PBXBuildFile {
     buildFileId :: String,
@@ -29,12 +27,8 @@ module Kit.XCode.Common where
   
   fileReferenceName = takeFileName . fileReferencePath
   
-  lineItem :: UUID -> String -> Dict -> String
-  lineItem uuid comment dict = uuid ++ " /* " ++ comment ++ " */ = " ++ buildDict dict ++ ";"
-  
-  buildDict :: Dict -> String
-  buildDict ps = g . mconcat . map (\x -> fst x ++ " = " ++ snd x ++ "; ") $ ps
-    where g s = "{"  ++ s ++ "}"
+  lineItem :: UUID -> String -> PListType -> String
+  lineItem uuid comment value = printItem $ PListObjectItem uuid (Just comment) value
   
   uuid :: Integer -> UUID
   uuid i = let

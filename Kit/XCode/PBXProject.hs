@@ -56,10 +56,10 @@ instance ProjectPListItem PBXGroup where
   writeEntry group = do
     childUUIDs <- mapM writeEntry (groupChildren group)
     write $ obj [
-          "isa" ~=~ val "PBXGroup"
-        , "name" ~=~ (val . groupName) group
-        , "sourceTree" ~=~ (val . groupSourceTree) group
-        , "children" ~=~ (arr $ map val (childUUIDs ++ groupChildrenExtra group))
+          "isa" ~> val "PBXGroup"
+        , "name" ~> (val . groupName) group
+        , "sourceTree" ~> (val . groupSourceTree) group
+        , "children" ~> (arr $ map val (childUUIDs ++ groupChildrenExtra group))
       ]
 
 type PLObjects = [(UUID, PListType)]
@@ -89,13 +89,13 @@ instance ProjectPListItem PBXProject where
     productGroupUUID <- writeEntry (PBXGroup [] [] "Products" "<group>")
     mainGroupUUID <- writeEntry (PBXGroup [] [productGroupUUID] (projectName project) "<group>")
     write $ obj [
-        "isa" ~=~ val "PBXProject"
-      , "buildConfigurationList" ~=~ val config
-      , "compatibilityVersion" ~=~ val "Xcode 3.1"
-      , "hasScannedForEncodings" ~=~ val "1"
-      , "mainGroup" ~=~ val mainGroupUUID
-      , "productRefGroup" ~=~ val productGroupUUID
-      , "projectDirPath" ~=~ val ""
-      , "projectRoot" ~=~ val ""
-      , "targets" ~=~ arr []
+        "isa" ~> val "PBXProject"
+      , "buildConfigurationList" ~> val config
+      , "compatibilityVersion" ~> val "Xcode 3.1"
+      , "hasScannedForEncodings" ~> val "1"
+      , "mainGroup" ~> val mainGroupUUID
+      , "productRefGroup" ~> val productGroupUUID
+      , "projectDirPath" ~> val ""
+      , "projectRoot" ~> val ""
+      , "targets" ~> arr []
      ]

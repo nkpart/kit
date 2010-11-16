@@ -67,4 +67,3 @@ module Kit.Util(
   stringJoin :: Monoid a => a -> [a] -> a
   stringJoin x = mconcat . intersperse x
 
-
