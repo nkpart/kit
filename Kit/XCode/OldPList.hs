@@ -5,35 +5,51 @@ import Data.List (isInfixOf, isPrefixOf)
 
 data PListObjectItem = PListObjectItem {
     itemKey :: String,
-    itemComment :: Maybe String,
+    itemComment :: Comment,
     itemValue :: PListType
   } deriving Eq 
 
-commentBit = maybe "" (\s -> " /* " ++ s ++ " */") 
-printItem :: PListObjectItem -> String
-printItem (PListObjectItem k c v) = k ++ (commentBit c) ++ " = " ++ show v ++ "; "
+-- A comment that can be attached to a value.
+newtype Comment = Comment (Maybe String) deriving Eq
 
-data PListType = PListValue String (Maybe String)
+comment :: String -> Comment
+comment = Comment . Just
+
+noComment :: Comment
+noComment = Comment Nothing
+
+instance Show Comment where
+  show (Comment m) = maybe "" (\s -> " /* " ++ s ++ " */") m
+
+data PListType = PListValue String Comment
                | PListArray [PListType]
                | PListObject [PListObjectItem]
                deriving Eq
 
-val x = PListValue x Nothing
+val x = PListValue x noComment 
 arr = PListArray
 obj = PListObject
 
-data PListFile = PListFile { pListFileCharset :: String, pListFileValue :: PListType }
+infixl 1 ~> 
+a ~> b = PListObjectItem a noComment b
+
+infixl 2 /*/
+(PListValue a _) /*/ s = PListValue a (comment s)
+a /*/ _ = a
 
 quote s = "\"" ++ s ++ "\""
 quotable s = or $ map (\x -> x `isInfixOf` s && (not $ "sourcecode" `isPrefixOf` s)) ["-", "<", ">", " ", ".m", ".h"]
 
+instance Show PListObjectItem where
+  show (PListObjectItem k c v) = k ++ (show c) ++ " = " ++ show v ++ "; "
+
 instance Show PListType where
-    show (PListValue a c) = (if (quotable a) then quote a else a) ++ commentBit c 
-    show (PListArray xs) = "(" ++ (map ((++ ",") . show) xs >>= id) ++ ")"
-    show (PListObject kvs) = "{" ++ (kvs >>= printItem) ++ "}"
+  show (PListValue a c) = (if (quotable a) then quote a else a) ++ show c 
+  show (PListArray xs) = "(" ++ (map ((++ ",") . show) xs >>= id) ++ ")"
+  show (PListObject kvs) = "{" ++ (kvs >>= show) ++ "}"
 
-a ~> b = PListObjectItem a Nothing b
 
+data PListFile = PListFile { pListFileCharset :: String, pListFileValue :: PListType }
 projectFile = PListFile "!$*UTF8*$!" $ obj [
         "archiveVersion" ~> val "1",
         "classes" ~> obj [],

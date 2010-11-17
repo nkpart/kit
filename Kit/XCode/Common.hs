@@ -27,13 +27,11 @@ module Kit.XCode.Common where
   
   fileReferenceName = takeFileName . fileReferencePath
   
-  lineItem :: UUID -> String -> PListType -> String
-  lineItem uuid comment value = printItem $ PListObjectItem uuid (Just comment) value
+  lineItem :: UUID -> Comment -> PListType -> PListObjectItem
+  lineItem a b c = PListObjectItem a b c
   
   uuid :: Integer -> UUID
   uuid i = let
-      s = show i
-      lengthS = length s
-      pad = 24 - lengthS
-    in
-      replicate pad '0' ++ s 
+       s = show i
+       pad = 24 - length s
+    in replicate pad '0' ++ s 
