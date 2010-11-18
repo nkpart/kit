@@ -3,48 +3,35 @@ module Kit.XCode.OldPList where
 
 import Data.List (isInfixOf, isPrefixOf)
 
+-------------------------------------------------------------------------------
+-- | A Key/Value pair in a PList Object
 data PListObjectItem = PListObjectItem {
-    itemKey :: String,
-    itemComment :: Comment,
-    itemValue :: PListType
+    itemKey :: String, -- The key in the object
+    itemValue :: PListType -- The value in the object
   } deriving Eq 
 
--- A comment that can be attached to a value.
-newtype Comment = Comment (Maybe String) deriving Eq
+lineItem = PListObjectItem 
 
-comment :: String -> Comment
-comment = Comment . Just
-
-noComment :: Comment
-noComment = Comment Nothing
-
-instance Show Comment where
-  show (Comment m) = maybe "" (\s -> " /* " ++ s ++ " */") m
-
-data PListType = PListValue String Comment
+data PListType = PListValue String
                | PListArray [PListType]
                | PListObject [PListObjectItem]
                deriving Eq
 
-val x = PListValue x noComment 
+val x = PListValue x 
 arr = PListArray
 obj = PListObject
 
 infixl 1 ~> 
-a ~> b = PListObjectItem a noComment b
-
-infixl 2 /*/
-(PListValue a _) /*/ s = PListValue a (comment s)
-a /*/ _ = a
+a ~> b = PListObjectItem a b
 
 quote s = "\"" ++ s ++ "\""
 quotable s = or $ map (\x -> x `isInfixOf` s && (not $ "sourcecode" `isPrefixOf` s)) ["-", "<", ">", " ", ".m", ".h"]
 
 instance Show PListObjectItem where
-  show (PListObjectItem k c v) = k ++ (show c) ++ " = " ++ show v ++ "; "
+  show (PListObjectItem k v) = k ++ " = " ++ show v ++ "; "
 
 instance Show PListType where
-  show (PListValue a c) = (if (quotable a) then quote a else a) ++ show c 
+  show (PListValue a) = (if (quotable a) then quote a else a) 
   show (PListArray xs) = "(" ++ (map ((++ ",") . show) xs >>= id) ++ ")"
   show (PListObject kvs) = "{" ++ (kvs >>= show) ++ "}"
 

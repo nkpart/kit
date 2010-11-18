@@ -16,19 +16,16 @@ module Kit.XCode.Common where
   fileType _ = Unknown
   
   data PBXBuildFile = PBXBuildFile {
-    buildFileId :: String,
+    buildFileId :: UUID,
     buildFileReference :: PBXFileReference
   }
   
   data PBXFileReference = PBXFileReference {
-    fileReferenceId :: String,
+    fileReferenceId :: UUID,
     fileReferencePath :: String
   }
   
   fileReferenceName = takeFileName . fileReferencePath
-  
-  lineItem :: UUID -> Comment -> PListType -> PListObjectItem
-  lineItem a b c = PListObjectItem a b c
   
   uuid :: Integer -> UUID
   uuid i = let
