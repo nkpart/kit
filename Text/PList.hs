@@ -1,5 +1,5 @@
 {-# LANGUAGE TypeSynonymInstances #-}
-module Kit.XCode.OldPList where
+module Text.PList where
 
 import Data.List (isInfixOf, isPrefixOf, intersperse)
 
@@ -9,7 +9,6 @@ data PListObjectItem = PListObjectItem {
     itemKey :: String, -- The key in the object
     itemValue :: PListType -- The value in the object
   } deriving Eq 
-
 
 data PListType = PListValue String
                | PListArray [PListType]
@@ -40,12 +39,4 @@ data PListFile = PListFile { pListFileCharset :: String, pListFileValue :: PList
 
 instance Show PListFile where
   show (PListFile charset value) = "// " ++ charset ++ "\n" ++ show value ++ "\n"
-
-projectFile objects uuid = PListFile "!$*UTF8*$!" $ obj [
-        "archiveVersion" ~> val "1",
-        "classes" ~> obj [],
-        "objectVersion" ~> val "45",
-        "objects" ~> obj objects, 
-        "rootObject" ~> val uuid
-    ]
 

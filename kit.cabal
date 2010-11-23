@@ -22,5 +22,5 @@ Executable kit
   hs-source-dirs: .
   other-modules:  Kit.Model Kit.Main Kit.Package
                   Kit.Project Kit.Repository Kit.Util Kit.XCode.Builder
-                  Kit.XCode.Common Kit.XCode.OldPList Kit.XCode.PBXProject
-                  Kit.XCode.ProjectFile Kit.XCode.XCConfig
+                  Kit.XCode.Common Kit.XCode.PBXProject
+                  Kit.XCode.ProjectFile Kit.XCode.XCConfig Text.PList

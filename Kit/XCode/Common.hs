@@ -2,7 +2,6 @@ module Kit.XCode.Common where
   import Data.Monoid
   import Data.List
   import System.FilePath.Posix
-  import Kit.XCode.OldPList 
   
   type UUID = String
   

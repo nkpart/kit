@@ -4,7 +4,7 @@ module Kit.XCode.Builder (buildXCodeProject) where
   import Data.List
   import Kit.XCode.Common
   import Kit.XCode.ProjectFile
-  import Kit.XCode.OldPList
+  import Text.PList
   import Kit.Util
 
   createBuildFile :: Integer -> FilePath -> PBXBuildFile

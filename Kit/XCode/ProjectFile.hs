@@ -4,8 +4,16 @@
 -}
 module Kit.XCode.ProjectFile (projectPbxProj) where
 
-  import Kit.XCode.OldPList
-  
+  import Text.PList
+
+  projectFile objects uuid = PListFile "!$*UTF8*$!" $ obj [
+        "archiveVersion" ~> val "1",
+        "classes" ~> obj [],
+        "objectVersion" ~> val "45",
+        "objects" ~> obj objects, 
+        "rootObject" ~> val uuid
+    ]
+ 
   projectPbxProj :: 
     [PListObjectItem] -> -- build file section
     [PListObjectItem] -> -- file refs section

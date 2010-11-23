@@ -1,7 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Kit.XCode.PBXProject where
 
-import Kit.XCode.OldPList
+import Text.PList
 import Control.Monad.State
 import Control.Monad.Writer
 import qualified Data.Map as M
