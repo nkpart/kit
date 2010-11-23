@@ -3,240 +3,193 @@
   Constant sections of the project file
 -}
 module Kit.XCode.ProjectFile (projectPbxProj) where
-  nl a b = a ++ "\n" ++ b
 
-  projectPbxProj bfs fileRefsSection classes headers sources =
-      top `nl` bfs `nl` fileRefsSection `nl` next1 `nl` classes `nl` next2 `nl` headers `nl` next3 `nl` sources `nl` bottom
-
-  top = "// !$*UTF8*$!" `nl`
-    "{" `nl`
-    " archiveVersion = 1;" `nl`
-    " classes = {" `nl`
-    " };" `nl`
-    " objectVersion = 45;" `nl`
-    " objects = {"
-
-  next1 = "/* Begin PBXFrameworksBuildPhase section */" `nl`
-    		"D2AAC07C0554694100DB518D /* Frameworks */ = {" `nl`
-    			"isa = PBXFrameworksBuildPhase;" `nl`
-    			"buildActionMask = 2147483647;" `nl`
-    			"files = (" `nl`
-    				"AACBBE4A0F95108600F1A2B1 /* Foundation.framework in Frameworks */," `nl`
-    			");" `nl`
-    			"runOnlyForDeploymentPostprocessing = 0;" `nl`
-    		"};" `nl`
-    "/* End PBXFrameworksBuildPhase section */" `nl`
-    "" `nl`
-    "/* Begin PBXGroup section */" `nl`
-    		"034768DFFF38A50411DB9C8B /* Products */ = {" `nl`
-    			"isa = PBXGroup;" `nl`
-    			"children = (" `nl`
-    				"D2AAC07E0554694100DB518D /* libKitDeps.a */," `nl`
-    			");" `nl`
-    			"name = Products;" `nl`
-    			"sourceTree = \"<group>\";" `nl`
-    		"};" `nl`
-    		"0867D691FE84028FC02AAC07 /* KitDeps */ = {" `nl`
-    			"isa = PBXGroup;" `nl`
-    			"children = (" `nl`
-    				"08FB77AEFE84172EC02AAC07 /* Classes */," `nl`
-    				"32C88DFF0371C24200C91783 /* Other Sources */," `nl`
-    				"0867D69AFE84028FC02AAC07 /* Frameworks */," `nl`
-    				"034768DFFF38A50411DB9C8B /* Products */," `nl`
-    				"4728C52F117C02B10027D7D1 /* Kit.xcconfig */," `nl`
-    			");" `nl`
-    			"name = KitDeps;" `nl`
-    			"sourceTree = \"<group>\";" `nl`
-    		"};" `nl`
-    		"0867D69AFE84028FC02AAC07 /* Frameworks */ = {" `nl`
-    			"isa = PBXGroup;" `nl`
-    			"children = (" `nl`
-    				"AACBBE490F95108600F1A2B1 /* Foundation.framework */," `nl`
-    			");" `nl`
-    			"name = Frameworks;" `nl`
-    			"sourceTree = \"<group>\";" `nl`
-    		"};"
-    		
-  next2 = "32C88DFF0371C24200C91783 /* Other Sources */ = {" `nl`
-        			"isa = PBXGroup;" `nl`
-        			"children = (" `nl`
-        				"AA747D9E0F9514B9006C5449 /* KitDeps_Prefix.pch */," `nl`
-        			");" `nl`
-        			"name = \"Other Sources\";" `nl`
-        			"sourceTree = \"<group>\";" `nl`
-        		"};" `nl`
-        "/* End PBXGroup section */"
-
-  next3 = "/* Begin PBXNativeTarget section */" `nl`
-        		"D2AAC07D0554694100DB518D /* KitDeps */ = {" `nl`
-        			"isa = PBXNativeTarget;" `nl`
-        			"buildConfigurationList = 1DEB921E08733DC00010E9CD /* Build configuration list for PBXNativeTarget \"KitDeps\" */;" `nl`
-        			"buildPhases = (" `nl`
-        				"D2AAC07A0554694100DB518D /* Headers */," `nl`
-        				"D2AAC07B0554694100DB518D /* Sources */," `nl`
-        				"D2AAC07C0554694100DB518D /* Frameworks */," `nl`
-        			");" `nl`
-              "buildRules = (" `nl`
-        			");" `nl`
-        			"dependencies = (" `nl`
-        			");" `nl`
-        			"name = KitDeps;" `nl`
-        			"productName = KitDeps;" `nl`
-        			"productReference = D2AAC07E0554694100DB518D /* libKitDeps.a */;" `nl`
-        			"productType = \"com.apple.product-type.library.static\";" `nl`
-        		"};" `nl`
-        "/* End PBXNativeTarget section */" `nl`
-        "" `nl`
-        kitUpdateTarget `nl`
-        "/* End PBXLegacyTarget section */" `nl`
-        "/* Begin PBXProject section */" `nl`
-        		"0867D690FE84028FC02AAC07 /* Project object */ = {" `nl`
-        			"isa = PBXProject;" `nl`
-        			"buildConfigurationList = 1DEB922208733DC00010E9CD /* Build configuration list for PBXProject \"KitDepsCustom\" */;" `nl`
-        			"compatibilityVersion = \"Xcode 3.1\";" `nl`
-        			"hasScannedForEncodings = 1;" `nl`
-        			"mainGroup = 0867D691FE84028FC02AAC07 /* KitDeps */;" `nl`
-        			"productRefGroup = 034768DFFF38A50411DB9C8B /* Products */;" `nl`
-        			"projectDirPath = \"\";" `nl`
-        			"projectRoot = \"\";" `nl`
-        			"targets = (" `nl`
-        				"D2AAC07D0554694100DB518D /* KitDeps */," `nl`
-        				"470E2D641287730A0084AE6F /* KitUpdate */," `nl`
-        			");" `nl`
-        		"};" `nl`
-        "/* End PBXProject section */"
-
-  bottom = "/* Begin XCBuildConfiguration section */" `nl`
-        		"1DEB921F08733DC00010E9CD /* Debug */ = {" `nl`
-        			"isa = XCBuildConfiguration;" `nl`
-        			"buildSettings = {" `nl`
-        				"ALWAYS_SEARCH_USER_PATHS = NO;" `nl`
-        				"ARCHS = \"$(ARCHS_STANDARD_32_BIT)\";" `nl`
-        				"COPY_PHASE_STRIP = NO;" `nl`
-        				"DSTROOT = /tmp/KitDeps.dst;" `nl`
-        				"GCC_DYNAMIC_NO_PIC = NO;" `nl`
-        				"GCC_ENABLE_FIX_AND_CONTINUE = YES;" `nl`
-        				"GCC_MODEL_TUNING = G5;" `nl`
-        				"GCC_OPTIMIZATION_LEVEL = 0;" `nl`
-        				"GCC_PRECOMPILE_PREFIX_HEADER = YES;" `nl`
-        				"GCC_PREFIX_HEADER = KitDeps_Prefix.pch;" `nl`
-        				"INSTALL_PATH = /usr/local/lib;" `nl`
-        				"PRODUCT_NAME = KitDeps;" `nl`
-        			"};" `nl`
-        			"name = Debug;" `nl`
-        		"};" `nl`
-        		"1DEB922008733DC00010E9CD /* Release */ = {" `nl`
-        			"isa = XCBuildConfiguration;" `nl`
-        			"buildSettings = {" `nl`
-        				"ALWAYS_SEARCH_USER_PATHS = NO;" `nl`
-        				"ARCHS = \"$(ARCHS_STANDARD_32_BIT)\";" `nl`
-        				"DSTROOT = /tmp/KitDeps.dst;" `nl`
-        				"GCC_MODEL_TUNING = G5;" `nl`
-        				"GCC_PRECOMPILE_PREFIX_HEADER = YES;" `nl`
-        				"GCC_PREFIX_HEADER = KitDeps_Prefix.pch;" `nl`
-        				"INSTALL_PATH = /usr/local/lib;" `nl`
-        				"PRODUCT_NAME = KitDeps;" `nl`
-        			"};" `nl`
-        			"name = Release;" `nl`
-        		"};" `nl`
-        		"1DEB922308733DC00010E9CD /* Debug */ = {" `nl`
-        			"isa = XCBuildConfiguration;" `nl`
-        			"baseConfigurationReference = 4728C52F117C02B10027D7D1 /* Kit.xcconfig */;" `nl`
-        			"buildSettings = {" `nl`
-        				"ARCHS = \"$(ARCHS_STANDARD_32_BIT)\";" `nl`
-        				"GCC_C_LANGUAGE_STANDARD = c99;" `nl`
-        				"GCC_OPTIMIZATION_LEVEL = 0;" `nl`
-        				"GCC_WARN_ABOUT_RETURN_TYPE = YES;" `nl`
-        				"GCC_WARN_UNUSED_VARIABLE = YES;" `nl`
-        				"OTHER_LDFLAGS = \"-ObjC\";" `nl`
-        				"PREBINDING = NO;" `nl`
-        				"SDKROOT = iphoneos;" `nl`
-        			"};" `nl`
-        			"name = Debug;" `nl`
-        		"};" `nl`
-        		"1DEB922408733DC00010E9CD /* Release */ = {" `nl`
-        			"isa = XCBuildConfiguration;" `nl`
-        			"baseConfigurationReference = 4728C52F117C02B10027D7D1 /* Kit.xcconfig */;" `nl`
-        			"buildSettings = {" `nl`
-        				"ARCHS = \"$(ARCHS_STANDARD_32_BIT)\";" `nl`
-        				"GCC_C_LANGUAGE_STANDARD = c99;" `nl`
-        				"GCC_WARN_ABOUT_RETURN_TYPE = YES;" `nl`
-        				"GCC_WARN_UNUSED_VARIABLE = YES;" `nl`
-        				"OTHER_LDFLAGS = \"-ObjC\";" `nl`
-        				"PREBINDING = NO;" `nl`
-        				"SDKROOT = iphoneos;" `nl`
-        			"};" `nl`
-        			"name = Release;" `nl`
-        		"};" `nl`
-        "/* End XCBuildConfiguration section */" `nl`
-        "" `nl`
-        "/* Begin XCConfigurationList section */" `nl`
-        		"1DEB921E08733DC00010E9CD /* Build configuration list for PBXNativeTarget \"KitDeps\" */ = {" `nl`
-        			"isa = XCConfigurationList;" `nl`
-        			"buildConfigurations = (" `nl`
-        				"1DEB921F08733DC00010E9CD /* Debug */," `nl`
-        				"1DEB922008733DC00010E9CD /* Release */," `nl`
-        			");" `nl`
-        			"defaultConfigurationIsVisible = 0;" `nl`
-        			"defaultConfigurationName = Release;" `nl`
-        		"};" `nl`
-        		"1DEB922208733DC00010E9CD /* Build configuration list for PBXProject \"KitDepsCustom\" */ = {" `nl`
-        			"isa = XCConfigurationList;" `nl`
-        			"buildConfigurations = (" `nl`
-        				"1DEB922308733DC00010E9CD /* Debug */," `nl`
-        				"1DEB922408733DC00010E9CD /* Release */," `nl`
-        			");" `nl`
-        			"defaultConfigurationIsVisible = 0;" `nl`
-        			"defaultConfigurationName = Release;" `nl`
-        		"};" `nl`
-        "/* End XCConfigurationList section */" `nl`
-            
-        	"};" `nl`
-        	"rootObject = 0867D690FE84028FC02AAC07 /* Project object */;" `nl`
-        "}"
-
-  kitUpdateTarget = "/* Begin PBXLegacyTarget section */" `nl`
-        "470E2D641287730A0084AE6F /* KitUpdate */ = {" `nl`
-        "isa = PBXLegacyTarget;" `nl`
-        "buildArgumentsString = \"\";" `nl`
-        " buildConfigurationList = 470E2D721287731E0084AE6F /* Build configuration list for PBXLegacyTarget \"KitUpdate\" */;" `nl`
-        " buildPhases = (" `nl`
-        " );" `nl`
-        " buildToolPath = /usr/bin/make;" `nl`
-        " buildWorkingDirectory = \"\";" `nl`
-        " dependencies = (" `nl`
-        " );" `nl`
-        " name = KitUpdate;" `nl`
-        " passBuildSettingsInEnvironment = 1;" `nl`
-        " productName = KitUpdate;" `nl`
-        " };" `nl`
-        "470E2D721287731E0084AE6F /* Build configuration list for PBXLegacyTarget \"KitUpdate\" */ = {" `nl`
-      " isa = XCConfigurationList;" `nl`
-      " buildConfigurations = (" `nl`
-      " 470E2D651287730B0084AE6F /* Debug */," `nl`
-      " 470E2D661287730B0084AE6F /* Release */," `nl`
-      " );" `nl`
-      " defaultConfigurationIsVisible = 0;" `nl`
-      " defaultConfigurationName = Debug;" `nl`
-      "};" `nl`
-      "470E2D651287730B0084AE6F /* Debug */ = {" `nl`
-      " isa = XCBuildConfiguration;" `nl`
-      " buildSettings = {" `nl`
-      " COPY_PHASE_STRIP = NO;" `nl`
-      " GCC_DYNAMIC_NO_PIC = NO;" `nl`
-      " GCC_OPTIMIZATION_LEVEL = 0;" `nl`
-      " PRODUCT_NAME = KitUpdate;" `nl`
-      " };" `nl`
-      " name = Debug;" `nl`
-      "};" `nl`
-      "470E2D661287730B0084AE6F /* Release */ = {" `nl`
-      " isa = XCBuildConfiguration;" `nl`
-      " buildSettings = {" `nl`
-      " PRODUCT_NAME = KitUpdate;" `nl`
-      " };" `nl`
-      " name = Release;" `nl`
-      "};"
+  import Kit.XCode.OldPList
   
-  main = do
-    putStrLn $ projectPbxProj "" "" "" "" ""
+  projectPbxProj :: 
+    [PListObjectItem] -> -- build file section
+    [PListObjectItem] -> -- file refs section
+    PListObjectItem -> -- classes item
+    PListObjectItem -> -- headers section
+    PListObjectItem -> -- sources section
+    PListFile 
+  projectPbxProj bfs fileRefsSection classes headers sources = projectFile objs "0867D690FE84028FC02AAC07" where
+      objs = bfs ++ fileRefsSection ++ next1 ++ [classes] ++ [next2] ++ [headers] ++ next3 ++ [sources] ++ bottom
+
+  next1 = ["D2AAC07C0554694100DB518D" ~> obj [
+            "isa" ~> val "PBXFrameworksBuildPhase",
+            "buildActionMask" ~> val "2147483647",
+            "files" ~> arr [ val "AACBBE4A0F95108600F1A2B1" ],
+            "runOnlyForDeploymentPostprocessing" ~> val "0"
+          ],
+          "034768DFFF38A50411DB9C8B" ~> obj [
+            "isa" ~> val "PBXGroup",
+            "children" ~> arr [val "D2AAC07E0554694100DB518D" ],
+            "name" ~> val "Products",
+            "sourceTree" ~> val "<group>"
+          ],
+          "0867D691FE84028FC02AAC07" ~> obj [
+            "isa" ~> val "PBXGroup",
+            "children" ~> arr [
+              val "08FB77AEFE84172EC02AAC07",
+              val "32C88DFF0371C24200C91783",
+              val "0867D69AFE84028FC02AAC07",
+              val "034768DFFF38A50411DB9C8B",
+              val "4728C52F117C02B10027D7D1"
+            ],
+            "name" ~> val "KitDeps",
+            "sourceTree" ~> val "<group>"
+          ],
+          "0867D69AFE84028FC02AAC07" ~> obj [
+            "isa" ~> val "PBXGroup",
+            "children" ~> arr [ val	"AACBBE490F95108600F1A2B1" ],
+            "name" ~> val "Frameworks",
+            "sourceTree" ~> val "<group>"
+          ]]
+    		
+  next2 = "32C88DFF0371C24200C91783" ~> obj [
+        			"isa" ~> val "PBXGroup",
+        			"children" ~> arr [val "AA747D9E0F9514B9006C5449"],
+        			"name" ~> val "Other Sources",
+        			"sourceTree" ~> val "<group>"
+        		] 
+
+  next3 = ("D2AAC07D0554694100DB518D" ~> obj [
+        			"isa" ~> val "PBXNativeTarget",
+        			"buildConfigurationList" ~> val "1DEB921E08733DC00010E9CD",
+        			"buildPhases" ~> arr [ val "D2AAC07A0554694100DB518D", val "D2AAC07B0554694100DB518D", val "D2AAC07C0554694100DB518D" ],
+              "buildRules" ~> arr [],
+        			"dependencies" ~> arr [],
+        			"name" ~> val "KitDeps",
+        			"productName" ~> val "KitDeps",
+        			"productReference" ~> val "D2AAC07E0554694100DB518D",
+        			"productType" ~> val "com.apple.product-type.library.static"
+        	  ]) : kitUpdateTarget ++ ["0867D690FE84028FC02AAC07" ~> obj [
+        			"isa" ~> val "PBXProject",
+        			"buildConfigurationList" ~> val "1DEB922208733DC00010E9CD",
+        			"compatibilityVersion" ~> val "Xcode 3.1",
+        			"hasScannedForEncodings" ~> val "1",
+        			"mainGroup" ~> val "0867D691FE84028FC02AAC07",
+        			"productRefGroup" ~> val "034768DFFF38A50411DB9C8B",
+        			"projectDirPath" ~> val "",
+        			"projectRoot" ~> val "",
+        			"targets" ~> arr [ val "D2AAC07D0554694100DB518D", val "470E2D641287730A0084AE6F" ] 
+        	]]
+
+  bottom = ["1DEB921F08733DC00010E9CD" ~> obj [
+        			"isa" ~> val "XCBuildConfiguration",
+        			"buildSettings" ~> obj [
+        				"ALWAYS_SEARCH_USER_PATHS" ~> val "NO",
+        				"ARCHS" ~> val "$(ARCHS_STANDARD_32_BIT)",
+        				"COPY_PHASE_STRIP" ~> val "NO",
+        				"DSTROOT" ~> val "/tmp/KitDeps.dst",
+        				"GCC_DYNAMIC_NO_PIC" ~> val "NO",
+        				"GCC_ENABLE_FIX_AND_CONTINUE" ~> val "YES",
+        				"GCC_MODEL_TUNING" ~> val "G5",
+        				"GCC_OPTIMIZATION_LEVEL" ~> val "0",
+        				"GCC_PRECOMPILE_PREFIX_HEADER" ~> val "YES",
+        				"GCC_PREFIX_HEADER" ~> val "KitDeps_Prefix.pch",
+        				"INSTALL_PATH" ~> val "/usr/local/lib",
+        				"PRODUCT_NAME" ~> val "KitDeps"
+              ],
+        			"name" ~> val "Debug"
+            ],
+        		"1DEB922008733DC00010E9CD" ~> obj [
+        			"isa" ~> val "XCBuildConfiguration",
+        			"buildSettings" ~> obj [
+        				"ALWAYS_SEARCH_USER_PATHS" ~> val "NO",
+        				"ARCHS" ~> val "$(ARCHS_STANDARD_32_BIT)",
+        				"DSTROOT" ~> val "/tmp/KitDeps.dst",
+        				"GCC_MODEL_TUNING" ~> val "G5",
+        				"GCC_PRECOMPILE_PREFIX_HEADER" ~> val "YES",
+        				"GCC_PREFIX_HEADER" ~> val "KitDeps_Prefix.pch",
+        				"INSTALL_PATH" ~> val "/usr/local/lib",
+        				"PRODUCT_NAME" ~> val "KitDeps"
+                ],
+        			"name" ~> val "Release"
+              ],
+        		"1DEB922308733DC00010E9CD" ~> obj [
+        			"isa" ~> val "XCBuildConfiguration",
+        			"baseConfigurationReference" ~> val "4728C52F117C02B10027D7D1",
+        			"buildSettings" ~> obj [
+        				"ARCHS" ~> val "$(ARCHS_STANDARD_32_BIT)",
+        				"GCC_C_LANGUAGE_STANDARD" ~> val "c99",
+        				"GCC_OPTIMIZATION_LEVEL" ~> val "0",
+        				"GCC_WARN_ABOUT_RETURN_TYPE" ~> val "YES",
+        				"GCC_WARN_UNUSED_VARIABLE" ~> val "YES",
+        				"OTHER_LDFLAGS" ~> val "-ObjC",
+        				"PREBINDING" ~> val "NO",
+        				"SDKROOT" ~> val "iphoneos"
+        			],
+        			"name" ~> val "Debug"
+        		],
+        		"1DEB922408733DC00010E9CD" ~> obj [
+        			"isa" ~> val "XCBuildConfiguration",
+        			"baseConfigurationReference" ~> val "4728C52F117C02B10027D7D1",
+        			"buildSettings" ~> obj [
+        				"ARCHS" ~> val "$(ARCHS_STANDARD_32_BIT)",
+        				"GCC_C_LANGUAGE_STANDARD" ~> val "c99",
+        				"GCC_WARN_ABOUT_RETURN_TYPE" ~> val "YES",
+        				"GCC_WARN_UNUSED_VARIABLE" ~> val "YES",
+        				"OTHER_LDFLAGS" ~> val "-ObjC",
+        				"PREBINDING" ~> val "NO",
+        				"SDKROOT" ~> val "iphoneos"
+        			],
+        			"name" ~> val "Release"
+        		],
+        		"1DEB921E08733DC00010E9CD" ~> obj [
+        			"isa" ~> val "XCConfigurationList",
+        			"buildConfigurations" ~> arr [
+        				val "1DEB921F08733DC00010E9CD",
+        				val "1DEB922008733DC00010E9CD"
+        			],
+        			"defaultConfigurationIsVisible" ~> val "0",
+        			"defaultConfigurationName" ~> val "Release"
+        		],
+        		"1DEB922208733DC00010E9CD" ~> obj [
+        			"isa" ~> val "XCConfigurationList",
+        			"buildConfigurations" ~> arr [
+        				val "1DEB922308733DC00010E9CD",
+        				val "1DEB922408733DC00010E9CD"
+        			],
+        			"defaultConfigurationIsVisible" ~> val "0",
+        			"defaultConfigurationName" ~> val "Release"
+        		]
+        	]
+
+  kitUpdateTarget = [
+        "470E2D641287730A0084AE6F" ~> obj [ 
+          "isa" ~> val "PBXLegacyTarget",
+          "buildArgumentsString" ~> val "",
+          "buildConfigurationList" ~> val "470E2D721287731E0084AE6F",
+          "buildPhases" ~> arr [],
+          "buildToolPath" ~> val "/usr/bin/make",
+          "buildWorkingDirectory" ~> val "",
+          "dependencies" ~> arr [],
+          "name" ~> val "KitUpdate",
+          "passBuildSettingsInEnvironment" ~> val "1",
+          "productName" ~> val "KitUpdate"
+        ],
+        "470E2D721287731E0084AE6F" ~> obj [
+          "isa" ~> val "XCConfigurationList",
+          "buildConfigurations" ~> arr [ val "470E2D651287730B0084AE6F", val "470E2D661287730B0084AE6F" ],
+          "defaultConfigurationIsVisible" ~> val "0",
+          "defaultConfigurationName" ~> val "Debug"
+        ],
+        "470E2D651287730B0084AE6F" ~> obj [
+          "isa" ~> val "XCBuildConfiguration",
+          "buildSettings" ~> obj [
+            "COPY_PHASE_STRIP" ~> val "NO",
+            "GCC_DYNAMIC_NO_PIC" ~> val "NO",
+            "GCC_OPTIMIZATION_LEVEL" ~> val "0", 
+            "PRODUCT_NAME" ~> val "KitUpdate" 
+          ],
+          "name" ~> val "Debug"
+        ], 
+        "470E2D661287730B0084AE6F" ~> obj [
+          "isa" ~> val "XCBuildConfiguration",
+          "buildSettings" ~> obj [ "PRODUCT_NAME" ~> val "KitUpdate" ],
+          "name" ~> val "Release"
+        ]]
+  
 

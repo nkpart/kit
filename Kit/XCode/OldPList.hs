@@ -1,7 +1,7 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 module Kit.XCode.OldPList where
 
-import Data.List (isInfixOf, isPrefixOf)
+import Data.List (isInfixOf, isPrefixOf, intersperse)
 
 -------------------------------------------------------------------------------
 -- | A Key/Value pair in a PList Object
@@ -10,7 +10,6 @@ data PListObjectItem = PListObjectItem {
     itemValue :: PListType -- The value in the object
   } deriving Eq 
 
-lineItem = PListObjectItem 
 
 data PListType = PListValue String
                | PListArray [PListType]
@@ -25,22 +24,28 @@ infixl 1 ~>
 a ~> b = PListObjectItem a b
 
 quote s = "\"" ++ s ++ "\""
-quotable s = or $ map (\x -> x `isInfixOf` s && (not $ "sourcecode" `isPrefixOf` s)) ["-", "<", ">", " ", ".m", ".h"]
+quotable "" = True
+quotable s = or $ map (\x -> x `isInfixOf` s && (not $ "sourcecode" `isPrefixOf` s)) quote_triggers
+              where quote_triggers = ["-", "<", ">", " ", ".m", ".h", "_", "$"]
 
 instance Show PListObjectItem where
-  show (PListObjectItem k v) = k ++ " = " ++ show v ++ "; "
+  show (PListObjectItem k v) = k ++ " = " ++ show v ++ ";\n"
 
 instance Show PListType where
   show (PListValue a) = (if (quotable a) then quote a else a) 
-  show (PListArray xs) = "(" ++ (map ((++ ",") . show) xs >>= id) ++ ")"
-  show (PListObject kvs) = "{" ++ (kvs >>= show) ++ "}"
-
+  show (PListArray xs) = "(" ++ ((intersperse ", " $ map show xs) >>= id) ++ ")"
+  show (PListObject kvs) = "{\n" ++ (kvs >>= (\x -> "  " ++ show x)) ++ "}\n"
 
 data PListFile = PListFile { pListFileCharset :: String, pListFileValue :: PListType }
-projectFile = PListFile "!$*UTF8*$!" $ obj [
+
+instance Show PListFile where
+  show (PListFile charset value) = "// " ++ charset ++ "\n" ++ show value ++ "\n"
+
+projectFile objects uuid = PListFile "!$*UTF8*$!" $ obj [
         "archiveVersion" ~> val "1",
         "classes" ~> obj [],
         "objectVersion" ~> val "45",
-        "objects" ~> obj []
+        "objects" ~> obj objects, 
+        "rootObject" ~> val uuid
     ]
 
