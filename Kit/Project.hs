@@ -36,12 +36,18 @@ module Kit.Project (
 
   -- Represents an extracted project
   -- Headers, Sources, Config, Prefix content
-  data KitContents = KitContents { contentHeaders :: [String], contentSources :: [String], contentConfig :: Maybe XCConfig, contentPrefix :: Maybe String }
+  data KitContents = KitContents { contentHeaders :: [FilePath], contentSources :: [FilePath], contentConfig :: Maybe XCConfig, contentPrefix :: Maybe String }
+
+  forceRight = either (const undefined) id
 
   readKitContents :: Kit -> IO KitContents
   readKitContents kit  =
     let kitDir = kitFileName kit
-        find tpe = glob ((kitDir </> "src/**/*") ++ tpe)
+        kitSpecFilePath = kitDir </> "KitSpec"
+        find tpe = do
+          -- TODO might be better off passing the kitSpec in to this function
+          x <- runErrorT $ readSpec kitSpecFilePath >>= (\spec -> liftIO $ glob ((kitDir </> specSourceDir spec </> "**/*") ++ tpe))
+          return . forceRight $ x
         headers = find ".h"
         sources = fmap join $ T.sequence [find ".m", find ".mm", find ".c"]
         config = readConfig kit
