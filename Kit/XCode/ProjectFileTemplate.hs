@@ -2,7 +2,7 @@
 
   Constant sections of the project file
 -}
-module Kit.XCode.ProjectFile (projectPbxProj) where
+module Kit.XCode.ProjectFileTemplate (makeProjectPList) where
 
   import Text.PList
 
@@ -14,14 +14,14 @@ module Kit.XCode.ProjectFile (projectPbxProj) where
         "rootObject" ~> val uuid
     ]
  
-  projectPbxProj :: 
+  makeProjectPList :: 
     [PListObjectItem] -> -- build file section
     [PListObjectItem] -> -- file refs section
     PListObjectItem -> -- classes item
     PListObjectItem -> -- headers section
     PListObjectItem -> -- sources section
     PListFile 
-  projectPbxProj bfs fileRefsSection classes headers sources = projectFile objs "0867D690FE84028FC02AAC07" where
+  makeProjectPList bfs fileRefsSection classes headers sources = projectFile objs "0867D690FE84028FC02AAC07" where
       objs = bfs ++ fileRefsSection ++ next1 ++ [classes] ++ [next2] ++ [headers] ++ next3 ++ [sources] ++ bottom
 
   next1 = ["D2AAC07C0554694100DB518D" ~> obj [

@@ -3,7 +3,7 @@ module Kit.XCode.Builder (buildXCodeProject) where
   import Data.Monoid
   import Data.List
   import Kit.XCode.Common
-  import Kit.XCode.ProjectFile
+  import Kit.XCode.ProjectFileTemplate
   import Text.PList
   import Kit.Util
 
@@ -13,7 +13,7 @@ module Kit.XCode.Builder (buildXCodeProject) where
           uuid2 = uuid $ i + 10000000
 
   buildXCodeProject :: [FilePath] -> [FilePath] -> String
-  buildXCodeProject headers sources = show $ projectPbxProj bfs frs classes hs srcs
+  buildXCodeProject headers sources = show $ makeProjectPList bfs frs classes hs srcs
     where
       sourceStart = toInteger (length headers + 1)
       headerBuildFiles = zipWith createBuildFile [1..] headers
@@ -24,33 +24,6 @@ module Kit.XCode.Builder (buildXCodeProject) where
       classes = classesSection $ map buildFileReference (sourceBuildFiles ++ headerBuildFiles)
       hs = headersSection headerBuildFiles
       srcs = sourcesSection sourceBuildFiles
-
-  buildFileItem :: PBXBuildFile -> PListObjectItem 
-  buildFileItem bf = i ~> dict
-    where fr = buildFileReference bf
-          i = buildFileId bf
-          dict = obj [
-              "isa" ~> val "PBXBuildFile",
-              "fileRef" ~> PListValue (fileReferenceId fr) 
-            ]
-
-  fileTypeBit :: FileType -> String
-  fileTypeBit Header = "sourcecode.c.h"
-  fileTypeBit Source = "sourcecode.c.objc"
-  fileTypeBit Unknown = "sourcecode.unknown"
-
-  fileReferenceItem :: PBXFileReference -> PListObjectItem
-  fileReferenceItem fr = (fileReferenceId fr) ~> dict
-    where
-      fileName = fileReferenceName fr
-      dict = obj [
-          "isa" ~> val "PBXFileReference",
-          "fileEncoding" ~> val "4",
-          "lastKnownFileType" ~> val (fileTypeBit . fileType $ fileName),
-          "name" ~> val fileName,
-          "path" ~> (val $ fileReferencePath fr),
-          "sourceTree" ~> val "<group>"
-        ]
 
   buildFileSection :: [PBXBuildFile] -> [PListObjectItem]
   buildFileSection bfs = (map buildFileItem bfs ++ [

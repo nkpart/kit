@@ -1,5 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-module Kit.XCode.PBXProject where
+module Kit.XCode.Experimental.ProjectBuilder.hs where
 
 import Text.PList
 import Control.Monad.State

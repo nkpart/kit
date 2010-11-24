@@ -3,6 +3,9 @@ module Kit.XCode.Common where
   import Data.List
   import System.FilePath.Posix
   
+  import Text.PList
+
+  
   type UUID = String
   
   data FileType = Header | Source | Unknown
@@ -13,7 +16,12 @@ module Kit.XCode.Common where
   fileType x | ".mm" `isSuffixOf` x = Source
   fileType x | ".c" `isSuffixOf` x = Source
   fileType _ = Unknown
-  
+
+  fileTypeBit :: FileType -> String
+  fileTypeBit Header = "sourcecode.c.h"
+  fileTypeBit Source = "sourcecode.c.objc"
+  fileTypeBit Unknown = "sourcecode.unknown"
+
   data PBXBuildFile = PBXBuildFile {
     buildFileId :: UUID,
     buildFileReference :: PBXFileReference
@@ -24,6 +32,29 @@ module Kit.XCode.Common where
     fileReferencePath :: String
   }
   
+  buildFileItem :: PBXBuildFile -> PListObjectItem 
+  buildFileItem bf = i ~> dict
+    where fr = buildFileReference bf
+          i = buildFileId bf
+          dict = obj [
+              "isa" ~> val "PBXBuildFile",
+              "fileRef" ~> PListValue (fileReferenceId fr) 
+            ]
+
+  fileReferenceItem :: PBXFileReference -> PListObjectItem
+  fileReferenceItem fr = (fileReferenceId fr) ~> dict
+    where
+      fileName = fileReferenceName fr
+      dict = obj [
+          "isa" ~> val "PBXFileReference",
+          "fileEncoding" ~> val "4",
+          "lastKnownFileType" ~> val (fileTypeBit . fileType $ fileName),
+          "name" ~> val fileName,
+          "path" ~> (val $ fileReferencePath fr),
+          "sourceTree" ~> val "<group>"
+        ]
+
+
   fileReferenceName = takeFileName . fileReferencePath
   
   uuid :: Integer -> UUID
