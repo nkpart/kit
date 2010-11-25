@@ -23,7 +23,7 @@ module Kit.Main where
   import Data.Data
   import Data.Typeable
 
-  appVersion = "0.3"
+  appVersion = "0.5"
 
   defaultLocalRepoPath = do
       home <- getHomeDirectory
@@ -31,7 +31,7 @@ module Kit.Main where
   defaultLocalRepository = fmap fileRepo defaultLocalRepoPath
 
   handleFails :: Either KitError a -> IO ()
-  handleFails = either (putStrLn . ("kit error: " ++)) (\x -> return ())
+  handleFails = either (putStrLn . ("kit error: " ++)) (const $ return ())
 
   run f = runErrorT f >>= handleFails
 

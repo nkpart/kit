@@ -46,7 +46,7 @@ module Kit.Project (
         kitSpecFilePath = kitDir </> "KitSpec"
         find tpe = do
           -- TODO might be better off passing the kitSpec in to this function
-          x <- runErrorT $ readSpec kitSpecFilePath >>= (\spec -> liftIO $ glob ((kitDir </> specSourceDir spec </> "**/*") ++ tpe))
+          x <- runErrorT $ readSpec kitSpecFilePath >>= (\spec -> liftIO $ glob ((kitDir </> specSourceDirectory spec </> "**/*") ++ tpe))
           return . forceRight $ x
         headers = find ".h"
         sources = fmap join $ T.sequence [find ".m", find ".mm", find ".c"]

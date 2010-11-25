@@ -13,14 +13,17 @@ module Kit.Package (package) where
   {-
     Package format
      src/ | configurable source dir
-     test/
+     test/ | test directory
+     lib/ | lib directory
+     *.xcconfig
+     *.pch
      KitSpec
      *.codeproj
   -}
 
   fileBelongsInPackage :: KitSpec -> FilePath -> Bool
   fileBelongsInPackage config fp = let
-    a = elem fp [specSourceDir config, "test", "KitSpec"]
+    a = elem fp [specSourceDirectory config, specTestDirectory config, specLibDirectory config, "KitSpec"]
     b = "xcodeproj" `isSuffixOf` fp
     c = "xcconfig" `isSuffixOf` fp
     d = ".pch" `isSuffixOf` fp

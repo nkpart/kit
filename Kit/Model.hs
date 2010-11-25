@@ -7,7 +7,9 @@ module Kit.Model where
   data KitSpec = KitSpec {
     specKit :: Kit,
     specDependencies :: [Kit],
-    specSourceDir :: FilePath
+    specSourceDirectory :: FilePath,
+    specTestDirectory :: FilePath,
+    specLibDirectory :: FilePath
   } deriving (Show, Read)
 
   type Version = String
@@ -24,7 +26,7 @@ module Kit.Model where
   kitConfigFile kit = kitFileName kit </> (kitName kit ++ ".xcconfig")
 
   defaultSpecForKit :: Kit -> KitSpec
-  defaultSpecForKit kit = KitSpec kit [] "src"
+  defaultSpecForKit kit = KitSpec kit [] "src" "test" "lib" -- TODO make this and the json reading use the same defaults
 
   instance JSON Kit where
       showJSON kit = makeObj
@@ -33,8 +35,7 @@ module Kit.Model where
           ]
 
       readJSON (JSObject obj) = Kit <$> f "name" <*> f "version"
-        where f x = mLookup x jsonObjAssoc >>= readJSON
-              jsonObjAssoc = fromJSObject obj
+        where f x = f' obj x 
 
   instance JSON KitSpec where
       showJSON spec = makeObj
@@ -44,12 +45,15 @@ module Kit.Model where
           ]
           where kit = specKit spec
 
-      readJSON (JSObject obj) =
-          let myKit = Kit <$> f "name" <*> f "version"
-              -- myConfig = (KitConfiguration <$> )
-           in KitSpec <$> myKit <*> f "dependencies" <*> (f "sourceDir" <|> pure "src")
-        where f x = mLookup x jsonObjAssoc >>= readJSON
-              jsonObjAssoc = fromJSObject obj
+      readJSON js@(JSObject obj) =
+              KitSpec <$> readJSON js 
+                      <*> (f "dependencies" <|> pure []) 
+                      <*> (f "source-directory" <|> pure "src")
+                      <*> (f "test-directory" <|> pure "test")
+                      <*> (f "lib-directory" <|> pure "lib")
+        where f x = f' obj x
+
+  f' obj x = mLookup x (fromJSObject obj) >>= readJSON
 
   mLookup :: Monad m => String -> [(String, b)] -> m b
   mLookup a as = maybe (fail $ "No such element: " ++ a) return (lookup a as)
