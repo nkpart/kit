@@ -2,3 +2,5 @@ dist
 Kits
 build
 *.lkshs
+*.swp
+*.swo
