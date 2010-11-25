@@ -1,0 +1,7 @@
+{
+  "name":"the-project",
+  "version":"1.0",
+  "dependencies":[
+    {"name":"the-dep", "version":"1.0"}
+  ]
+}
