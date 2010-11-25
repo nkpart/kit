@@ -8,8 +8,6 @@
 
 #import <UIKit/UIKit.h>
 
-#import "FlurryAPI.h"
-
 @interface RootViewController : UITableViewController {
 }
 

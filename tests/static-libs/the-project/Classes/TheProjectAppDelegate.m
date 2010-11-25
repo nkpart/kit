@@ -9,6 +9,8 @@
 #import "TheProjectAppDelegate.h"
 #import "RootViewController.h"
 
+#import "FlurryAPI.h"
+
 
 @implementation TheProjectAppDelegate
 
@@ -20,6 +22,7 @@
 #pragma mark Application lifecycle
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {    
+    [FlurryAPI startSession:@"WOO!"];
     
     // Override point for customization after application launch.
     
