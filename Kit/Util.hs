@@ -53,12 +53,12 @@ module Kit.Util(
     when exists $ removeDirectoryRecursive directory
     mkdir_p directory
 
-  inDirectory :: FilePath -> IO a -> IO a
+  inDirectory :: MonadIO m => FilePath -> m a -> m a
   inDirectory dir actions = do
-    cwd <- getCurrentDirectory
-    setCurrentDirectory dir
+    cwd <- liftIO $ getCurrentDirectory
+    liftIO $ setCurrentDirectory dir
     v <- actions
-    setCurrentDirectory cwd
+    liftIO $ setCurrentDirectory cwd
     return v
 
   glob :: String -> IO [String]

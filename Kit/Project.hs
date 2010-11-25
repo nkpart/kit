@@ -40,28 +40,28 @@ module Kit.Project (
 
   forceRight = either (const undefined) id
 
-  readKitContents :: Kit -> IO KitContents
-  readKitContents kit  =
-    let kitDir = kitFileName kit
+  readKitContents :: KitSpec -> IO KitContents
+  readKitContents spec  =
+    let kit = specKit spec
+        kitDir = kitFileName kit
         kitSpecFilePath = kitDir </> "KitSpec"
-        find tpe = do
-          -- TODO might be better off passing the kitSpec in to this function
-          x <- runErrorT $ readSpec kitSpecFilePath >>= (\spec -> liftIO $ glob ((kitDir </> specSourceDirectory spec </> "**/*") ++ tpe))
-          return . forceRight $ x
+        find tpe = glob ((kitDir </> specSourceDirectory spec </> "**/*") ++ tpe)
         headers = find ".h"
         sources = fmap join $ T.sequence [find ".m", find ".mm", find ".c"]
         config = readConfig kit
         prefix = readHeader kit
     in  KitContents <$> headers <*> sources <*> config <*> prefix
 
-  generateXCodeProject :: [Kit] -> IO ()
+  generateXCodeProject :: [Kit] -> KitIO ()
   generateXCodeProject deps = do
-    mkdir_p kitDir
+    liftIO $ mkdir_p kitDir
     inDirectory kitDir $ do
-      kitsContents <- T.for deps readKitContents
-      createProjectFile kitsContents
-      createHeader kitsContents
-      createConfig kitsContents
+      specs <- forM deps $ \kit -> do
+        readSpec (kitFileName kit </> "KitSpec")  
+      kitsContents <- forM specs (liftIO . readKitContents)
+      liftIO $ createProjectFile kitsContents
+      liftIO $ createHeader kitsContents
+      liftIO $ createConfig kitsContents
     where kitFileNames = map kitFileName deps
           createProjectFile cs = do
             let headers = cs >>= contentHeaders
