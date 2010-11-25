@@ -55,14 +55,17 @@ module Kit.Project (
   generateXCodeProject :: [Kit] -> KitIO ()
   generateXCodeProject deps = do
     liftIO $ mkdir_p kitDir
+    specs <- forM deps $ \kit -> readSpec (kitDir </> kitFileName kit </> "KitSpec")  
     inDirectory kitDir $ do
-      specs <- forM deps $ \kit -> do
-        readSpec (kitFileName kit </> "KitSpec")  
       kitsContents <- forM specs (liftIO . readKitContents)
       liftIO $ createProjectFile kitsContents
       liftIO $ createHeader kitsContents
-      liftIO $ createConfig kitsContents
+      liftIO $ createConfig kitsContents specs
     where kitFileNames = map kitFileName deps
+          sourceDirs specs = specs >>= (\spec -> [
+              kitDir </> (kitFileName . specKit $ spec) </> specSourceDirectory spec, 
+              (kitFileName . specKit $ spec) </> specSourceDirectory spec
+            ])
           createProjectFile cs = do
             let headers = cs >>= contentHeaders
             let sources = cs >>= contentSources
@@ -72,10 +75,10 @@ module Kit.Project (
             let headers = mapMaybe contentPrefix cs
             let combinedHeader = stringJoin "\n" headers
             writeFile prefixFile $ prefixDefault ++ combinedHeader ++ "\n"
-          createConfig cs = do
+          createConfig cs specs = do
             let configs = mapMaybe contentConfig cs
             let combinedConfig = multiConfig "KitConfig" configs
-            let kitHeaders = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ (stringJoin " "  $ kitFileNames >>= (\x -> [kitDir </> x </> "src", x </> "src"]))
+            let kitHeaders = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ (stringJoin " " $ sourceDirs specs)
             let prefixHeaders = "GCC_PRECOMPILE_PREFIX_HEADER = YES\nGCC_PREFIX_HEADER = $(SRCROOT)/KitDeps_Prefix.pch\n"
             writeFile xcodeConfigFile $ kitHeaders ++ "\n" ++  prefixHeaders ++ "\n" ++ configToString combinedConfig
             writeFile kitUpdateMakeFilePath kitUpdateMakeFile
