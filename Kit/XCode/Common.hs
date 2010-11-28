@@ -34,14 +34,17 @@ module Kit.XCode.Common where
     fileReferencePath :: String
   } deriving (Eq, Show)
   
+  group name children = obj [
+      "isa" ~> val "PBXGroup",
+      "name" ~> val name,
+      "sourceTree" ~> val "<group>",
+      "children" ~> arr children
+    ]
+
+  buildFile refUUID = obj [ "isa" ~> val "PBXBuildFile", "fileRef" ~> val refUUID ]
+
   buildFileItem :: PBXBuildFile -> PListObjectItem 
-  buildFileItem bf = i ~> dict
-    where fr = buildFileReference bf
-          i = buildFileId bf
-          dict = obj [
-              "isa" ~> val "PBXBuildFile",
-              "fileRef" ~> PListValue (fileReferenceId fr) 
-            ]
+  buildFileItem bf = buildFileId bf ~> buildFile (fileReferenceId . buildFileReference $ bf) 
 
   fileReferenceItem :: PBXFileReference -> PListObjectItem
   fileReferenceItem fr = (fileReferenceId fr) ~> dict
