@@ -8,29 +8,31 @@ module Kit.XCode.Common where
   
   type UUID = String
   
-  data FileType = Header | Source | Unknown
+  data FileType = Header | Source | Archive | Unknown
   
   fileType :: String -> FileType
   fileType x | ".h" `isSuffixOf` x = Header
   fileType x | ".m" `isSuffixOf` x = Source
   fileType x | ".mm" `isSuffixOf` x = Source
   fileType x | ".c" `isSuffixOf` x = Source
+  fileType x | ".a" `isSuffixOf` x = Archive
   fileType _ = Unknown
 
   fileTypeBit :: FileType -> String
   fileTypeBit Header = "sourcecode.c.h"
   fileTypeBit Source = "sourcecode.c.objc"
   fileTypeBit Unknown = "sourcecode.unknown"
+  fileTypeBit Archive = "archive.ar"
 
   data PBXBuildFile = PBXBuildFile {
     buildFileId :: UUID,
     buildFileReference :: PBXFileReference
-  }
+  } deriving (Eq, Show)
   
   data PBXFileReference = PBXFileReference {
     fileReferenceId :: UUID,
     fileReferencePath :: String
-  }
+  } deriving (Eq, Show)
   
   buildFileItem :: PBXBuildFile -> PListObjectItem 
   buildFileItem bf = i ~> dict
