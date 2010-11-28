@@ -36,21 +36,20 @@ module Kit.Project (
 
   -- Represents an extracted project
   -- Headers, Sources, Config, Prefix content
-  data KitContents = KitContents { contentHeaders :: [FilePath], contentSources :: [FilePath], contentConfig :: Maybe XCConfig, contentPrefix :: Maybe String }
-
-  forceRight = either (const undefined) id
+  data KitContents = KitContents { contentHeaders :: [FilePath], contentSources :: [FilePath], contentLibs :: [FilePath], contentConfig :: Maybe XCConfig, contentPrefix :: Maybe String }
 
   readKitContents :: KitSpec -> IO KitContents
   readKitContents spec  =
     let kit = specKit spec
         kitDir = kitFileName kit
-        kitSpecFilePath = kitDir </> "KitSpec"
-        find tpe = glob ((kitDir </> specSourceDirectory spec </> "**/*") ++ tpe)
-        headers = find ".h"
-        sources = fmap join $ T.sequence [find ".m", find ".mm", find ".c"]
+        find dir tpe = glob ((kitDir </> dir </> "**/*") ++ tpe)
+        findSrc = find $ specSourceDirectory spec
+        headers = findSrc ".h"
+        sources = fmap join $ T.sequence [findSrc ".m", findSrc ".mm", findSrc ".c"]
+        libs = find (specLibDirectory spec) ".a" 
         config = readConfig kit
         prefix = readHeader kit
-    in  KitContents <$> headers <*> sources <*> config <*> prefix
+    in  KitContents <$> headers <*> sources <*> libs <*> config <*> prefix
 
   generateXCodeProject :: [Kit] -> KitIO ()
   generateXCodeProject deps = do
@@ -69,6 +68,7 @@ module Kit.Project (
           createProjectFile cs = do
             let headers = cs >>= contentHeaders
             let sources = cs >>= contentSources
+            let libs = cs >>= contentLibs
             mkdir_p projectDir
             writeFile projectFile $ buildXCodeProject headers sources
           createHeader cs = do
