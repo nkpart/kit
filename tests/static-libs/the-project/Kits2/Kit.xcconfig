@@ -1,0 +1,4 @@
+HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) ./Kits/the-dep-1.0/Classes the-dep-1.0/Classes
+GCC_PRECOMPILE_PREFIX_HEADER = YES
+GCC_PREFIX_HEADER = $(SRCROOT)/KitDeps_Prefix.pch
+
