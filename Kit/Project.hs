@@ -70,7 +70,7 @@ module Kit.Project (
             let sources = cs >>= contentSources
             let libs = cs >>= contentLibs
             mkdir_p projectDir
-            writeFile projectFile $ buildXCodeProject headers sources
+            writeFile projectFile $ buildXCodeProject headers sources libs
           createHeader cs = do
             let headers = mapMaybe contentPrefix cs
             let combinedHeader = stringJoin "\n" headers

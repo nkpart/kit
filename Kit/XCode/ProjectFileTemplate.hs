@@ -2,9 +2,12 @@
 
   Constant sections of the project file
 -}
-module Kit.XCode.ProjectFileTemplate (makeProjectPList) where
+module Kit.XCode.ProjectFileTemplate where
 
+  import Kit.XCode.Common
   import Text.PList
+
+  import qualified Data.List as L
 
   projectFile objects uuid = PListFile "!$*UTF8*$!" $ obj [
         "archiveVersion" ~> val "1",
@@ -13,78 +16,70 @@ module Kit.XCode.ProjectFileTemplate (makeProjectPList) where
         "objects" ~> obj objects, 
         "rootObject" ~> val uuid
     ]
- 
+
+  groupProductsUUID = "034768DFFF38A50411DB9C8B"
+  mainGroupUUID = "0867D691FE84028FC02AAC07"
+  classesGroupUUID = "08FB77AEFE84172EC02AAC07"
+  otherSourcesGroupUUID = "32C88DFF0371C24200C91783"
+  frameworksGroupUUID = "0867D69AFE84028FC02AAC07"
+
+  productRefUUID = "D2AAC07E0554694100DB518D"
+  kitConfigRefUUID = "4728C52F117C02B10027D7D1"
+
+  headersBuildPhaseUUID = "D2AAC07A0554694100DB518D"
+  sourcesBuildPhaseUUID = "D2AAC07B0554694100DB518D"
+  frameworksBuildPhaseUUID = "D2AAC07C0554694100DB518D"
+
   makeProjectPList :: 
     [PListObjectItem] -> -- build file section
     [PListObjectItem] -> -- file refs section
     PListObjectItem -> -- classes item
     PListObjectItem -> -- headers section
     PListObjectItem -> -- sources section
+    PListObjectItem -> -- frameworks section
+    PListObjectItem -> -- frameworks group
+    [FilePath] -> -- lib directories
     PListFile 
-  makeProjectPList bfs fileRefsSection classes headers sources = projectFile objs "0867D690FE84028FC02AAC07" where
-      objs = bfs ++ fileRefsSection ++ next1 ++ [classes] ++ [next2] ++ [headers] ++ next3 ++ [sources] ++ bottom
+  makeProjectPList bfs fileRefsSection classes headers sources frameworks fg libDirs = projectFile objs "0867D690FE84028FC02AAC07" where
+      objs = bfs ++ fileRefsSection ++ [frameworks] ++ [fg] ++ next1 ++ [classes] ++ [next2] ++ [headers] ++ next3 ++ [sources] ++ buildConfigurations libDirs
 
-  next1 = ["D2AAC07C0554694100DB518D" ~> obj [
-            "isa" ~> val "PBXFrameworksBuildPhase",
-            "buildActionMask" ~> val "2147483647",
-            "files" ~> arr [ val "AACBBE4A0F95108600F1A2B1" ],
-            "runOnlyForDeploymentPostprocessing" ~> val "0"
-          ],
-          "034768DFFF38A50411DB9C8B" ~> obj [
-            "isa" ~> val "PBXGroup",
-            "children" ~> arr [val "D2AAC07E0554694100DB518D" ],
-            "name" ~> val "Products",
-            "sourceTree" ~> val "<group>"
-          ],
-          "0867D691FE84028FC02AAC07" ~> obj [
-            "isa" ~> val "PBXGroup",
-            "children" ~> arr [
-              val "08FB77AEFE84172EC02AAC07",
-              val "32C88DFF0371C24200C91783",
-              val "0867D69AFE84028FC02AAC07",
-              val "034768DFFF38A50411DB9C8B",
-              val "4728C52F117C02B10027D7D1"
-            ],
-            "name" ~> val "KitDeps",
-            "sourceTree" ~> val "<group>"
-          ],
-          "0867D69AFE84028FC02AAC07" ~> obj [
-            "isa" ~> val "PBXGroup",
-            "children" ~> arr [ val	"AACBBE490F95108600F1A2B1" ],
-            "name" ~> val "Frameworks",
-            "sourceTree" ~> val "<group>"
-          ]]
+  next1 = [ groupProductsUUID ~> group "Products" [ val productRefUUID ],
+            mainGroupUUID ~> group "KitDeps" [
+              val classesGroupUUID,
+              val otherSourcesGroupUUID,
+              val frameworksGroupUUID,
+              val groupProductsUUID,
+              val kitConfigRefUUID
+            ]
+          ]
     		
-  next2 = "32C88DFF0371C24200C91783" ~> obj [
-        			"isa" ~> val "PBXGroup",
-        			"children" ~> arr [val "AA747D9E0F9514B9006C5449"],
-        			"name" ~> val "Other Sources",
-        			"sourceTree" ~> val "<group>"
-        		] 
+  next2 = otherSourcesGroupUUID ~> group "Other Sources" [val "AA747D9E0F9514B9006C5449"]
 
   next3 = ("D2AAC07D0554694100DB518D" ~> obj [
         			"isa" ~> val "PBXNativeTarget",
         			"buildConfigurationList" ~> val "1DEB921E08733DC00010E9CD",
-        			"buildPhases" ~> arr [ val "D2AAC07A0554694100DB518D", val "D2AAC07B0554694100DB518D", val "D2AAC07C0554694100DB518D" ],
+        			"buildPhases" ~> arr [ val headersBuildPhaseUUID, val sourcesBuildPhaseUUID, val frameworksBuildPhaseUUID ],
               "buildRules" ~> arr [],
         			"dependencies" ~> arr [],
         			"name" ~> val "KitDeps",
         			"productName" ~> val "KitDeps",
-        			"productReference" ~> val "D2AAC07E0554694100DB518D",
+        			"productReference" ~> val productRefUUID,
         			"productType" ~> val "com.apple.product-type.library.static"
         	  ]) : kitUpdateTarget ++ ["0867D690FE84028FC02AAC07" ~> obj [
         			"isa" ~> val "PBXProject",
         			"buildConfigurationList" ~> val "1DEB922208733DC00010E9CD",
         			"compatibilityVersion" ~> val "Xcode 3.1",
         			"hasScannedForEncodings" ~> val "1",
-        			"mainGroup" ~> val "0867D691FE84028FC02AAC07",
-        			"productRefGroup" ~> val "034768DFFF38A50411DB9C8B",
+        			"mainGroup" ~> val mainGroupUUID ,
+        			"productRefGroup" ~> val groupProductsUUID,
         			"projectDirPath" ~> val "",
         			"projectRoot" ~> val "",
         			"targets" ~> arr [ val "D2AAC07D0554694100DB518D", val "470E2D641287730A0084AE6F" ] 
         	]]
 
-  bottom = ["1DEB921F08733DC00010E9CD" ~> obj [
+  librarySearchPaths libDirs = "LIBRARY_SEARCH_PATHS" ~> val ("$(inherited) " ++ (L.intersperse " " libDirs >>= id))
+
+  buildConfigurations libDirs = let libSearch = librarySearchPaths libDirs in ["1DEB921F08733DC00010E9CD" ~> obj [
         			"isa" ~> val "XCBuildConfiguration",
         			"buildSettings" ~> obj [
         				"ALWAYS_SEARCH_USER_PATHS" ~> val "NO",
@@ -98,7 +93,8 @@ module Kit.XCode.ProjectFileTemplate (makeProjectPList) where
         				"GCC_PRECOMPILE_PREFIX_HEADER" ~> val "YES",
         				"GCC_PREFIX_HEADER" ~> val "KitDeps_Prefix.pch",
         				"INSTALL_PATH" ~> val "/usr/local/lib",
-        				"PRODUCT_NAME" ~> val "KitDeps"
+        				"PRODUCT_NAME" ~> val "KitDeps",
+                libSearch 
               ],
         			"name" ~> val "Debug"
             ],
@@ -112,13 +108,14 @@ module Kit.XCode.ProjectFileTemplate (makeProjectPList) where
         				"GCC_PRECOMPILE_PREFIX_HEADER" ~> val "YES",
         				"GCC_PREFIX_HEADER" ~> val "KitDeps_Prefix.pch",
         				"INSTALL_PATH" ~> val "/usr/local/lib",
-        				"PRODUCT_NAME" ~> val "KitDeps"
+        				"PRODUCT_NAME" ~> val "KitDeps",
+                libSearch
                 ],
         			"name" ~> val "Release"
               ],
         		"1DEB922308733DC00010E9CD" ~> obj [
         			"isa" ~> val "XCBuildConfiguration",
-        			"baseConfigurationReference" ~> val "4728C52F117C02B10027D7D1",
+        			"baseConfigurationReference" ~> val kitConfigRefUUID,
         			"buildSettings" ~> obj [
         				"ARCHS" ~> val "$(ARCHS_STANDARD_32_BIT)",
         				"GCC_C_LANGUAGE_STANDARD" ~> val "c99",
@@ -127,13 +124,14 @@ module Kit.XCode.ProjectFileTemplate (makeProjectPList) where
         				"GCC_WARN_UNUSED_VARIABLE" ~> val "YES",
         				"OTHER_LDFLAGS" ~> val "-ObjC",
         				"PREBINDING" ~> val "NO",
-        				"SDKROOT" ~> val "iphoneos"
+        				"SDKROOT" ~> val "iphoneos",
+                libSearch
         			],
         			"name" ~> val "Debug"
         		],
         		"1DEB922408733DC00010E9CD" ~> obj [
         			"isa" ~> val "XCBuildConfiguration",
-        			"baseConfigurationReference" ~> val "4728C52F117C02B10027D7D1",
+        			"baseConfigurationReference" ~> val kitConfigRefUUID,
         			"buildSettings" ~> obj [
         				"ARCHS" ~> val "$(ARCHS_STANDARD_32_BIT)",
         				"GCC_C_LANGUAGE_STANDARD" ~> val "c99",
@@ -141,7 +139,8 @@ module Kit.XCode.ProjectFileTemplate (makeProjectPList) where
         				"GCC_WARN_UNUSED_VARIABLE" ~> val "YES",
         				"OTHER_LDFLAGS" ~> val "-ObjC",
         				"PREBINDING" ~> val "NO",
-        				"SDKROOT" ~> val "iphoneos"
+        				"SDKROOT" ~> val "iphoneos",
+                libSearch
         			],
         			"name" ~> val "Release"
         		],
