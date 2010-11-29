@@ -87,6 +87,7 @@ module Kit.Main where
             writeFile "KitSpec" $ encode verifySpec
             doUpdate
             inDirectory "Kits" $ do
+              system $ "open KitDeps.xcodeproj"
               system $ "xcodebuild -sdk " ++ sdk
           putStrLn "OK."
         puts "End checks."
