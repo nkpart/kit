@@ -47,8 +47,8 @@ module Kit.Project (
         headers = findSrc ".h"
         sources = fmap join $ T.sequence [findSrc ".m", findSrc ".mm", findSrc ".c"]
         libs = find (specLibDirectory spec) ".a" 
-        config = readConfig kit
-        prefix = readHeader kit
+        config = readConfig spec
+        prefix = readHeader spec
     in  KitContents <$> headers <*> sources <*> libs <*> config <*> prefix
 
   generateXCodeProject :: [Kit] -> KitIO ()
@@ -83,18 +83,19 @@ module Kit.Project (
             writeFile xcodeConfigFile $ kitHeaders ++ "\n" ++  prefixHeaders ++ "\n" ++ configToString combinedConfig
             writeFile kitUpdateMakeFilePath kitUpdateMakeFile
 
-  kitPrefixFile = "Prefix.pch"
-
-  readHeader :: Kit -> IO (Maybe String)
-  readHeader kit = do
-    let fp = kitFileName kit </> kitPrefixFile
+  -- Report missing file
+  readHeader :: KitSpec -> IO (Maybe String)
+  readHeader spec = do
+    let fp = (kitFileName . specKit $ spec) </> specPrefixFile spec
     exists <- doesFileExist fp
     contents <- T.sequence (fmap readFile $ justTrue exists fp)
     return contents
 
-  readConfig :: Kit -> IO (Maybe XCConfig)
-  readConfig kit = do
-    let fp = kitConfigFile kit
+  -- TODO make this report missing file
+  readConfig :: KitSpec -> IO (Maybe XCConfig)
+  readConfig spec = do
+    let kit = specKit spec
+    let fp = kitFileName kit </> specConfigFile spec
     exists <- doesFileExist fp
     contents <- T.sequence (fmap readFile $ justTrue exists fp)
     return $ fmap (fileContentsToXCC $ kitName kit) contents

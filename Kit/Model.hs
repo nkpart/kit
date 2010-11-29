@@ -9,7 +9,9 @@ module Kit.Model where
     specDependencies :: [Kit],
     specSourceDirectory :: FilePath,
     specTestDirectory :: FilePath,
-    specLibDirectory :: FilePath
+    specLibDirectory :: FilePath,
+    specPrefixFile :: FilePath,
+    specConfigFile :: FilePath
   } deriving (Show, Read)
 
   type Version = String
@@ -22,11 +24,12 @@ module Kit.Model where
   kitFileName :: Kit -> String
   kitFileName k = kitName k ++ "-" ++ kitVersion k
 
-  kitConfigFile :: Kit -> String
-  kitConfigFile kit = kitFileName kit </> (kitName kit ++ ".xcconfig")
-
   defaultSpecForKit :: Kit -> KitSpec
-  defaultSpecForKit kit = KitSpec kit [] "src" "test" "lib" -- TODO make this and the json reading use the same defaults
+  defaultSpecForKit kit = KitSpec kit [] "src" "test" "lib" "Prefix.pch" "Config.xcconfig"
+  -- TODO make this and the json reading use the same defaults
+  -- I suspect that to do this I'll need update functions for each of
+  -- fields in the KitSpec record.
+  -- Look at the 'lenses' package on haskell.
 
   instance JSON Kit where
       showJSON kit = makeObj [ ("name", w kitName) , ("version", w kitVersion) ] where w f = showJSON . f $ kit
@@ -48,6 +51,8 @@ module Kit.Model where
                       <*> (f "source-directory" <|> pure "src")
                       <*> (f "test-directory" <|> pure "test")
                       <*> (f "lib-directory" <|> pure "lib")
+                      <*> (f "prefix-header" <|> pure "Prefix.pch")
+                      <*> (f "xcconfig" <|> pure "Config.xcconfig")
         where f x = f' obj x
 
   f' obj x = mLookup x (fromJSObject obj) >>= readJSON

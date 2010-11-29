@@ -1,0 +1,9 @@
+{
+  "name" : "test-custom-everything",
+  "version" : "1.0",
+  "source-directory" : "Classes",
+  "lib-directory" : "MyLibs",
+  "test-directory" : "TestClasses",
+  "prefix-header" : "my_prefix.pch",
+  "xcconfig" : "my_config.xcconfig"
+}
