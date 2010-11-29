@@ -1,5 +1,5 @@
 name:           kit
-version:        0.4.4
+version:        0.5
 cabal-version:  >=1.2
 build-type:     Simple
 license:        BSD3
@@ -20,7 +20,5 @@ Executable kit
                   HTTP >=4000.0.9, Glob >= 0.5
 
   hs-source-dirs: .
-  other-modules:  Kit.Model Kit.Main Kit.Package
-                  Kit.Project Kit.Repository Kit.Util Kit.XCode.Builder
-                  Kit.XCode.Common 
-                  Kit.XCode.ProjectFileTemplate Kit.XCode.XCConfig Text.PList
+  other-modules:  Kit.Model Kit.Main Kit.Package Kit.Project Kit.Repository Kit.Util Kit.XCode.Builder
+                  Kit.XCode.Common Kit.XCode.ProjectFileTemplate Kit.XCode.XCConfig Text.PList
