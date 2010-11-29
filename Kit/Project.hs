@@ -146,7 +146,5 @@ module Kit.Project (
   readSpecContents kitSpecPath = checkExists kitSpecPath >>= liftIO . readFile
 
   parses :: String -> Either KitError KitSpec
-  parses contents = case (decode contents) of
-                      Ok a -> Right a
-                      Error a -> Left a
+  parses contents = resultToEither (decode contents)
 

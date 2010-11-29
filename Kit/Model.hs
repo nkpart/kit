@@ -29,17 +29,14 @@ module Kit.Model where
   defaultSpecForKit kit = KitSpec kit [] "src" "test" "lib" -- TODO make this and the json reading use the same defaults
 
   instance JSON Kit where
-      showJSON kit = makeObj
-          [ ("name", showJSON $ kitName kit)
-          , ("version", showJSON $ kitVersion kit)
-          ]
+      showJSON kit = makeObj [ ("name", w kitName) , ("version", w kitVersion) ] where w f = showJSON . f $ kit
 
       readJSON (JSObject obj) = Kit <$> f "name" <*> f "version"
         where f x = f' obj x 
 
   instance JSON KitSpec where
-      showJSON spec = makeObj
-          [ ("name", showJSON $ kitName kit)
+      showJSON spec = makeObj [
+            ("name", showJSON $ kitName kit)
           , ("version", showJSON $ kitVersion kit)
           , ("dependencies", showJSON $ specDependencies spec)
           ]
