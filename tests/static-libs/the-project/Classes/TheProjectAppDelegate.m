@@ -10,7 +10,7 @@
 #import "RootViewController.h"
 
 #import "FlurryAPI.h"
-
+#import "Foo.h"
 
 @implementation TheProjectAppDelegate
 
@@ -24,6 +24,7 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {    
     [FlurryAPI startSession:@"WOO!"];
     
+    here_is_a_function();
     // Override point for customization after application launch.
     
     // Add the navigation controller's view to the window and display.

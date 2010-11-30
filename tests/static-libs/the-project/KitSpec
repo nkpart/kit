@@ -1,4 +1,5 @@
 {
+  "kitdeps-xcode-flags":"GCC_PREPROCESSOR_DEFINITIONS=YES_PLS_A_FUNCTION=1",
   "name":"the-project",
   "version":"1.0",
   "dependencies":[
