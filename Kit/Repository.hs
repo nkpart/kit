@@ -1,10 +1,3 @@
-{-
-  Exposes the repositories.
-  Allows you to:
-    * copy down kit packages (getKit)
-    * read kit specs (getKitSpec)
--}
-
 module Kit.Repository (
     getKit,
     getKitSpec,

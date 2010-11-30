@@ -28,7 +28,7 @@ module Kit.XCode.Builder (buildXCodeProject) where
       allBuildFiles = (sourceBuildFiles ++ headerBuildFiles ++ libBuildFiles)
       bfs = buildFileSection allBuildFiles
       frs = fileReferenceSection $ map buildFileReference allBuildFiles
-      classes = classesSection $ map buildFileReference (sourceBuildFiles ++ headerBuildFiles)
+      classes = classesGroup $ map buildFileReference (sourceBuildFiles ++ headerBuildFiles)
       hs = headersBuildPhase headerBuildFiles
       srcs = sourcesBuildPhase sourceBuildFiles
       xxx = frameworksBuildPhase $ traceShow libBuildFiles libBuildFiles
@@ -73,8 +73,8 @@ module Kit.XCode.Builder (buildXCodeProject) where
       ]
     ]
 
-  classesSection :: [PBXFileReference] -> PListObjectItem 
-  classesSection files = classesGroupUUID ~> group "Classes" (map (val . fileReferenceId) files)
+  classesGroup :: [PBXFileReference] -> PListObjectItem 
+  classesGroup files = classesGroupUUID ~> group "Classes" (map (val . fileReferenceId) files)
 	
   frameworksGroup :: [PBXFileReference] -> PListObjectItem
   frameworksGroup files = frameworksGroupUUID ~> group "Frameworks" (val "AACBBE490F95108600F1A2B1" :  (map (val . fileReferenceId) files))

@@ -11,7 +11,11 @@ module Kit.XCode.XCConfig where
   type XCCSetting = (String, String)
   type XCCInclude = String
                     
-  data XCConfig = XCC { configName :: String, configSettings :: M.Map String String, configIncludes :: [XCCInclude] } deriving (Eq, Show)
+  data XCConfig = XCC { 
+    configName :: String, 
+    configSettings :: M.Map String String, 
+    configIncludes :: [XCCInclude]
+  } deriving (Eq, Show)
   
   includeStart = "#include "
   
@@ -33,7 +37,6 @@ module Kit.XCode.XCConfig where
   includeToString :: XCCInclude -> String
   includeToString a = includeStart ++ a
   
-  -- TODO incorporate the config name
   configToString :: XCConfig -> String
   configToString (XCC _ settings includes) = stringJoin "\n" $ (map includeToString includes) ++ (map settingToString $ M.toList settings)
                   
