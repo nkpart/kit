@@ -29,6 +29,7 @@ module Kit.Project (
   prefixFile = "KitDeps_Prefix.pch"
   projectFile = projectDir </> "project.pbxproj"
   xcodeConfigFile = "Kit.xcconfig"
+  depsConfigFile = "DepsOnly.xcconfig"
   kitUpdateMakeFilePath = "Makefile"
   kitUpdateMakeFile = "kit: Kit.xcconfig\nKit.xcconfig: ../KitSpec\n\tcd .. && kit update && exit 1\n"
 
@@ -51,15 +52,16 @@ module Kit.Project (
         prefix = readHeader spec
     in  KitContents <$> headers <*> sources <*> libs <*> config <*> prefix
 
-  generateXCodeProject :: [Kit] -> KitIO ()
-  generateXCodeProject deps = do
+  generateXCodeProject :: [Kit] -> Maybe String -> KitIO ()
+  generateXCodeProject deps depsOnlyConfig = do
     liftIO $ mkdir_p kitDir
     specs <- forM deps $ \kit -> readSpec (kitDir </> kitFileName kit </> "KitSpec")  
-    inDirectory kitDir $ do
-      kitsContents <- forM specs (liftIO . readKitContents)
-      liftIO $ createProjectFile kitsContents
-      liftIO $ createHeader kitsContents
-      liftIO $ createConfig kitsContents specs
+    liftIO $ inDirectory kitDir $ do
+      kitsContents <- forM specs readKitContents
+      createProjectFile kitsContents
+      createHeader kitsContents
+      createConfig kitsContents specs
+      writeFile depsConfigFile $ "#include \"" ++ xcodeConfigFile ++ "\"\n" ++ fromMaybe "" depsOnlyConfig 
     where kitFileNames = map kitFileName deps
           sourceDirs specs = specs >>= (\spec -> [
               kitDir </> (kitFileName . specKit $ spec) </> specSourceDirectory spec, 

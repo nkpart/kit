@@ -11,7 +11,8 @@ module Kit.Model where
     specTestDirectory :: FilePath,
     specLibDirectory :: FilePath,
     specPrefixFile :: FilePath,
-    specConfigFile :: FilePath
+    specConfigFile :: FilePath,
+    specKitDepsXcodeFlags :: Maybe String
   } deriving (Show, Read)
 
   type Version = String
@@ -25,7 +26,7 @@ module Kit.Model where
   kitFileName k = kitName k ++ "-" ++ kitVersion k
 
   defaultSpecForKit :: Kit -> KitSpec
-  defaultSpecForKit kit = KitSpec kit [] "src" "test" "lib" "Prefix.pch" "Config.xcconfig"
+  defaultSpecForKit kit = KitSpec kit [] "src" "test" "lib" "Prefix.pch" "Config.xcconfig" Nothing
   -- TODO make this and the json reading use the same defaults
   -- I suspect that to do this I'll need update functions for each of
   -- fields in the KitSpec record.
@@ -35,7 +36,7 @@ module Kit.Model where
       showJSON kit = makeObj [ ("name", w kitName) , ("version", w kitVersion) ] where w f = showJSON . f $ kit
 
       readJSON (JSObject obj) = Kit <$> f "name" <*> f "version"
-        where f x = f' obj x 
+                                  where f x = f' obj x 
 
   instance JSON KitSpec where
       showJSON spec = makeObj [
@@ -53,6 +54,7 @@ module Kit.Model where
                       <*> (f "lib-directory" <|> pure "lib")
                       <*> (f "prefix-header" <|> pure "Prefix.pch")
                       <*> (f "xcconfig" <|> pure "Config.xcconfig")
+                      <*> (Just <$> f "kitdeps-xcode-flags" <|> pure Nothing)
         where f x = f' obj x
 
   f' obj x = mLookup x (fromJSObject obj) >>= readJSON

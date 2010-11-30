@@ -38,11 +38,12 @@ module Kit.Main where
   doUpdate :: IO ()
   doUpdate = run $ do
               repo <- liftIO defaultLocalRepository
+              spec <- myKitSpec
               deps <- getMyDeps repo
               puts $ "Dependencies: " ++ (stringJoin ", " $ map kitFileName deps)
               liftIO $ mapM (installKit repo) deps
               puts " -> Generating XCode project..."
-              generateXCodeProject deps
+              generateXCodeProject deps $ specKitDepsXcodeFlags spec
               puts "Kit complete. You may need to restart XCode for it to pick up any changes."
                 where p x = liftIO $ print x
                       puts x = liftIO $ putStrLn x

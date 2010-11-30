@@ -47,7 +47,7 @@ module Kit.XCode.Builder (buildXCodeProject) where
         "isa" ~> val "PBXFileReference",
         "fileEncoding" ~> val "4",
         "lastKnownFileType" ~> val "text.xcconfig",
-        "path" ~> val "Kit.xcconfig",
+        "path" ~> val "DepsOnly.xcconfig",
         "sourceTree" ~> val "<group>"
         ],
       "AA747D9E0F9514B9006C5449" ~> obj [
