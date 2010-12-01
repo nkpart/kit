@@ -15,18 +15,29 @@ module Kit.Model where
     specKitDepsXcodeFlags :: Maybe String
   } deriving (Show, Read)
 
-  type Version = String
-
   data Kit = Kit {
     kitName :: String,
-    kitVersion :: Version
+    kitVersion :: String
   } deriving (Eq, Show, Ord, Read)
 
-  kitFileName :: Kit -> String
-  kitFileName k = kitName k ++ "-" ++ kitVersion k
+  class Packageable a where
+    packageName :: a -> String
+    packageVersion :: a -> String
 
-  defaultSpecForKit :: Kit -> KitSpec
-  defaultSpecForKit kit = KitSpec kit [] "src" "test" "lib" "Prefix.pch" "Config.xcconfig" Nothing
+    packageFileName :: a -> String
+    packageFileName a = packageName a ++ "-" ++ packageVersion a
+
+  instance Packageable Kit where
+    packageName = kitName
+    packageVersion = kitVersion
+
+  instance Packageable KitSpec where
+    packageName = kitName . specKit
+    packageVersion = kitVersion . specKit
+
+
+  defaultSpec :: String -> String -> KitSpec
+  defaultSpec name version = KitSpec (Kit name version) [] "src" "test" "lib" "Prefix.pch" "Config.xcconfig" Nothing
   -- TODO make this and the json reading use the same defaults
   -- I suspect that to do this I'll need update functions for each of
   -- fields in the KitSpec record.

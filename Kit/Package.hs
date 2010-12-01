@@ -42,7 +42,7 @@ module Kit.Package (package) where
       inDirectory tempDir $ sh $ "tar czf " ++ (distDir </> (kitPath ++ ".tar.gz")) ++ " " ++ kitPath
       return ()
     where
-      kitPath = kitFileName . specKit $ spec
+      kitPath = packageFileName spec
       sh c = liftIO $ system (trace c c)
       puts c = liftIO $ putStrLn c
       p c = liftIO $ print c

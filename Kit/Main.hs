@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 module Kit.Main where
-  import qualified Data.ByteString as BS
 
+  import qualified Data.ByteString as BS
   import Control.Monad.Trans
   import Control.Monad.Error
   import Data.List
@@ -23,12 +23,12 @@ module Kit.Main where
   import Data.Data
   import Data.Typeable
 
-  appVersion = "0.5"
+  appVersion = "0.5.2" -- TODO how to keep this up to date with cabal?
 
   defaultLocalRepoPath = do
       home <- getHomeDirectory
       return $ home </> ".kit" </> "repository"
-  defaultLocalRepository = fmap fileRepo defaultLocalRepoPath
+  defaultLocalRepository = fileRepo <$> defaultLocalRepoPath
 
   handleFails :: Either KitError a -> IO ()
   handleFails = either (putStrLn . ("kit error: " ++)) (const $ return ())
@@ -40,7 +40,7 @@ module Kit.Main where
               repo <- liftIO defaultLocalRepository
               spec <- myKitSpec
               deps <- getMyDeps repo
-              puts $ "Dependencies: " ++ (stringJoin ", " $ map kitFileName deps)
+              puts $ "Dependencies: " ++ (stringJoin ", " $ map packageFileName deps)
               liftIO $ mapM (installKit repo) deps
               puts " -> Generating XCode project..."
               generateXCodeProject deps $ specKitDepsXcodeFlags spec
@@ -63,11 +63,10 @@ module Kit.Main where
       where
         x :: KitSpec -> IO ()
         x spec = let
-              k = specKit spec
-              pkg = (kitFileName k ++ ".tar.gz")
+              pkg = (packageFileName spec ++ ".tar.gz")
             in do
               repo <- defaultLocalRepoPath
-              let thisKitDir = repo </> "kits" </> kitName k </> kitVersion k
+              let thisKitDir = repo </> "kits" </> packageName spec </> packageVersion spec
               mkdir_p thisKitDir
               copyFile ("dist" </> pkg) $ thisKitDir </> pkg
               copyFile "KitSpec" $ thisKitDir </> "KitSpec"
@@ -84,7 +83,7 @@ module Kit.Main where
           let kitVerifyDir = "kit-verify"
           cleanOrCreate kitVerifyDir
           inDirectory kitVerifyDir $ do
-            let verifySpec = (defaultSpecForKit $ Kit "verify-kit" "1.0"){ specDependencies = [specKit mySpec] }
+            let verifySpec = (defaultSpec "verify-kit" "1.0"){ specDependencies = [specKit mySpec] }
             writeFile "KitSpec" $ encode verifySpec
             doUpdate
             inDirectory "Kits" $ do
@@ -96,10 +95,9 @@ module Kit.Main where
 
   doCreateSpec :: String -> String -> IO ()
   doCreateSpec name version = do
-    let kit =(Kit name version)
-    let spec = defaultSpecForKit kit
+    let spec = defaultSpec name version 
     writeFile "KitSpec" $ encode spec
-    putStrLn $ "Created KitSpec for " ++ kitFileName kit
+    putStrLn $ "Created KitSpec for " ++ packageFileName spec
     return ()
 
   data KitCmdArgs = Update
@@ -137,7 +135,4 @@ module Kit.Main where
       path <- defaultLocalRepoPath
       mkdir_p path
       handleArgs =<< parseArgs -- =<< getArgs
-
-
-
 

@@ -41,8 +41,7 @@ module Kit.Project (
 
   readKitContents :: KitSpec -> IO KitContents
   readKitContents spec  =
-    let kit = specKit spec
-        kitDir = kitFileName kit
+    let kitDir = packageFileName spec
         find dir tpe = glob ((kitDir </> dir </> "**/*") ++ tpe)
         findSrc = find $ specSourceDirectory spec
         headers = findSrc ".h"
@@ -55,17 +54,17 @@ module Kit.Project (
   generateXCodeProject :: [Kit] -> Maybe String -> KitIO ()
   generateXCodeProject deps depsOnlyConfig = do
     liftIO $ mkdir_p kitDir
-    specs <- forM deps $ \kit -> readSpec (kitDir </> kitFileName kit </> "KitSpec")  
+    specs <- forM deps $ \kit -> readSpec (kitDir </> packageFileName kit </> "KitSpec")  
     liftIO $ inDirectory kitDir $ do
       kitsContents <- forM specs readKitContents
       createProjectFile kitsContents
       createHeader kitsContents
       createConfig kitsContents specs
       writeFile depsConfigFile $ "#include \"" ++ xcodeConfigFile ++ "\"\n" ++ fromMaybe "" depsOnlyConfig 
-    where kitFileNames = map kitFileName deps
+    where kitFileNames = map packageFileName deps
           sourceDirs specs = specs >>= (\spec -> [
-              kitDir </> (kitFileName . specKit $ spec) </> specSourceDirectory spec, 
-              (kitFileName . specKit $ spec) </> specSourceDirectory spec
+              kitDir </> packageFileName spec </> specSourceDirectory spec, 
+              packageFileName spec </> specSourceDirectory spec
             ])
           createProjectFile cs = do
             let headers = cs >>= contentHeaders
@@ -88,7 +87,7 @@ module Kit.Project (
   -- Report missing file
   readHeader :: KitSpec -> IO (Maybe String)
   readHeader spec = do
-    let fp = (kitFileName . specKit $ spec) </> specPrefixFile spec
+    let fp = packageFileName spec </> specPrefixFile spec
     exists <- doesFileExist fp
     contents <- T.sequence (fmap readFile $ justTrue exists fp)
     return contents
@@ -96,11 +95,10 @@ module Kit.Project (
   -- TODO make this report missing file
   readConfig :: KitSpec -> IO (Maybe XCConfig)
   readConfig spec = do
-    let kit = specKit spec
-    let fp = kitFileName kit </> specConfigFile spec
+    let fp = packageFileName spec </> specConfigFile spec
     exists <- doesFileExist fp
     contents <- T.sequence (fmap readFile $ justTrue exists fp)
-    return $ fmap (fileContentsToXCC $ kitName kit) contents
+    return $ fmap (fileContentsToXCC $ packageName spec) contents
 
   refineDeps :: Tree Kit -> [Kit]
   refineDeps = nub . concat . reverse . drop 1 . levels
@@ -109,6 +107,7 @@ module Kit.Project (
   depsForSpec' kr spec = do
       tree <- unfoldTreeM (unfoldDeps kr) spec
       -- todo: check for conflicts
+      -- todo: check for version ranges :)
       return $ refineDeps tree
 
   unfoldDeps :: KitRepository -> KitSpec -> KitIO (Kit, [KitSpec])
@@ -124,8 +123,8 @@ module Kit.Project (
   installKit :: KitRepository -> Kit -> IO ()
   installKit kr kit = do
       tmpDir <- getTemporaryDirectory
-      let fp = tmpDir </> (kitFileName kit ++ ".tar.gz")
-      putStrLn $ " -> Installing " ++ kitFileName kit
+      let fp = tmpDir </> (packageFileName kit ++ ".tar.gz")
+      putStrLn $ " -> Installing " ++ packageFileName kit
       fmap fromJust $ getKit kr kit fp
       let dest = kitDir
       mkdir_p dest

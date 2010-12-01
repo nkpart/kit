@@ -32,8 +32,8 @@ module Kit.Repository (
   getKitSpec :: KitRepository -> Kit -> KitIO KitSpec
   getKitSpec kr k = do
     mbKitStuff <- liftIO $ repoRead kr (kitSpecPath k)
-    maybe (throwError $ "Missing " ++ kitFileName k) f mbKitStuff
-    where f contents = maybeToKitIO ("Invalid KitSpec file for " ++ kitFileName k) $ case (decode contents) of
+    maybe (throwError $ "Missing " ++ packageFileName k) f mbKitStuff
+    where f contents = maybeToKitIO ("Invalid KitSpec file for " ++ packageFileName k) $ case (decode contents) of
                           Ok a -> Just a
                           Error _ -> Nothing
 
@@ -54,7 +54,7 @@ module Kit.Repository (
   baseKitPath k = joinS ["kits", kitName k, kitVersion k] "/"
     where joinS xs x = foldl1 (++) $ L.intersperse x xs
 
-  kitPackagePath k = baseKitPath k ++ "/" ++ kitFileName k ++ ".tar.gz"
+  kitPackagePath k = baseKitPath k ++ "/" ++ packageFileName k ++ ".tar.gz"
   kitSpecPath k = baseKitPath k ++ "/" ++ "KitSpec"
 
   getBody :: BufferType a => HStream a => String -> IO (Maybe a)
