@@ -1,38 +1,40 @@
 
 module Kit.XCode.Builder (buildXCodeProject) where
-  import Data.Monoid
   import Kit.XCode.Common
   import Kit.XCode.ProjectFileTemplate
   import Text.PList
   import Kit.Util
-
-  import Debug.Trace
-
-  import System.FilePath.Posix (dropFileName)
   import Data.List (nub)
+  import Control.Monad.State
 
   createBuildFile :: Integer -> FilePath -> PBXBuildFile
   createBuildFile i path = PBXBuildFile uuid1 $ PBXFileReference uuid2 path
     where uuid1 = uuid i
           uuid2 = uuid $ i + 10000000
 
+  xxx2 :: FilePath -> State [Integer] PBXBuildFile
+  xxx2 x = flip createBuildFile x `fmap` popS 
+
   buildXCodeProject :: [FilePath] -> [FilePath] -> [FilePath] -> String
-  buildXCodeProject headers sources libs = show $ makeProjectPList bfs frs classes hs srcs xxx fg libDirs
-    where
-      libDirs = nub $ map dropFileName libs 
-      sourceStart = toInteger (length headers + 1)
-      libStart = toInteger (length headers + length sources + 1)
-      headerBuildFiles = zipWith createBuildFile [1..] headers
-      sourceBuildFiles = zipWith createBuildFile [sourceStart..] sources
-      libBuildFiles = zipWith createBuildFile [libStart..] libs
-      allBuildFiles = (sourceBuildFiles ++ headerBuildFiles ++ libBuildFiles)
-      bfs = buildFileSection allBuildFiles
-      frs = fileReferenceSection $ map buildFileReference allBuildFiles
-      classes = classesGroup $ map buildFileReference (sourceBuildFiles ++ headerBuildFiles)
-      hs = headersBuildPhase headerBuildFiles
-      srcs = sourcesBuildPhase sourceBuildFiles
-      xxx = frameworksBuildPhase $ traceShow libBuildFiles libBuildFiles
-      fg = frameworksGroup $ map buildFileReference libBuildFiles
+  buildXCodeProject headers sources libs = fst . flip runState [1..] $ do
+      headerBuildFiles <- mapM xxx2 headers
+      sourceBuildFiles <- mapM xxx2 sources
+      libBuildFiles <- mapM xxx2 libs
+      -- Build File Items
+      let allBuildFiles = (sourceBuildFiles ++ headerBuildFiles ++ libBuildFiles)
+          -- Build And FileRef sections
+          bfs = buildFileSection allBuildFiles
+          frs = fileReferenceSection $ map buildFileReference allBuildFiles
+          -- Groups
+          classes = classesGroup $ map buildFileReference (sourceBuildFiles ++ headerBuildFiles)
+          fg = frameworksGroup $ map buildFileReference libBuildFiles
+          -- Phases
+          headersPhase = headersBuildPhase headerBuildFiles
+          srcsPhase = sourcesBuildPhase sourceBuildFiles
+          frameworksPhase = frameworksBuildPhase libBuildFiles
+          -- UUID indices
+          libDirs = nub $ map dropFileName libs 
+      return . show $ makeProjectPList (bfs ++ frs ++ [classes, headersPhase, srcsPhase, frameworksPhase, fg]) libDirs
 
   buildFileSection :: [PBXBuildFile] -> [PListObjectItem]
   buildFileSection bfs = (map buildFileItem bfs ++ [

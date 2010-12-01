@@ -19,7 +19,15 @@ module Kit.Util(
   import Control.Monad.Error
 
   import System.FilePath.Glob
+  
+  import qualified Control.Monad.State as S
 
+  popS :: S.State [a] a
+  popS = do
+    (x:t) <- S.get
+    S.put t
+    return x
+  
   maybeRead :: Read a => String -> Maybe a
   maybeRead = fmap fst . listToMaybe . reads
 

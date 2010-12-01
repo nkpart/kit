@@ -30,32 +30,22 @@ module Kit.XCode.ProjectFileTemplate where
   sourcesBuildPhaseUUID = "D2AAC07B0554694100DB518D"
   frameworksBuildPhaseUUID = "D2AAC07C0554694100DB518D"
 
-  makeProjectPList :: 
-    [PListObjectItem] -> -- build file section
-    [PListObjectItem] -> -- file refs section
-    PListObjectItem -> -- classes item
-    PListObjectItem -> -- headers section
-    PListObjectItem -> -- sources section
-    PListObjectItem -> -- frameworks section
-    PListObjectItem -> -- frameworks group
-    [FilePath] -> -- lib directories
-    PListFile 
-  makeProjectPList bfs fileRefsSection classes headers sources frameworks fg libDirs = projectFile objs "0867D690FE84028FC02AAC07" where
-      objs = bfs ++ fileRefsSection ++ [frameworks] ++ [fg] ++ next1 ++ [classes] ++ [next2] ++ [headers] ++ next3 ++ [sources] ++ buildConfigurations libDirs
+  makeProjectPList :: [PListObjectItem] -> [FilePath] -> PListFile 
+  makeProjectPList objects libDirs = projectFile objs "0867D690FE84028FC02AAC07" where
+      objs = objects ++ groups ++ targets ++ buildConfigurations libDirs
 
-  next1 = [ groupProductsUUID ~> group "Products" [ val productRefUUID ],
+  groups = [ groupProductsUUID ~> group "Products" [ val productRefUUID ],
             mainGroupUUID ~> group "KitDeps" [
               val classesGroupUUID,
               val otherSourcesGroupUUID,
               val frameworksGroupUUID,
               val groupProductsUUID,
               val kitConfigRefUUID
-            ]
+            ],
+            otherSourcesGroupUUID ~> group "Other Sources" [val "AA747D9E0F9514B9006C5449"]
           ]
     		
-  next2 = otherSourcesGroupUUID ~> group "Other Sources" [val "AA747D9E0F9514B9006C5449"]
-
-  next3 = ("D2AAC07D0554694100DB518D" ~> obj [
+  targets = ("D2AAC07D0554694100DB518D" ~> obj [
         			"isa" ~> val "PBXNativeTarget",
         			"buildConfigurationList" ~> val "1DEB921E08733DC00010E9CD",
         			"buildPhases" ~> arr [ val headersBuildPhaseUUID, val sourcesBuildPhaseUUID, val frameworksBuildPhaseUUID ],
