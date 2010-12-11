@@ -52,7 +52,7 @@ module Kit.Main where
   doDeployLocal = do
     mySpec <- runErrorT myKitSpec
     T.for mySpec package
-    T.for mySpec x
+    T.for mySpec publishLocal
     handleFails mySpec
       where
         publishLocal :: KitSpec -> IO ()
