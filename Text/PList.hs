@@ -2,6 +2,7 @@
 module Text.PList where
 
 import Data.List (isInfixOf, isPrefixOf, intersperse)
+import Control.Monad
 
 -------------------------------------------------------------------------------
 -- | A Key/Value pair in a PList Object
@@ -15,7 +16,7 @@ data PListType = PListValue String
                | PListObject [PListObjectItem]
                deriving Eq
 
-val x = PListValue x 
+val = PListValue
 arr = PListArray
 obj = PListObject
 
@@ -24,15 +25,15 @@ a ~> b = PListObjectItem a b
 
 quote s = "\"" ++ s ++ "\""
 quotable "" = True
-quotable s = or $ map (\x -> x `isInfixOf` s && (not $ "sourcecode" `isPrefixOf` s)) quote_triggers
+quotable s = any (\x -> x `isInfixOf` s && not ("sourcecode" `isPrefixOf` s)) quote_triggers
               where quote_triggers = ["-", "<", ">", " ", ".m", ".h", "_", "$"]
 
 instance Show PListObjectItem where
   show (PListObjectItem k v) = k ++ " = " ++ show v ++ ";\n"
 
 instance Show PListType where
-  show (PListValue a) = (if (quotable a) then quote a else a) 
-  show (PListArray xs) = "(" ++ ((intersperse ", " $ map show xs) >>= id) ++ ")"
+  show (PListValue a) = if quotable a then quote a else a 
+  show (PListArray xs) = "(" ++ join (intersperse ", " $ map show xs) ++ ")"
   show (PListObject kvs) = "{\n" ++ (kvs >>= (\x -> "  " ++ show x)) ++ "}\n"
 
 data PListFile = PListFile { pListFileCharset :: String, pListFileValue :: PListType }

@@ -23,30 +23,31 @@ module Kit.Main where
   import Data.Data
   import Data.Typeable
 
+  appVersion :: String
   appVersion = "0.5.2" -- TODO how to keep this up to date with cabal?
 
-  defaultLocalRepoPath = do
-      home <- getHomeDirectory
-      return $ home </> ".kit" </> "repository"
+  defaultLocalRepoPath :: IO FilePath
+  defaultLocalRepoPath = getHomeDirectory >>= \h -> return $ h </> ".kit" </> "repository"
+
+  defaultLocalRepository :: IO KitRepository
   defaultLocalRepository = fileRepo <$> defaultLocalRepoPath
 
   handleFails :: Either KitError a -> IO ()
   handleFails = either (putStrLn . ("kit error: " ++)) (const $ return ())
 
+  run :: KitIO a -> IO ()
   run f = runErrorT f >>= handleFails
 
   doUpdate :: IO ()
   doUpdate = run $ do
               repo <- liftIO defaultLocalRepository
               spec <- myKitSpec
-              deps <- getMyDeps repo
-              puts $ "Dependencies: " ++ (stringJoin ", " $ map packageFileName deps)
-              liftIO $ mapM (installKit repo) deps
+              deps <- totalSpecDependencies repo spec
+              puts $ "Dependencies: " ++ stringJoin ", " (map packageFileName deps)
+              liftIO $ mapM_ (installKit repo) deps
               puts " -> Generating XCode project..."
-              generateXCodeProject deps $ specKitDepsXcodeFlags spec
+              generateXCodeProject deps (specKitDepsXcodeFlags spec)
               puts "Kit complete. You may need to restart XCode for it to pick up any changes."
-                where p x = liftIO $ print x
-                      puts x = liftIO $ putStrLn x
 
   doPackageKit :: IO ()
   doPackageKit = do
@@ -61,8 +62,8 @@ module Kit.Main where
     T.for mySpec x
     handleFails mySpec
       where
-        x :: KitSpec -> IO ()
-        x spec = let
+        publishLocal :: KitSpec -> IO ()
+        publishLocal spec = let
               pkg = (packageFileName spec ++ ".tar.gz")
             in do
               repo <- defaultLocalRepoPath
@@ -87,18 +88,16 @@ module Kit.Main where
             writeFile "KitSpec" $ encode verifySpec
             doUpdate
             inDirectory "Kits" $ do
-              system $ "open KitDeps.xcodeproj"
+              system "open KitDeps.xcodeproj"
               system $ "xcodebuild -sdk " ++ sdk
-          putStrLn "OK."
+          puts "OK."
         puts "End checks."
-       where puts = liftIO . putStrLn
 
   doCreateSpec :: String -> String -> IO ()
   doCreateSpec name version = do
     let spec = defaultSpec name version 
     writeFile "KitSpec" $ encode spec
-    putStrLn $ "Created KitSpec for " ++ packageFileName spec
-    return ()
+    puts $ "Created KitSpec for " ++ packageFileName spec
 
   data KitCmdArgs = Update
                   | Package
@@ -109,7 +108,7 @@ module Kit.Main where
   parseArgs = cmdArgs $ modes [
         Update &= help "Create an Xcode project to wrap the dependencies defined in `KitSpec`"
                &= auto -- The default mode to run. This is most common usage.
-      , (CreateSpec { Kit.Main.name = (def &= typ "NAME") &= argPos 0, version = (def &= typ "VERSION") &= argPos 1 }) &=
+      , CreateSpec { Kit.Main.name = (def &= typ "NAME") &= argPos 0, version = (def &= typ "VERSION") &= argPos 1 } &=
                             explicit &=
                             CA.name "create-spec" &=
                             help "Write out a KitSpec file using the given name and version."
@@ -126,13 +125,11 @@ module Kit.Main where
   handleArgs Update = doUpdate
   handleArgs Package = doPackageKit
   handleArgs PublishLocal = doDeployLocal
-  handleArgs (Verify sdk) = doVerify sdk
+  handleArgs (Verify sdkName) = doVerify sdkName
   handleArgs (CreateSpec name version) = doCreateSpec name version
 
   kitMain :: IO ()
   kitMain = do
-      localRepo <- defaultLocalRepository
-      path <- defaultLocalRepoPath
-      mkdir_p path
+      mkdir_p =<< defaultLocalRepoPath 
       handleArgs =<< parseArgs -- =<< getArgs
 

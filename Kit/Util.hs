@@ -4,22 +4,26 @@ module Kit.Util(
   module Kit.Util,
   module Control.Applicative,
   module System.FilePath.Posix,
-  module System.Directory
+  module System.Directory,
+  module Control.Monad
   ) where
-  import System.FilePath.Posix
-  import System.Process
   import System.Directory
-  import Data.Maybe
-  import Data.List
-  import qualified Data.Traversable as T
-  import Data.Foldable
-  import Control.Applicative
+  import System.FilePath.Posix
+  import System.FilePath.Glob
 
+  import Data.Foldable
+  import Data.List
+  import Data.Maybe
   import Data.Monoid
+  import qualified Data.Traversable as T
+
+  import Control.Applicative
+  import Control.Monad
   import Control.Monad.Error
 
-  import System.FilePath.Glob
-  
+  import Data.Map
+  import Control.Monad.Writer
+
   import qualified Control.Monad.State as S
 
   popS :: S.State [a] a
@@ -28,6 +32,9 @@ module Kit.Util(
     S.put t
     return x
   
+  puts :: MonadIO m => String -> m ()
+  puts a = liftIO $ putStrLn a
+
   maybeRead :: Read a => String -> Maybe a
   maybeRead = fmap fst . listToMaybe . reads
 
@@ -41,7 +48,7 @@ module Kit.Util(
   maybeToLeft v = maybe (Right v) Left
 
   instance Foldable (Either c) where
-    foldr f z = either (const z) (\v -> f v z)
+    foldr f z = either (const z) (flip f z) 
 
   instance T.Traversable (Either c) where
     sequenceA = either (pure . Left) (Right <$>)
@@ -50,10 +57,11 @@ module Kit.Util(
 
   type KitIO a = ErrorT KitError IO a
 
+  maybeToKitIO :: String -> Maybe a -> KitIO a
   maybeToKitIO msg = maybe (throwError msg) return
 
-  mkdir_p :: FilePath -> IO ()
-  mkdir_p = createDirectoryIfMissing True
+  mkdir_p :: MonadIO m => FilePath -> m ()
+  mkdir_p = liftIO . createDirectoryIfMissing True
 
   cleanOrCreate :: FilePath -> IO ()
   cleanOrCreate directory = do
@@ -63,7 +71,7 @@ module Kit.Util(
 
   inDirectory :: MonadIO m => FilePath -> m a -> m a
   inDirectory dir actions = do
-    cwd <- liftIO $ getCurrentDirectory
+    cwd <- liftIO getCurrentDirectory
     liftIO $ setCurrentDirectory dir
     v <- actions
     liftIO $ setCurrentDirectory cwd
@@ -74,4 +82,4 @@ module Kit.Util(
 
   stringJoin :: Monoid a => a -> [a] -> a
   stringJoin x = mconcat . intersperse x
-
+  

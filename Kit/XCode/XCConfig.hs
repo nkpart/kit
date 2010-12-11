@@ -24,7 +24,7 @@ module Kit.XCode.XCConfig where
   
   parseLine :: String -> Maybe (Either XCCSetting XCCInclude)
   parseLine l | includeStart `isPrefixOf` l = Just . Right . fromJust $ stripPrefix includeStart l
-  parseLine l | "=" `isInfixOf` l = fmap (Left) $ breakAround '=' l
+  parseLine l | "=" `isInfixOf` l = fmap Left $ breakAround '=' l
     where breakAround a xs = let (q,r) = break (a ==) xs in nonEmptyPair (strip q, strip $ drop 1 r)
           nonEmptyPair ([], _) = Nothing
           nonEmptyPair (_, []) = Nothing
@@ -38,7 +38,7 @@ module Kit.XCode.XCConfig where
   includeToString a = includeStart ++ a
   
   configToString :: XCConfig -> String
-  configToString (XCC _ settings includes) = stringJoin "\n" $ (map includeToString includes) ++ (map settingToString $ M.toList settings)
+  configToString (XCC _ settings includes) = stringJoin "\n" $ map includeToString includes ++ map settingToString (M.toList settings)
                   
   fileContentsToXCC :: String -> String -> XCConfig
   fileContentsToXCC name content = let ls = lines content
@@ -57,5 +57,5 @@ module Kit.XCode.XCConfig where
           individualSettings = M.fromList $ concatMap f $ M.toList settingsWithName
             where f (key, namesAndValues) = map (g key) namesAndValues
                   g key (n, v) = (n ++ "_" ++ key, v)
-          settings = M.union aggregateSettings individualSettings
+          settings = aggregateSettings `M.union` individualSettings
   

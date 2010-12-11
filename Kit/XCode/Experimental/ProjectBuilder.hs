@@ -1,5 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-module Kit.XCode.Experimental.ProjectBuilder.hs where
+module Kit.XCode.Experimental.ProjectBuilder where
 
 import Text.PList
 import Control.Monad.State
@@ -59,7 +59,7 @@ instance ProjectPListItem PBXGroup where
           "isa" ~> val "PBXGroup"
         , "name" ~> (val . groupName) group
         , "sourceTree" ~> (val . groupSourceTree) group
-        , "children" ~> (arr $ map val (childUUIDs ++ groupChildrenExtra group))
+        , "children" ~> arr $ map val (childUUIDs ++ groupChildrenExtra group)
       ]
 
 type PLObjects = [(UUID, PListType)]

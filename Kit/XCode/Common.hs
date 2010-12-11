@@ -47,7 +47,7 @@ module Kit.XCode.Common where
   buildFileItem bf = buildFileId bf ~> buildFile (fileReferenceId . buildFileReference $ bf) 
 
   fileReferenceItem :: PBXFileReference -> PListObjectItem
-  fileReferenceItem fr = (fileReferenceId fr) ~> dict
+  fileReferenceItem fr = fileReferenceId fr ~> dict
     where
       fileName = fileReferenceName fr
       dict = obj [
@@ -55,7 +55,7 @@ module Kit.XCode.Common where
           "fileEncoding" ~> val "4",
           "lastKnownFileType" ~> val (fileTypeBit . fileType $ fileName),
           "name" ~> val fileName,
-          "path" ~> (val $ fileReferencePath fr),
+          "path" ~> val (fileReferencePath fr),
           "sourceTree" ~> val "<group>"
         ]
 
