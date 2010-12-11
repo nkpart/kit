@@ -1,8 +1,10 @@
 module Kit.Model where
 
-  import Text.JSON
   import Control.Applicative
-  import System.FilePath.Posix
+ 
+  import qualified Data.ByteString as BS 
+  import Data.Object
+  import qualified Data.Object.Yaml as Y
 
   data KitSpec = KitSpec {
     specKit :: Kit,
@@ -35,7 +37,6 @@ module Kit.Model where
     packageName = kitName . specKit
     packageVersion = kitVersion . specKit
 
-
   defaultSpec :: String -> String -> KitSpec
   defaultSpec name version = KitSpec (Kit name version) [] "src" "test" "lib" "Prefix.pch" "Config.xcconfig" Nothing
   -- TODO make this and the json reading use the same defaults
@@ -43,33 +44,34 @@ module Kit.Model where
   -- fields in the KitSpec record.
   -- Look at the 'lenses' package on haskell.
 
-  instance JSON Kit where
-      showJSON kit = makeObj [ ("name", w kitName) , ("version", w kitVersion) ] where w f = showJSON . f $ kit
+  decodeSpec :: BS.ByteString -> Maybe KitSpec
+  decodeSpec s = Y.decode s >>= readObject 
 
-      readJSON (JSObject obj) = Kit <$> f "name" <*> f "version"
-                                  where f x = f' obj x 
+  class IsObject x where
+    showObject :: x -> StringObject
+    readObject :: StringObject -> Maybe x
 
-  instance JSON KitSpec where
-      showJSON spec = makeObj [
-            ("name", showJSON $ kitName kit)
-          , ("version", showJSON $ kitVersion kit)
-          , ("dependencies", showJSON $ specDependencies spec)
-          ]
-          where kit = specKit spec
+  instance IsObject Kit where
+    showObject kit = Mapping [("name", w kitName), ("version", w kitVersion)] where w f = Scalar . f $ kit
+    readObject x = fromMapping x >>= \obj -> Kit <$> lookupScalar "name" obj <*> lookupScalar "version" obj
 
-      readJSON js@(JSObject obj) =
-              KitSpec <$> readJSON js 
-                      <*> (f "dependencies" <|> pure []) 
-                      <*> (f "source-directory" <|> pure "src")
-                      <*> (f "test-directory" <|> pure "test")
-                      <*> (f "lib-directory" <|> pure "lib")
-                      <*> (f "prefix-header" <|> pure "Prefix.pch")
-                      <*> (f "xcconfig" <|> pure "Config.xcconfig")
-                      <*> (Just <$> f "kitdeps-xcode-flags" <|> pure Nothing)
-        where f x = f' obj x
+  instance IsObject KitSpec where
+    showObject spec = Mapping [
+         "name" ~> (val $ kitName . specKit),
+         "version" ~> (val $ kitVersion . specKit),
+         "dependencies" ~> seq specDependencies spec
+      ] where a ~> b = (a,b)
+              val f = Scalar. f $ spec
+              seq f = Sequence . (map showObject) . f
 
-  f' obj x = mLookup x (fromJSObject obj) >>= readJSON
-
-  mLookup :: Monad m => String -> [(String, b)] -> m b
-  mLookup a as = maybe (fail $ "No such element: " ++ a) return (lookup a as)
+    readObject x = fromMapping x >>= parser
+        where or a b = a <|> pure b
+              parser obj = let f x = lookupScalar x obj in KitSpec <$> readObject x
+                                    <*> ((lookupSequence "dependencies" obj >>= mapM readObject) `or` []) 
+                                    <*> (f "source-directory" `or` "src")
+                                    <*> (f "test-directory" `or` "test")
+                                    <*> (f "lib-directory" `or` "lib")
+                                    <*> (f "prefix-header" `or` "Prefix.pch")
+                                    <*> (f "xcconfig" `or` "Config.xcconfig")
+                                    <*> (Just <$> f "kitdeps-xcode-flags") `or` Nothing
 

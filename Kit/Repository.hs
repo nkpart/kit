@@ -9,21 +9,19 @@ module Kit.Repository (
   import Kit.Model
   import Kit.Util
 
+  import Network.BufferType
   import Network.HTTP
   import Network.URI
-  import Network.BufferType
-  import qualified Data.List as L
-  import Data.Maybe
-  import qualified Data.Traversable as T
-  import Control.Monad
-  import Control.Monad.Trans
   import Control.Monad.Error
-  import Text.JSON
+  import Control.Monad.Trans
+  import Data.Maybe
+  import qualified Data.List as L
+  import qualified Data.Traversable as T
   import qualified Data.ByteString as BS
 
   data KitRepository = KitRepository {
     repoSave :: String -> FilePath -> IO (Maybe ()),
-    repoRead :: String -> IO (Maybe String)
+    repoRead :: String -> IO (Maybe BS.ByteString)
   }
 
   getKit :: KitRepository -> Kit -> FilePath -> IO (Maybe ())
@@ -33,9 +31,7 @@ module Kit.Repository (
   getKitSpec kr k = do
     mbKitStuff <- liftIO $ repoRead kr (kitSpecPath k)
     maybe (throwError $ "Missing " ++ packageFileName k) f mbKitStuff
-    where f contents = maybeToKitIO ("Invalid KitSpec file for " ++ packageFileName k) $ case (decode contents) of
-                          Ok a -> Just a
-                          Error _ -> Nothing
+    where f contents = maybeToKitIO ("Invalid KitSpec file for " ++ packageFileName k) $ decodeSpec contents
 
   webRepo :: String -> KitRepository
   webRepo baseUrl = KitRepository save read where
@@ -47,7 +43,7 @@ module Kit.Repository (
     save src destPath = Just <$> copyFile (baseDir </> src) destPath
     read path = let file = (baseDir </> path) in do
       exists <- doesFileExist file
-      T.sequenceA $ justTrue exists $ readFile file
+      T.sequenceA $ justTrue exists $ BS.readFile file
 
   -- private!
   baseKitPath :: Kit -> String

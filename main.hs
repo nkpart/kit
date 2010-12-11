@@ -1,3 +1,6 @@
 module Main where
-  import Kit.Main
-  main = kitMain
+
+import Kit.Main
+
+main :: IO ()
+main = kitMain

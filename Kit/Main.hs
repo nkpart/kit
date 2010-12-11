@@ -1,27 +1,20 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 module Kit.Main where
 
-  import qualified Data.ByteString as BS
   import Control.Monad.Trans
   import Control.Monad.Error
-  import Data.List
-  import Data.Maybe
-  import Data.Monoid
   import Kit.Model
   import Kit.Package
   import Kit.Project
   import Kit.Repository
   import Kit.Util
-  import Kit.XCode.Builder
   import qualified Data.Traversable as T
   import System.Cmd
-  import System.Environment
-  import Text.JSON
-  import System.Console.CmdArgs
   import System.Console.CmdArgs as CA
+  import Control.Arrow
 
-  import Data.Data
-  import Data.Typeable
+  import Data.Object.Yaml
+  import qualified Data.ByteString as BS
 
   appVersion :: String
   appVersion = "0.5.2" -- TODO how to keep this up to date with cabal?
@@ -85,7 +78,7 @@ module Kit.Main where
           cleanOrCreate kitVerifyDir
           inDirectory kitVerifyDir $ do
             let verifySpec = (defaultSpec "verify-kit" "1.0"){ specDependencies = [specKit mySpec] }
-            writeFile "KitSpec" $ encode verifySpec
+            BS.writeFile "KitSpec" $ encode . showObject $ verifySpec
             doUpdate
             inDirectory "Kits" $ do
               system "open KitDeps.xcodeproj"
@@ -96,7 +89,7 @@ module Kit.Main where
   doCreateSpec :: String -> String -> IO ()
   doCreateSpec name version = do
     let spec = defaultSpec name version 
-    writeFile "KitSpec" $ encode spec
+    BS.writeFile "KitSpec" $ encode . showObject $ spec
     puts $ "Created KitSpec for " ++ packageFileName spec
 
   data KitCmdArgs = Update
