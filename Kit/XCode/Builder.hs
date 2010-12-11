@@ -24,7 +24,7 @@ module Kit.XCode.Builder (buildXCodeProject) where
       let allBuildFiles = (sourceBuildFiles ++ headerBuildFiles ++ libBuildFiles)
           -- Build And FileRef sections
           bfs = buildFileSection allBuildFiles
-          frs = fileReferenceSection $ map buildFileReference allBuildFiles
+          frs = fileReferenceSection (map buildFileReference allBuildFiles) "libKitDeps.a"
           -- Groups
           classes = classesGroup $ map buildFileReference (sourceBuildFiles ++ headerBuildFiles)
           fg = frameworksGroup $ map buildFileReference libBuildFiles
@@ -37,14 +37,14 @@ module Kit.XCode.Builder (buildXCodeProject) where
       return . show $ makeProjectPList (bfs ++ frs ++ [classes, headersPhase, srcsPhase, frameworksPhase, fg]) libDirs
 
   buildFileSection :: [PBXBuildFile] -> [PListObjectItem]
-  buildFileSection bfs = (map buildFileItem bfs ++ [
+  buildFileSection bfs = map buildFileItem bfs ++ [
       "4728C530117C02B10027D7D1" ~> buildFile kitConfigRefUUID,
       "AA747D9F0F9514B9006C5449" ~> buildFile "AA747D9E0F9514B9006C5449",
       "AACBBE4A0F95108600F1A2B1" ~> buildFile "AACBBE490F95108600F1A2B1"
-    ])
+    ]
 
-  fileReferenceSection :: [PBXFileReference] -> [PListObjectItem]
-  fileReferenceSection refs = map fileReferenceItem refs ++ [
+  fileReferenceSection :: [PBXFileReference] -> String -> [PListObjectItem]
+  fileReferenceSection refs archiveName = map fileReferenceItem refs ++ [
   		kitConfigRefUUID ~> obj [ 
         "isa" ~> val "PBXFileReference",
         "fileEncoding" ~> val "4",
@@ -70,7 +70,7 @@ module Kit.XCode.Builder (buildXCodeProject) where
         "isa" ~> val "PBXFileReference",
         "explicitFileType" ~> val "archive.ar",
         "includeInIndex" ~> val "0",
-        "path" ~> val "libKitDeps.a",
+        "path" ~> val archiveName,
         "sourceTree" ~> val "BUILT_PRODUCTS_DIR"
       ]
     ]
@@ -79,7 +79,7 @@ module Kit.XCode.Builder (buildXCodeProject) where
   classesGroup files = classesGroupUUID ~> group "Classes" (map (val . fileReferenceId) files)
 	
   frameworksGroup :: [PBXFileReference] -> PListObjectItem
-  frameworksGroup files = frameworksGroupUUID ~> group "Frameworks" (val "AACBBE490F95108600F1A2B1" :  (map (val . fileReferenceId) files))
+  frameworksGroup files = frameworksGroupUUID ~> group "Frameworks" (val "AACBBE490F95108600F1A2B1" :  map (val . fileReferenceId) files)
 
   frameworksBuildPhase :: [PBXBuildFile] -> PListObjectItem  
   frameworksBuildPhase libs = frameworksBuildPhaseUUID ~> obj [
