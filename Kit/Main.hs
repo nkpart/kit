@@ -3,7 +3,7 @@ module Kit.Main where
 
   import Control.Monad.Trans
   import Control.Monad.Error
-  import Kit.Model
+  import Kit.Spec
   import Kit.Package
   import Kit.Project
   import Kit.Repository
@@ -78,7 +78,7 @@ module Kit.Main where
           cleanOrCreate kitVerifyDir
           inDirectory kitVerifyDir $ do
             let verifySpec = (defaultSpec "verify-kit" "1.0"){ specDependencies = [specKit mySpec] }
-            BS.writeFile "KitSpec" $ encode . showObject $ verifySpec
+            BS.writeFile "KitSpec" $ encodeSpec verifySpec
             doUpdate
             inDirectory "Kits" $ do
               system "open KitDeps.xcodeproj"
@@ -89,7 +89,7 @@ module Kit.Main where
   doCreateSpec :: String -> String -> IO ()
   doCreateSpec name version = do
     let spec = defaultSpec name version 
-    BS.writeFile "KitSpec" $ encode . showObject $ spec
+    BS.writeFile "KitSpec" $ encodeSpec spec
     puts $ "Created KitSpec for " ++ packageFileName spec
 
   data KitCmdArgs = Update

@@ -3,7 +3,7 @@ module Kit.Contents (
   readKitContents
   ) where
 
-import Kit.Model
+import Kit.Spec
 import Kit.Util
 import Kit.XCode.XCConfig
 

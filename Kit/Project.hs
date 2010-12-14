@@ -5,7 +5,7 @@ module Kit.Project (
   myKitSpec)
     where
 
-import Kit.Model
+import Kit.Spec
 import Kit.Contents
 import Kit.Repository
 import Kit.Util
@@ -28,9 +28,15 @@ projectFile = projectDir </> "project.pbxproj"
 xcodeConfigFile = "Kit.xcconfig"
 depsConfigFile = "DepsOnly.xcconfig"
 kitUpdateMakeFilePath = "Makefile"
-kitUpdateMakeFile = "kit: Kit.xcconfig\nKit.xcconfig: ../KitSpec\n\tcd .. && kit update && exit 1\n"
 
-prefixDefault = "#ifdef __OBJC__\n" ++ "    #import <Foundation/Foundation.h>\n    #import <UIKit/UIKit.h>\n" ++ "#endif\n"
+kitUpdateMakeFile = "kit: Kit.xcconfig\n" ++
+                    "Kit.xcconfig: ../KitSpec\n" ++
+                    "\tcd .. && kit update && exit 1\n"
+
+prefixDefault = "#ifdef __OBJC__\n" ++ 
+                "    #import <Foundation/Foundation.h>\n" ++ 
+                "    #import <UIKit/UIKit.h>\n" ++ 
+                "#endif\n"
 
 generateXCodeProject :: [Kit] -> Maybe String -> KitIO ()
 generateXCodeProject deps depsOnlyConfig = do

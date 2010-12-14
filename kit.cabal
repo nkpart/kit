@@ -17,10 +17,12 @@ Executable kit
   build-depends:  process -any, network -any, mtl -any, 
                   filepath -any, directory -any, containers -any, cmdargs >=0.3,
                   bytestring -any, base >=3 && <5, QuickCheck -any,
-                  HTTP >=4000.0.9, Glob >= 0.5, data-object -any, data-object-yaml -any
+                  HTTP >=4000.0.9, Glob >= 0.5, data-object -any, data-object-yaml -any,
+                  TypeCompose >= 0.8
+
 
   hs-source-dirs: .
-  other-modules:  Kit.Model Kit.Main Kit.Package Kit.Project Kit.Repository Kit.Util Kit.XCode.Builder
+  other-modules:  Kit.Spec Kit.Main Kit.Package Kit.Project Kit.Repository Kit.Util Kit.XCode.Builder
                   Kit.XCode.Common Kit.XCode.ProjectFileTemplate Kit.XCode.XCConfig Text.PList
                   Kit.Contents
   Ghc-options:    -Wall -fno-warn-unused-do-bind

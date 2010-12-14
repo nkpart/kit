@@ -6,7 +6,7 @@ module Kit.Repository (
     KitRepository
   ) where
 
-  import Kit.Model
+  import Kit.Spec
   import Kit.Util
 
   import Network.BufferType

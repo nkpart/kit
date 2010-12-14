@@ -1,6 +1,6 @@
 module Kit.Package (package) where
 
-  import Kit.Model
+  import Kit.Spec
   import Kit.Util
   import System.Cmd
   import Control.Monad.Trans
