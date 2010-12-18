@@ -18,8 +18,7 @@ data KitContents = KitContents {
   contentPrefix :: Maybe String     -- ^ Contents of the prefix header
 }
 
--- | Determine the contents for a Kit, assumes that we're in a folder containing the exploded
--- kits.
+-- | Determine the contents for a Kit, assumes that we're in a projects 'Kits' folder.
 readKitContents :: KitSpec -> IO KitContents
 readKitContents spec  =
   let kitDir = packageFileName spec

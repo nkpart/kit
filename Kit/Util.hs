@@ -56,7 +56,7 @@ module Kit.Util(
   type KitError = String
 
   type KitIO a = ErrorT KitError IO a
-
+  
   maybeToKitIO :: String -> Maybe a -> KitIO a
   maybeToKitIO msg = maybe (throwError msg) return
 

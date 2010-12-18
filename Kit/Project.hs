@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 module Kit.Project (
   totalSpecDependencies,
   installKit,
@@ -74,18 +75,12 @@ refineDeps :: Eq a => Tree a -> [a]
 refineDeps = nub . concat . reverse . drop 1 . levels
 
 totalSpecDependencies :: KitRepository -> KitSpec -> KitIO [Kit]
-totalSpecDependencies kr spec = do
-    tree <- unfoldTreeM (unfoldDeps kr) spec
+totalSpecDependencies kr spec = refineDeps <$> unfoldTreeM (unfoldDeps kr) spec
     -- todo: check for conflicts
     -- todo: check for version ranges :)
-    return $ refineDeps tree
 
 unfoldDeps :: KitRepository -> KitSpec -> KitIO (Kit, [KitSpec])
-unfoldDeps kr ks = do
-    let kit = specKit ks
-    let depKits = specDependencies ks
-    specs <- mapM (getKitSpec kr) depKits
-    return (kit, specs)
+unfoldDeps kr ks = (specKit ks,) <$> mapM (getKitSpec kr) (specDependencies ks) -- s/mapM/traverse ?
 
 installKit :: KitRepository -> Kit -> IO ()
 installKit kr kit = do
@@ -93,26 +88,17 @@ installKit kr kit = do
     let fp = tmpDir </> (packageFileName kit ++ ".tar.gz")
     putStrLn $ " -> Installing " ++ packageFileName kit
     fmap fromJust $ getKit kr kit fp
-    let dest = kitDir
-    mkdir_p dest
-    inDirectory dest $ system ("tar zxf " ++ fp)
+    mkdir_p kitDir 
+    inDirectory kitDir $ system ("tar zxf " ++ fp)
     return ()
 
 readSpec :: FilePath -> KitIO KitSpec
-readSpec kitSpecPath = readSpecContents kitSpecPath >>= ErrorT . return . parses
+readSpec kitSpecPath = checkExists kitSpecPath >>= liftIO . BS.readFile >>= ErrorT . return . parses
+  where checkExists kitSpecPath = do
+          doesExist <- liftIO $ doesFileExist kitSpecPath
+          if doesExist then return kitSpecPath else throwError $ "Couldn't find the spec at " ++ kitSpecPath
+        parses = maybeToRight "Parse error in KitSpec file" . decodeSpec
 
 myKitSpec :: KitIO KitSpec
 myKitSpec = readSpec "KitSpec"
-
--- private!
-checkExists :: FilePath -> KitIO FilePath
-checkExists kitSpecPath = do
-  doesExist <- liftIO $ doesFileExist kitSpecPath
-  maybeToKitIO ("Couldn't find the spec at " ++ kitSpecPath) (justTrue doesExist kitSpecPath)
-
-readSpecContents :: FilePath -> KitIO BS.ByteString
-readSpecContents kitSpecPath = checkExists kitSpecPath >>= liftIO . BS.readFile
-
-parses :: BS.ByteString -> Either KitError KitSpec
-parses contents = maybe (Left "Parse error in KitSpec file") Right (decodeSpec contents)
 
