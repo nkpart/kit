@@ -53,9 +53,7 @@ module Kit.Util(
   instance T.Traversable (Either c) where
     sequenceA = either (pure . Left) (Right <$>)
 
-  type KitError = String
-
-  type KitIO a = ErrorT KitError IO a
+  type KitIO a = ErrorT String IO a
   
   maybeToKitIO :: String -> Maybe a -> KitIO a
   maybeToKitIO msg = maybe (throwError msg) return

@@ -3,7 +3,8 @@ module Kit.Project (
   totalSpecDependencies,
   installKit,
   generateXCodeProject,
-  myKitSpec)
+  readSpec
+  )
     where
 
 import Kit.Spec
@@ -99,6 +100,4 @@ readSpec kitSpecPath = checkExists kitSpecPath >>= liftIO . BS.readFile >>= Erro
           if doesExist then return kitSpecPath else throwError $ "Couldn't find the spec at " ++ kitSpecPath
         parses = maybeToRight "Parse error in KitSpec file" . decodeSpec
 
-myKitSpec :: KitIO KitSpec
-myKitSpec = readSpec "KitSpec"
 

@@ -3,6 +3,7 @@ module Kit.Main where
 
   import Control.Monad.Trans
   import Control.Monad.Error
+  import Kit.Commands
   import Kit.Spec
   import Kit.Package
   import Kit.Project
@@ -19,41 +20,25 @@ module Kit.Main where
   appVersion :: String
   appVersion = "0.5.2" -- TODO how to keep this up to date with cabal?
 
-  defaultLocalRepoPath :: IO FilePath
-  defaultLocalRepoPath = getHomeDirectory >>= \h -> return $ h </> ".kit" </> "repository"
-
-  defaultLocalRepository :: IO KitRepository
-  defaultLocalRepository = fileRepo <$> defaultLocalRepoPath
-
-  handleFails :: Either KitError a -> IO ()
-  handleFails = either (putStrLn . ("kit error: " ++)) (const $ return ())
-
-  run :: KitIO a -> IO ()
-  run f = runErrorT f >>= handleFails
-
-  doUpdate :: IO ()
-  doUpdate = run $ do
-              repo <- liftIO defaultLocalRepository
-              spec <- myKitSpec
-              deps <- totalSpecDependencies repo spec
+  doUpdate :: Command ()
+  doUpdate = do
+              repo <- myRepository
+              spec <- mySpec
+              deps <- liftKit $ totalSpecDependencies repo spec
               puts $ "Dependencies: " ++ stringJoin ", " (map packageFileName deps)
               liftIO $ mapM_ (installKit repo) deps
               puts " -> Generating XCode project..."
-              generateXCodeProject deps (specKitDepsXcodeFlags spec)
+              liftKit $ generateXCodeProject deps (specKitDepsXcodeFlags spec)
               puts "Kit complete. You may need to restart XCode for it to pick up any changes."
 
-  doPackageKit :: IO ()
-  doPackageKit = do
-      mySpec <- runErrorT myKitSpec
-      T.for mySpec package
-      return ()
+  doPackageKit :: Command ()
+  doPackageKit = mySpec >>= liftIO . package 
 
-  doDeployLocal :: IO ()
-  doDeployLocal = do
-    mySpec <- runErrorT myKitSpec
-    T.for mySpec package
-    T.for mySpec publishLocal
-    handleFails mySpec
+  doDeployLocal :: Command ()
+  doDeployLocal = mySpec >>= \spec -> liftIO $ do 
+    package spec
+    publishLocal spec 
+    return ()
       where
         publishLocal :: KitSpec -> IO ()
         publishLocal spec = let
@@ -65,31 +50,31 @@ module Kit.Main where
               copyFile ("dist" </> pkg) $ thisKitDir </> pkg
               copyFile "KitSpec" $ thisKitDir </> "KitSpec"
 
-  doVerify :: String -> IO ()
-  doVerify sdk = run $ do
-        mySpec <- myKitSpec
+  doVerify :: String -> Command ()
+  doVerify sdk = do
+        mySpec <- mySpec
         puts "Checking that the kit can be depended upon..."
         puts " #> Deploying locally"
-        liftIO doDeployLocal
+        doDeployLocal
         puts " #> Building temporary parent project"
         tmp <- liftIO getTemporaryDirectory
-        liftIO $ inDirectory tmp $ do
+        inDirectory tmp $ do
           let kitVerifyDir = "kit-verify"
-          cleanOrCreate kitVerifyDir
+          liftIO $ cleanOrCreate kitVerifyDir
           inDirectory kitVerifyDir $ do
             let verifySpec = (defaultSpec "verify-kit" "1.0"){ specDependencies = [specKit mySpec] }
-            BS.writeFile "KitSpec" $ encodeSpec verifySpec
+            liftIO $ BS.writeFile "KitSpec" $ encodeSpec verifySpec
             doUpdate
             inDirectory "Kits" $ do
-              system "open KitDeps.xcodeproj"
-              system $ "xcodebuild -sdk " ++ sdk
+              liftIO $ system "open KitDeps.xcodeproj"
+              liftIO $ system $ "xcodebuild -sdk " ++ sdk
           puts "OK."
         puts "End checks."
 
-  doCreateSpec :: String -> String -> IO ()
+  doCreateSpec :: String -> String -> Command ()
   doCreateSpec name version = do
     let spec = defaultSpec name version 
-    BS.writeFile "KitSpec" $ encodeSpec spec
+    liftIO $ BS.writeFile "KitSpec" $ encodeSpec spec
     puts $ "Created KitSpec for " ++ packageFileName spec
 
   data KitCmdArgs = Update
@@ -114,7 +99,7 @@ module Kit.Main where
     ] &= program "kit"
       &= summary ("Kit v" ++ appVersion ++ ". It's a dependency manager for Objective-C projects built with XCode.")
 
-  handleArgs :: KitCmdArgs -> IO ()
+  handleArgs :: KitCmdArgs -> Command ()
   handleArgs Update = doUpdate
   handleArgs Package = doPackageKit
   handleArgs PublishLocal = doDeployLocal
@@ -124,5 +109,6 @@ module Kit.Main where
   kitMain :: IO ()
   kitMain = do
       mkdir_p =<< defaultLocalRepoPath 
-      handleArgs =<< parseArgs -- =<< getArgs
+      args <- parseArgs
+      runCommand $ handleArgs args 
 
