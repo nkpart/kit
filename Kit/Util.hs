@@ -61,8 +61,8 @@ module Kit.Util(
   mkdir_p :: MonadIO m => FilePath -> m ()
   mkdir_p = liftIO . createDirectoryIfMissing True
 
-  cleanOrCreate :: FilePath -> IO ()
-  cleanOrCreate directory = do
+  cleanOrCreate :: MonadIO m => FilePath -> m ()
+  cleanOrCreate directory = liftIO $ do
     exists <- doesDirectoryExist directory
     when exists $ removeDirectoryRecursive directory
     mkdir_p directory

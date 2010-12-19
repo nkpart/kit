@@ -14,6 +14,7 @@ module Kit.Spec (
   ) where
 
   import Control.Applicative
+  import Control.Monad.Trans
  
   import Data.Object
   import qualified Data.ByteString as BS 
@@ -64,6 +65,9 @@ module Kit.Spec (
 
   encodeSpec :: KitSpec -> BS.ByteString
   encodeSpec = Y.encode . showObject
+
+  writeSpec :: MonadIO m => FilePath -> KitSpec -> m ()
+  writeSpec fp spec = liftIO $ BS.writeFile fp $ encodeSpec spec
 
   class IsObject x where
     showObject :: x -> StringObject

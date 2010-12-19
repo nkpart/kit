@@ -41,14 +41,13 @@ module Kit.Main where
     return ()
       where
         publishLocal :: KitSpec -> IO ()
-        publishLocal spec = let
-              pkg = (packageFileName spec ++ ".tar.gz")
-            in do
-              repo <- defaultLocalRepoPath
-              let thisKitDir = repo </> "kits" </> packageName spec </> packageVersion spec
-              mkdir_p thisKitDir
-              copyFile ("dist" </> pkg) $ thisKitDir </> pkg
-              copyFile "KitSpec" $ thisKitDir </> "KitSpec"
+        publishLocal spec = let pkg = (packageFileName spec ++ ".tar.gz")
+                            in do
+                              repo <- defaultLocalRepoPath
+                              let thisKitDir = repo </> "kits" </> packageName spec </> packageVersion spec
+                              mkdir_p thisKitDir
+                              copyFile ("dist" </> pkg) (thisKitDir </> pkg)
+                              copyFile "KitSpec" (thisKitDir </> "KitSpec")
 
   doVerify :: String -> Command ()
   doVerify sdk = do
@@ -60,10 +59,9 @@ module Kit.Main where
         tmp <- liftIO getTemporaryDirectory
         inDirectory tmp $ do
           let kitVerifyDir = "kit-verify"
-          liftIO $ cleanOrCreate kitVerifyDir
+          cleanOrCreate kitVerifyDir
           inDirectory kitVerifyDir $ do
-            let verifySpec = (defaultSpec "verify-kit" "1.0"){ specDependencies = [specKit mySpec] }
-            liftIO $ BS.writeFile "KitSpec" $ encodeSpec verifySpec
+            writeSpec "KitSpec" (defaultSpec "verify-kit" "1.0") { specDependencies = [specKit mySpec] }
             doUpdate
             inDirectory "Kits" $ do
               liftIO $ system "open KitDeps.xcodeproj"
@@ -74,7 +72,7 @@ module Kit.Main where
   doCreateSpec :: String -> String -> Command ()
   doCreateSpec name version = do
     let spec = defaultSpec name version 
-    liftIO $ BS.writeFile "KitSpec" $ encodeSpec spec
+    writeSpec "KitSpec" spec
     puts $ "Created KitSpec for " ++ packageFileName spec
 
   data KitCmdArgs = Update
