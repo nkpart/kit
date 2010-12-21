@@ -1,5 +1,5 @@
 
-module Kit.XCode.Builder (buildXCodeProject) where
+module Kit.XCode.Builder (renderXcodeProject) where
   import Kit.XCode.Common
   import Kit.XCode.ProjectFileTemplate
   import Text.PList
@@ -12,19 +12,24 @@ module Kit.XCode.Builder (buildXCodeProject) where
     where uuid1 = uuid i
           uuid2 = uuid $ i + 10000000
 
-  xxx2 :: FilePath -> State [Integer] PBXBuildFile
-  xxx2 x = flip createBuildFile x `fmap` popS 
+  buildFileFromState :: FilePath -> State [Integer] PBXBuildFile
+  buildFileFromState filePath = flip createBuildFile filePath <$> popS 
 
-  buildXCodeProject :: [FilePath] -> [FilePath] -> [FilePath] -> String
-  buildXCodeProject headers sources libs = fst . flip runState [1..] $ do
-      headerBuildFiles <- mapM xxx2 headers
-      sourceBuildFiles <- mapM xxx2 sources
-      libBuildFiles <- mapM xxx2 libs
-      -- Build File Items
+  -- | Render an Xcode project!
+  renderXcodeProject :: 
+    [FilePath]    -- ^ Headers  
+    -> [FilePath] -- ^ Sources
+    -> [FilePath] -- ^ Static Libs
+    -> String     -- ^ Output lib name
+    -> String     
+  renderXcodeProject headers sources libs outputLibName = fst . flip runState [1..] $ do
+      headerBuildFiles <- mapM buildFileFromState headers
+      sourceBuildFiles <- mapM buildFileFromState sources
+      libBuildFiles <- mapM buildFileFromState libs -- Build File Items
       let allBuildFiles = (sourceBuildFiles ++ headerBuildFiles ++ libBuildFiles)
           -- Build And FileRef sections
           bfs = buildFileSection allBuildFiles
-          frs = fileReferenceSection (map buildFileReference allBuildFiles) "libKitDeps.a"
+          frs = fileReferenceSection (map buildFileReference allBuildFiles) outputLibName 
           -- Groups
           classes = classesGroup $ map buildFileReference (sourceBuildFiles ++ headerBuildFiles)
           fg = frameworksGroup $ map buildFileReference libBuildFiles

@@ -58,7 +58,7 @@ generateXCodeProject deps depsOnlyConfig = do
           let sources = cs >>= contentSources
           let libs = cs >>= contentLibs
           mkdir_p projectDir
-          writeFile projectFile $ buildXCodeProject headers sources libs
+          writeFile projectFile $ renderXcodeProject headers sources libs "libKitDeps.a"
         createHeader cs = do
           let headers = mapMaybe contentPrefix cs
           let combinedHeader = stringJoin "\n" headers
@@ -99,5 +99,4 @@ readSpec kitSpecPath = checkExists kitSpecPath >>= liftIO . BS.readFile >>= Erro
           doesExist <- liftIO $ doesFileExist kitSpecPath
           if doesExist then return kitSpecPath else throwError $ "Couldn't find the spec at " ++ kitSpecPath
         parses = maybeToRight "Parse error in KitSpec file" . decodeSpec
-
 
