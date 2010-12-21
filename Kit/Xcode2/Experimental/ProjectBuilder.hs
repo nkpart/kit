@@ -1,5 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-module Kit.XCode.Experimental.ProjectBuilder where
+module Kit.Xcode.Experimental.ProjectBuilder where
 
 import Text.PList
 import Control.Monad.State

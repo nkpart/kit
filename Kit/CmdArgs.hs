@@ -26,7 +26,7 @@ module Kit.CmdArgs (parseArgs, KitCmdArgs(..)) where
       , Verify { sdk = "iphonesimulator4.0" &= typ "SDK" &= help "iphoneos, iphonesimulator4.0, etc."} &=
                     help "Package this kit, then attempt to use it as a dependency in an empty project. This will assert that the kit and all its dependencies can be compiled together."
     ] &= program "kit"
-      &= summary ("Kit v" ++ appVersion ++ ". It's a dependency manager for Objective-C projects built with XCode.")
+      &= summary ("Kit v" ++ appVersion ++ ". It's a dependency manager for Objective-C projects built with Xcode.")
       
 
 

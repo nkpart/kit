@@ -2,9 +2,9 @@
 
 Constant sections of the project file
 -}
-module Kit.XCode.ProjectFileTemplate where
+module Kit.Xcode.ProjectFileTemplate where
 
-import Kit.XCode.Common
+import Kit.Xcode.Common
 import Text.PList
 import Control.Monad (join)
 

@@ -5,7 +5,7 @@ module Kit.Contents (
 
 import Kit.Spec
 import Kit.Util
-import Kit.XCode.XCConfig
+import Kit.Xcode.XCConfig
 
 import qualified Data.Traversable as T
 

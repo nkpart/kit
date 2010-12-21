@@ -23,9 +23,9 @@ module Kit.Main where
               deps <- liftKit $ totalSpecDependencies repo spec
               puts $ "Dependencies: " ++ stringJoin ", " (map packageFileName deps)
               liftIO $ mapM_ (installKit repo) deps
-              puts " -> Generating XCode project..."
-              liftKit $ generateXCodeProject deps (specKitDepsXcodeFlags spec)
-              puts "Kit complete. You may need to restart XCode for it to pick up any changes."
+              puts " -> Generating Xcode project..."
+              liftKit $ generateXcodeProject deps (specKitDepsXcodeFlags spec)
+              puts "Kit complete. You may need to restart Xcode for it to pick up any changes."
 
   doPackageKit :: Command ()
   doPackageKit = mySpec >>= liftIO . package 

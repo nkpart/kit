@@ -1,7 +1,7 @@
 
-module Kit.XCode.Builder (renderXcodeProject) where
-  import Kit.XCode.Common
-  import Kit.XCode.ProjectFileTemplate
+module Kit.Xcode.Builder (renderXcodeProject) where
+  import Kit.Xcode.Common
+  import Kit.Xcode.ProjectFileTemplate
   import Text.PList
   import Kit.Util
   import Data.List (nub)

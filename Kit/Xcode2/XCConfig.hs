@@ -1,4 +1,4 @@
-module Kit.XCode.XCConfig where
+module Kit.Xcode.XCConfig where
 
   import Kit.Util
 

@@ -2,7 +2,7 @@
 module Kit.Project (
   totalSpecDependencies,
   installKit,
-  generateXCodeProject,
+  generateXcodeProject,
   readSpec
   )
     where
@@ -11,8 +11,8 @@ import Kit.Spec
 import Kit.Contents
 import Kit.Repository
 import Kit.Util
-import Kit.XCode.Builder
-import Kit.XCode.XCConfig
+import Kit.Xcode.Builder
+import Kit.Xcode.XCConfig
 
 import Control.Monad.Error
 import Data.Maybe
@@ -40,8 +40,8 @@ prefixDefault = "#ifdef __OBJC__\n" ++
                 "    #import <UIKit/UIKit.h>\n" ++ 
                 "#endif\n"
 
-generateXCodeProject :: [Kit] -> Maybe String -> KitIO ()
-generateXCodeProject deps depsOnlyConfig = do
+generateXcodeProject :: [Kit] -> Maybe String -> KitIO ()
+generateXcodeProject deps depsOnlyConfig = do
   specs <- forM deps $ \kit -> readSpec (kitDir </> packageFileName kit </> "KitSpec")  
   liftIO $ inDirectory kitDir $ do
     kitsContents <- forM specs readKitContents
