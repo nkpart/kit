@@ -10,7 +10,8 @@ module Kit.Spec (
   defaultSpec,
   -- | Serialisation
   decodeSpec,
-  encodeSpec
+  encodeSpec,
+  writeSpec
   ) where
 
   import Control.Applicative
