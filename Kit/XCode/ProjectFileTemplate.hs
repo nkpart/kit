@@ -84,7 +84,7 @@ buildConfigurations libDirs = let libSearch = librarySearchPaths libDirs in ["1D
               "GCC_MODEL_TUNING" ~> val "G5",
               "GCC_OPTIMIZATION_LEVEL" ~> val "0",
               "GCC_PRECOMPILE_PREFIX_HEADER" ~> val "YES",
-              "GCC_PREFIX_HEADER" ~> val "KitDeps_Prefix.pch",
+              "GCC_PREFIX_HEADER" ~> val "Prefix.pch",
               "INSTALL_PATH" ~> val "/usr/local/lib",
               "PRODUCT_NAME" ~> val "KitDeps",
               libSearch 
@@ -99,7 +99,7 @@ buildConfigurations libDirs = let libSearch = librarySearchPaths libDirs in ["1D
               "DSTROOT" ~> val "/tmp/KitDeps.dst",
               "GCC_MODEL_TUNING" ~> val "G5",
               "GCC_PRECOMPILE_PREFIX_HEADER" ~> val "YES",
-              "GCC_PREFIX_HEADER" ~> val "KitDeps_Prefix.pch",
+              "GCC_PREFIX_HEADER" ~> val "Prefix.pch",
               "INSTALL_PATH" ~> val "/usr/local/lib",
               "PRODUCT_NAME" ~> val "KitDeps",
               libSearch

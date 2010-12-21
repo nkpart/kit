@@ -25,7 +25,7 @@ import qualified Data.ByteString as BS
 -- Paths
 kitDir = "." </> "Kits"
 projectDir = "KitDeps.xcodeproj"
-prefixFile = "KitDeps_Prefix.pch"
+prefixFile = "Prefix.pch"
 projectFile = projectDir </> "project.pbxproj"
 xcodeConfigFile = "Kit.xcconfig"
 depsConfigFile = "DepsOnly.xcconfig"
@@ -67,7 +67,7 @@ generateXCodeProject deps depsOnlyConfig = do
           let configs = mapMaybe contentConfig cs
           let combinedConfig = multiConfig "KitConfig" configs
           let kitHeaders = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ stringJoin " " (sourceDirs specs)
-          let prefixHeaders = "GCC_PRECOMPILE_PREFIX_HEADER = YES\nGCC_PREFIX_HEADER = $(SRCROOT)/KitDeps_Prefix.pch\n"
+          let prefixHeaders = "GCC_PRECOMPILE_PREFIX_HEADER = YES\nGCC_PREFIX_HEADER = $(SRCROOT)/Prefix.pch\n"
           writeFile xcodeConfigFile $ kitHeaders ++ "\n" ++  prefixHeaders ++ "\n" ++ configToString combinedConfig
           writeFile kitUpdateMakeFilePath kitUpdateMakeFile
 

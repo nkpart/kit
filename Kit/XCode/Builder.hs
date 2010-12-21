@@ -61,7 +61,7 @@ module Kit.XCode.Builder (renderXcodeProject) where
         "isa" ~> val "PBXFileReference",
         "fileEncoding" ~> val "4",
         "lastKnownFileType" ~> val "sourcecode.c.h",
-        "path" ~> val "KitDeps_Prefix.pch",
+        "path" ~> val "Prefix.pch",
         "sourceTree" ~> val "SOURCE_ROOT"
         ],
       "AACBBE490F95108600F1A2B1" ~> obj [
