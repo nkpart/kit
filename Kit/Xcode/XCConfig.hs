@@ -40,10 +40,13 @@ module Kit.Xcode.XCConfig where
   configToString :: XCConfig -> String
   configToString (XCC _ settings includes) = stringJoin "\n" $ map includeToString includes ++ map settingToString (M.toList settings)
                   
+  cleanName :: String -> String
+  cleanName = map (\a -> if a == '-' then '_' else a)
+
   fileContentsToXCC :: String -> String -> XCConfig
   fileContentsToXCC name content = let ls = lines content
                                        (settings, includes) = partitionEithers (ls >>= (maybeToList . parseLine))
-                                    in XCC name (M.fromList settings) includes
+                                    in XCC (cleanName name) (M.fromList settings) includes
 
   configAsMap :: XCConfig -> M.Map String [(String, String)]
   configAsMap (XCC name settings _) = M.map (return . (,) name) settings

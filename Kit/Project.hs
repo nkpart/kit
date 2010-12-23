@@ -60,7 +60,7 @@ generateXcodeProject deps depsOnlyConfig = do
           mkdir_p projectDir
           writeFile projectFile $ renderXcodeProject headers sources libs "libKitDeps.a"
         createHeader cs = do
-          let headers = mapMaybe contentPrefix cs
+          let headers = mapMaybe namedPrefix cs
           let combinedHeader = stringJoin "\n" headers
           writeFile prefixFile $ prefixDefault ++ combinedHeader ++ "\n"
         createConfig cs specs = do
@@ -68,7 +68,7 @@ generateXcodeProject deps depsOnlyConfig = do
           let combinedConfig = multiConfig "KitConfig" configs
           let kitHeaders = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ stringJoin " " (sourceDirs specs)
           let prefixHeaders = "GCC_PRECOMPILE_PREFIX_HEADER = YES\nGCC_PREFIX_HEADER = $(SRCROOT)/Prefix.pch\n"
-          writeFile xcodeConfigFile $ kitHeaders ++ "\n" ++  prefixHeaders ++ "\n" ++ configToString combinedConfig
+          writeFile xcodeConfigFile $ kitHeaders ++ "\n" ++  prefixHeaders ++ "\n" ++ configToString combinedConfig ++ "\n"
           writeFile kitUpdateMakeFilePath kitUpdateMakeFile
 
 -- | Return all the (unique) children of this tree (except the top node), in reverse depth order.

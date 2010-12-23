@@ -6,8 +6,8 @@ license:        BSD3
 license-file:   LICENSE
 maintainer:     nkpart@gmail.com
 
-synopsis:       A dependency manager for XCode (Objective-C) projects
-description:    A dependency manager for XCode (Objective-C) projects
+synopsis:       A dependency manager for Xcode (Objective-C) projects
+description:    A dependency manager for Xcode (Objective-C) projects
 category:       Development
 author:         Nick Partridge
 
@@ -22,7 +22,7 @@ Executable kit
 
 
   hs-source-dirs: .
-  other-modules:  Kit.Spec Kit.Main Kit.Package Kit.Project Kit.Repository Kit.Util Kit.XCode.Builder
-                  Kit.XCode.Common Kit.XCode.ProjectFileTemplate Kit.XCode.XCConfig Text.PList
+  other-modules:  Kit.Spec Kit.Main Kit.Package Kit.Project Kit.Repository Kit.Util Kit.Xcode.Builder
+                  Kit.Xcode.Common Kit.Xcode.ProjectFileTemplate Kit.Xcode.XCConfig Text.PList
                   Kit.Contents
   Ghc-options:    -Wall -fno-warn-unused-do-bind

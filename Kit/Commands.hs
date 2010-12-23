@@ -1,5 +1,14 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-module Kit.Commands where
+module Kit.Commands (
+  Command,
+  liftKit,
+  mySpec,
+  myKitSpec,
+  myRepository,
+  runCommand,
+  defaultLocalRepoPath,
+  defaultLocalRepository
+) where
 
 import Kit.Util
 import Kit.Spec
@@ -24,10 +33,12 @@ myRepository :: Command KitRepository
 myRepository = Command $ ask >>= (return . snd)
 
 runCommand :: Command a -> IO ()
-runCommand (Command cmd) = run $ do
+runCommand (Command cmd) = (handleFails =<<) . runErrorT $ do
   spec <- readSpec "KitSpec"
   repository <- liftIO defaultLocalRepository
   runReaderT cmd (spec, repository)
+  where run = (handleFails =<<) . runErrorT
+        handleFails = either (putStrLn . ("kit error: " ++)) (const $ return ())
 
 myKitSpec :: KitIO KitSpec
 myKitSpec = readSpec "KitSpec"
@@ -37,14 +48,4 @@ defaultLocalRepoPath = getHomeDirectory >>= \h -> return $ h </> ".kit" </> "rep
 
 defaultLocalRepository :: IO KitRepository
 defaultLocalRepository = fileRepo <$> defaultLocalRepoPath
-
-handleFails :: Either String a -> IO ()
-handleFails = either (putStrLn . ("kit error: " ++)) (const $ return ())
-
-run :: KitIO a -> IO ()
-run f = runErrorT f >>= handleFails
-
-
-
-
 

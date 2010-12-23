@@ -1,6 +1,7 @@
 module Kit.Contents (
   KitContents(..),
-  readKitContents
+  readKitContents,
+  namedPrefix
   ) where
 
 import Kit.Spec
@@ -11,12 +12,16 @@ import qualified Data.Traversable as T
 
 -- | The determined contents of a particular Kit
 data KitContents = KitContents { 
+  contentKit :: Kit,
   contentHeaders :: [FilePath],     -- ^ Paths to headers
   contentSources :: [FilePath],     -- ^ Paths to source files
   contentLibs :: [FilePath],        -- ^ Paths to static libs
   contentConfig :: Maybe XCConfig,  -- ^ Contents of the xcconfig base file
   contentPrefix :: Maybe String     -- ^ Contents of the prefix header
 }
+
+namedPrefix :: KitContents -> Maybe String
+namedPrefix kc = fmap (\s -> "//" ++ (packageFileName . contentKit $ kc) ++ "\n" ++ s) $ contentPrefix kc
 
 -- | Determine the contents for a Kit, assumes that we're in a projects 'Kits' folder.
 readKitContents :: KitSpec -> IO KitContents
@@ -29,7 +34,7 @@ readKitContents spec  =
       libs = find (specLibDirectory spec) ".a" 
       config = readConfig spec
       prefix = readHeader spec
-  in  KitContents <$> headers <*> sources <*> libs <*> config <*> prefix
+  in  KitContents (specKit spec) <$> headers <*> sources <*> libs <*> config <*> prefix
 
 -- Report missing file
 readHeader :: KitSpec -> IO (Maybe String)
