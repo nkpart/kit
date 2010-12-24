@@ -1,20 +1,13 @@
 module Kit.Main where
 
   import Control.Monad.Trans
-  import Control.Monad.Error
-  import Kit.CmdArgs
+  import qualified Kit.CmdArgs as KA 
   import Kit.Commands
   import Kit.Spec
   import Kit.Package
   import Kit.Project
-  import Kit.Repository
   import Kit.Util
-  import qualified Data.Traversable as T
   import System.Cmd
-  import Control.Arrow
-
-  import Data.Object.Yaml
-  import qualified Data.ByteString as BS
 
   doUpdate :: Command ()
   doUpdate = do
@@ -47,7 +40,7 @@ module Kit.Main where
 
   doVerify :: String -> Command ()
   doVerify sdk = do
-        mySpec <- mySpec
+        spec <- mySpec
         puts "Checking that the kit can be depended upon..."
         puts " #> Deploying locally"
         doDeployLocal
@@ -57,7 +50,7 @@ module Kit.Main where
           let kitVerifyDir = "kit-verify"
           cleanOrCreate kitVerifyDir
           inDirectory kitVerifyDir $ do
-            writeSpec "KitSpec" (defaultSpec "verify-kit" "1.0") { specDependencies = [specKit mySpec] }
+            writeSpec "KitSpec" (defaultSpec "verify-kit" "1.0") { specDependencies = [specKit spec] }
             doUpdate
             inDirectory "Kits" $ do
               liftIO $ system "open KitDeps.xcodeproj"
@@ -71,16 +64,16 @@ module Kit.Main where
     writeSpec "KitSpec" spec
     puts $ "Created KitSpec for " ++ packageFileName spec
 
-  handleArgs :: KitCmdArgs -> Command ()
-  handleArgs Update = doUpdate
-  handleArgs Package = doPackageKit
-  handleArgs PublishLocal = doDeployLocal
-  handleArgs (Verify sdkName) = doVerify sdkName
-  handleArgs (CreateSpec name version) = doCreateSpec name version
+  handleArgs :: KA.KitCmdArgs -> Command ()
+  handleArgs KA.Update = doUpdate
+  handleArgs KA.Package = doPackageKit
+  handleArgs KA.PublishLocal = doDeployLocal
+  handleArgs (KA.Verify sdkName) = doVerify sdkName
+  handleArgs (KA.CreateSpec name version) = doCreateSpec name version
 
   kitMain :: IO ()
   kitMain = do
       mkdir_p =<< defaultLocalRepoPath 
-      args <- parseArgs
+      args <- KA.parseArgs
       runCommand $ handleArgs args 
 

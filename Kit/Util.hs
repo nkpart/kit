@@ -11,18 +11,13 @@ module Kit.Util(
   import System.FilePath.Posix
   import System.FilePath.Glob
 
-  import Data.Foldable
   import Data.List
   import Data.Maybe
   import Data.Monoid
-  import qualified Data.Traversable as T
 
   import Control.Applicative
   import Control.Monad
   import Control.Monad.Error
-
-  import Data.Map
-  import Control.Monad.Writer
 
   import qualified Control.Monad.State as S
 
@@ -46,12 +41,6 @@ module Kit.Util(
 
   maybeToLeft :: b -> Maybe a -> Either a b
   maybeToLeft v = maybe (Right v) Left
-
-  instance Foldable (Either c) where
-    foldr f z = either (const z) (flip f z) 
-
-  instance T.Traversable (Either c) where
-    sequenceA = either (pure . Left) (Right <$>)
 
   type KitIO a = ErrorT String IO a
   

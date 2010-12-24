@@ -16,14 +16,22 @@ data PListType = PListValue String
                | PListObject [PListObjectItem]
                deriving Eq
 
+val :: String -> PListType
+arr :: [PListType] -> PListType
+obj :: [PListObjectItem] -> PListType
+
 val = PListValue
 arr = PListArray
 obj = PListObject
 
 infixl 1 ~> 
+(~>) :: String -> PListType -> PListObjectItem
 a ~> b = PListObjectItem a b
 
+quote :: String -> String
 quote s = "\"" ++ s ++ "\""
+
+quotable :: String -> Bool
 quotable "" = True
 quotable s = any (\x -> x `isInfixOf` s && not ("sourcecode" `isPrefixOf` s)) quote_triggers
               where quote_triggers = ["-", "<", ">", " ", ".m", ".h", "_", "$"]

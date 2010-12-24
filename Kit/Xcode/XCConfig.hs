@@ -17,6 +17,8 @@ module Kit.Xcode.XCConfig where
     configIncludes :: [XCCInclude]
   } deriving (Eq, Show)
   
+
+  includeStart :: String
   includeStart = "#include "
   
   strip :: String -> String

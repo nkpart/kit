@@ -33,7 +33,7 @@ myRepository :: Command KitRepository
 myRepository = Command $ ask >>= (return . snd)
 
 runCommand :: Command a -> IO ()
-runCommand (Command cmd) = (handleFails =<<) . runErrorT $ do
+runCommand (Command cmd) = run $ do
   spec <- readSpec "KitSpec"
   repository <- liftIO defaultLocalRepository
   runReaderT cmd (spec, repository)

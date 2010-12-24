@@ -21,8 +21,6 @@ module Kit.Spec (
   import qualified Data.ByteString as BS 
   import qualified Data.Object.Yaml as Y
 
-  import Control.Compose
-
   data KitSpec = KitSpec {
     specKit :: Kit,
     specDependencies :: [Kit],
@@ -73,9 +71,10 @@ module Kit.Spec (
   class IsObject x where
     showObject :: x -> StringObject
     readObject :: StringObject -> Maybe x
-  
-  lookup' key obj = lookupObject key obj >>= readObject
-  (#>) = flip lookup'
+ 
+   
+  (#>) :: IsObject b => [(String, Object String String)] -> String -> Maybe b
+  obj #> key = lookupObject key obj >>= readObject
 
   instance IsObject a => IsObject [a] where
     showObject xs = Sequence $ map showObject xs
@@ -84,9 +83,6 @@ module Kit.Spec (
   instance IsObject String where
     showObject = Scalar
     readObject = fromScalar
-
-  parseKit :: [(String, StringObject)] -> Maybe Kit
-  parseKit = unO $ Kit `fmapFF` (O (#> "name")) <*> (O (#> "version"))
 
   instance IsObject Kit where
     showObject kit = Mapping [("name", w kitName), ("version", w kitVersion)] where w f = showObject . f $ kit
@@ -102,13 +98,13 @@ module Kit.Spec (
               val f = Scalar . f $ spec
 
     readObject x = fromMapping x >>= parser
-        where or a b = a <|> pure b
+        where or' a b = a <|> pure b
               parser obj =  KitSpec <$> readObject x
-                                    <*> (obj #> "dependencies" `or` [])
-                                    <*> (obj #> "source-directory" `or` "src")
-                                    <*> (obj #> "test-directory" `or` "test")
-                                    <*> (obj #> "lib-directory" `or` "lib")
-                                    <*> (obj #> "prefix-header" `or` "Prefix.pch")
-                                    <*> (obj #> "xcconfig" `or` "Config.xcconfig")
-                                    <*> (Just <$> obj #> "kitdeps-xcode-flags") `or` Nothing
+                                    <*> (obj #> "dependencies" `or'` [])
+                                    <*> (obj #> "source-directory" `or'` "src")
+                                    <*> (obj #> "test-directory" `or'` "test")
+                                    <*> (obj #> "lib-directory" `or'` "lib")
+                                    <*> (obj #> "prefix-header" `or'` "Prefix.pch")
+                                    <*> (obj #> "xcconfig" `or'` "Config.xcconfig")
+                                    <*> (Just <$> obj #> "kitdeps-xcode-flags") `or'` Nothing
 

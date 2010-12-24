@@ -1,7 +1,4 @@
-{-
-
-Constant sections of the project file
--}
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 module Kit.Xcode.ProjectFileTemplate where
 
 import Kit.Xcode.Common
@@ -10,14 +7,12 @@ import Control.Monad (join)
 
 import qualified Data.List as L
 
-projectFile objects uuid = PListFile "!$*UTF8*$!" $ obj [
+projectFile objects rootId = PListFile "!$*UTF8*$!" $ obj [
       "archiveVersion" ~> val "1",
       "classes" ~> obj [],
       "objectVersion" ~> val "45",
       "objects" ~> obj objects, 
-      "rootObject" ~> val uuid
-
-
+      "rootObject" ~> val rootId 
   ]
 
 groupProductsUUID = "034768DFFF38A50411DB9C8B"

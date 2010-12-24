@@ -1,5 +1,4 @@
 module Kit.Xcode.Common where
-  import Data.Monoid
   import Data.List
   import System.FilePath.Posix
   
@@ -33,7 +32,8 @@ module Kit.Xcode.Common where
     fileReferenceId :: UUID,
     fileReferencePath :: String
   } deriving (Eq, Show)
-  
+ 
+  group :: String -> [PListType] -> PListType 
   group name children = obj [
       "isa" ~> val "PBXGroup",
       "name" ~> val name,
@@ -41,6 +41,7 @@ module Kit.Xcode.Common where
       "children" ~> arr children
     ]
 
+  buildFile :: String -> PListType
   buildFile refUUID = obj [ "isa" ~> val "PBXBuildFile", "fileRef" ~> val refUUID ]
 
   buildFileItem :: PBXBuildFile -> PListObjectItem 
@@ -60,6 +61,7 @@ module Kit.Xcode.Common where
         ]
 
 
+  fileReferenceName :: PBXFileReference -> String
   fileReferenceName = takeFileName . fileReferencePath
   
   uuid :: Integer -> UUID

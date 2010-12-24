@@ -13,7 +13,6 @@ module Kit.Repository (
   import Network.HTTP
   import Network.URI
   import Control.Monad.Error
-  import Control.Monad.Trans
   import Data.Maybe
   import qualified Data.List as L
   import qualified Data.Traversable as T
@@ -33,15 +32,16 @@ module Kit.Repository (
     maybe (throwError $ "Missing " ++ packageFileName k) f mbKitStuff
     where f contents = maybeToKitIO ("Invalid KitSpec file for " ++ packageFileName k) $ decodeSpec contents
 
+  -- TODO: Use the base url!
   webRepo :: String -> KitRepository
-  webRepo baseUrl = KitRepository save read where
+  webRepo _ = KitRepository save doRead where
     save = download
-    read = getBody
+    doRead = getBody
 
   fileRepo :: String -> KitRepository
-  fileRepo baseDir = KitRepository save read where
+  fileRepo baseDir = KitRepository save doRead where
     save src destPath = Just <$> copyFile (baseDir </> src) destPath
-    read path = let file = (baseDir </> path) in do
+    doRead fp = let file = (baseDir </> fp) in do
       exists <- doesFileExist file
       T.sequenceA $ justTrue exists $ BS.readFile file
 
@@ -50,16 +50,17 @@ module Kit.Repository (
   baseKitPath k = joinS ["kits", kitName k, kitVersion k] "/"
     where joinS xs x = foldl1 (++) $ L.intersperse x xs
 
+  kitPackagePath, kitSpecPath :: Kit -> String
+
   kitPackagePath k = baseKitPath k ++ "/" ++ packageFileName k ++ ".tar.gz"
   kitSpecPath k = baseKitPath k ++ "/" ++ "KitSpec"
 
   getBody :: BufferType a => HStream a => String -> IO (Maybe a)
-  getBody path = let
+  getBody p = let
       request = defaultGETRequest_ . fromJust . parseURI
-      checkResponse r = justTrue (rspCode r == (2,0,0)) r
       leftMaybe = either (const Nothing) Just
     in do
-      rr <- Network.HTTP.simpleHTTP $ request path
+      rr <- Network.HTTP.simpleHTTP $ request p 
       return $ fmap rspBody $ leftMaybe rr
 
   download :: String -> FilePath -> IO (Maybe ())

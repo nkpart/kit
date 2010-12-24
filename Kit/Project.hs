@@ -23,6 +23,9 @@ import System.Cmd
 import qualified Data.ByteString as BS
 
 -- Paths
+
+kitDir, projectDir, prefixFile, projectFile, xcodeConfigFile, depsConfigFile, kitUpdateMakeFilePath :: FilePath
+
 kitDir = "." </> "Kits"
 projectDir = "KitDeps.xcodeproj"
 prefixFile = "Prefix.pch"
@@ -31,10 +34,12 @@ xcodeConfigFile = "Kit.xcconfig"
 depsConfigFile = "DepsOnly.xcconfig"
 kitUpdateMakeFilePath = "Makefile"
 
+kitUpdateMakeFile :: String
 kitUpdateMakeFile = "kit: Kit.xcconfig\n" ++
                     "Kit.xcconfig: ../KitSpec\n" ++
                     "\tcd .. && kit update && exit 1\n"
 
+prefixDefault :: String
 prefixDefault = "#ifdef __OBJC__\n" ++ 
                 "    #import <Foundation/Foundation.h>\n" ++ 
                 "    #import <UIKit/UIKit.h>\n" ++ 
@@ -94,9 +99,9 @@ installKit kr kit = do
     return ()
 
 readSpec :: FilePath -> KitIO KitSpec
-readSpec kitSpecPath = checkExists kitSpecPath >>= liftIO . BS.readFile >>= ErrorT . return . parses
-  where checkExists kitSpecPath = do
-          doesExist <- liftIO $ doesFileExist kitSpecPath
-          if doesExist then return kitSpecPath else throwError $ "Couldn't find the spec at " ++ kitSpecPath
+readSpec path = checkExists path >>= liftIO . BS.readFile >>= ErrorT . return . parses
+  where checkExists pathToSpec = do
+          doesExist <- liftIO $ doesFileExist pathToSpec 
+          if doesExist then return pathToSpec else throwError $ "Couldn't find the spec at " ++ pathToSpec 
         parses = maybeToRight "Parse error in KitSpec file" . decodeSpec
 
