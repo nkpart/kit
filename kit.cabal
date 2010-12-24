@@ -1,5 +1,5 @@
 name:           kit
-version:        0.5.2
+version:        0.6
 cabal-version:  >=1.2
 build-type:     Simple
 license:        BSD3
@@ -17,12 +17,10 @@ Executable kit
   build-depends:  process -any, network -any, mtl -any, 
                   filepath -any, directory -any, containers -any, cmdargs >=0.3,
                   bytestring -any, base >=3 && <5, QuickCheck -any,
-                  HTTP >=4000.0.9, Glob >= 0.5, data-object -any, data-object-yaml -any,
-                  TypeCompose >= 0.8
-
+                  HTTP >=4000.0.9, Glob >= 0.5, data-object -any, data-object-yaml -any
 
   hs-source-dirs: .
   other-modules:  Kit.Spec Kit.Main Kit.Package Kit.Project Kit.Repository Kit.Util Kit.Xcode.Builder
                   Kit.Xcode.Common Kit.Xcode.ProjectFileTemplate Kit.Xcode.XCConfig Text.PList
-                  Kit.Contents
+                  Kit.Contents Kit.Commands Kit.CmdArgs
   Ghc-options:    -Wall -fno-warn-unused-do-bind
