@@ -10,7 +10,7 @@ module Kit.Package (package) where
   fileBelongsInPackage :: KitSpec -> FilePath -> Bool
   fileBelongsInPackage config fp = let
     isCore = elem fp [specSourceDirectory config, specTestDirectory config, specLibDirectory config, "KitSpec"]
-    isProject = or $ map (`isSuffixOf` fp) ["xcodeproj", "xcconfig", ".pch"]
+    isProject = any (`isSuffixOf` fp) ["xcodeproj", "xcconfig", ".pch"]
       in isCore || isProject
 
   package :: KitSpec -> IO ()
@@ -21,9 +21,8 @@ module Kit.Package (package) where
       cleanOrCreate kd
       contents <- getDirectoryContents "."
       mapM_ (copyAllTo kd) (filter (fileBelongsInPackage spec) contents)
-      mkdir_p distDir
-      inDirectory tempDir $ do
-        sh $ "tar czf " ++ (distDir </> (kitPath ++ ".tar.gz")) ++ " " ++ kitPath
+      mkdirP distDir
+      inDirectory tempDir $ sh $ "tar czf " ++ (distDir </> (kitPath ++ ".tar.gz")) ++ " " ++ kitPath
       return ()
     where
       kitPath = packageFileName spec

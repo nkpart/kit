@@ -47,14 +47,14 @@ module Kit.Util(
   maybeToKitIO :: String -> Maybe a -> KitIO a
   maybeToKitIO msg = maybe (throwError msg) return
 
-  mkdir_p :: MonadIO m => FilePath -> m ()
-  mkdir_p = liftIO . createDirectoryIfMissing True
+  mkdirP :: MonadIO m => FilePath -> m ()
+  mkdirP = liftIO . createDirectoryIfMissing True
 
   cleanOrCreate :: MonadIO m => FilePath -> m ()
   cleanOrCreate directory = liftIO $ do
     exists <- doesDirectoryExist directory
     when exists $ removeDirectoryRecursive directory
-    mkdir_p directory
+    mkdirP directory
 
   inDirectory :: MonadIO m => FilePath -> m a -> m a
   inDirectory dir actions = do

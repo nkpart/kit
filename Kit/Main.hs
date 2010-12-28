@@ -34,7 +34,7 @@ module Kit.Main where
                             in do
                               repo <- defaultLocalRepoPath
                               let thisKitDir = repo </> "kits" </> packageName spec </> packageVersion spec
-                              mkdir_p thisKitDir
+                              mkdirP thisKitDir
                               copyFile ("dist" </> pkg) (thisKitDir </> pkg)
                               copyFile "KitSpec" (thisKitDir </> "KitSpec")
 
@@ -73,7 +73,6 @@ module Kit.Main where
 
   kitMain :: IO ()
   kitMain = do
-      mkdir_p =<< defaultLocalRepoPath 
-      args <- KA.parseArgs
-      runCommand $ handleArgs args 
+      mkdirP =<< defaultLocalRepoPath 
+      runCommand . handleArgs =<< KA.parseArgs
 

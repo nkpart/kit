@@ -5,7 +5,7 @@ build-type:     Simple
 license:        BSD3
 license-file:   LICENSE
 maintainer:     nkpart@gmail.com
-
+homepage:       http://github.com/nkpart/kit
 synopsis:       A dependency manager for Xcode (Objective-C) projects
 description:    A dependency manager for Xcode (Objective-C) projects
 category:       Development

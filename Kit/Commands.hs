@@ -3,7 +3,6 @@ module Kit.Commands (
   Command,
   liftKit,
   mySpec,
-  myKitSpec,
   myRepository,
   runCommand,
   defaultLocalRepoPath,
@@ -27,10 +26,10 @@ liftKit :: KitIO a -> Command a
 liftKit = Command . ReaderT . const
 
 mySpec :: Command KitSpec
-mySpec = Command $ ask >>= (return . fst) 
+mySpec = Command $ fmap fst ask
 
 myRepository :: Command KitRepository
-myRepository = Command $ ask >>= (return . snd)
+myRepository = Command $ fmap snd ask
 
 runCommand :: Command a -> IO ()
 runCommand (Command cmd) = run $ do
@@ -39,9 +38,6 @@ runCommand (Command cmd) = run $ do
   runReaderT cmd (spec, repository)
   where run = (handleFails =<<) . runErrorT
         handleFails = either (putStrLn . ("kit error: " ++)) (const $ return ())
-
-myKitSpec :: KitIO KitSpec
-myKitSpec = readSpec "KitSpec"
 
 defaultLocalRepoPath :: IO FilePath
 defaultLocalRepoPath = getHomeDirectory >>= \h -> return $ h </> ".kit" </> "repository"

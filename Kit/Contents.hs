@@ -36,14 +36,14 @@ readKitContents spec  =
       prefix = readHeader spec
   in  KitContents (specKit spec) <$> headers <*> sources <*> libs <*> config <*> prefix
 
--- Report missing file
+-- TODO report missing file
 readHeader :: KitSpec -> IO (Maybe String)
 readHeader spec = do
   let fp = packageFileName spec </> specPrefixFile spec
   exists <- doesFileExist fp
   T.sequence (fmap readFile $ justTrue exists fp)
 
--- TODO make this report missing file
+-- TODO report missing file
 readConfig :: KitSpec -> IO (Maybe XCConfig)
 readConfig spec = do
   let fp = packageFileName spec </> specConfigFile spec

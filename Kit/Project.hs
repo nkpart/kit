@@ -62,7 +62,7 @@ generateXcodeProject deps depsOnlyConfig = do
           let headers = cs >>= contentHeaders
           let sources = cs >>= contentSources
           let libs = cs >>= contentLibs
-          mkdir_p projectDir
+          mkdirP projectDir
           writeFile projectFile $ renderXcodeProject headers sources libs "libKitDeps.a"
         createHeader cs = do
           let headers = mapMaybe namedPrefix cs
@@ -94,7 +94,7 @@ installKit kr kit = do
     let fp = tmpDir </> (packageFileName kit ++ ".tar.gz")
     putStrLn $ " -> Installing " ++ packageFileName kit
     fmap fromJust $ getKit kr kit fp
-    mkdir_p kitDir 
+    mkdirP kitDir 
     inDirectory kitDir $ system ("tar zxf " ++ fp)
     return ()
 
