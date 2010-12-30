@@ -14,6 +14,8 @@ import Kit.Spec
 import Kit.Repository
 import Kit.Project
 
+import System.Exit (exitFailure)
+
 import Control.Monad.Error
 import Control.Monad.Reader
 
@@ -37,7 +39,7 @@ runCommand (Command cmd) = run $ do
   repository <- liftIO defaultLocalRepository
   runReaderT cmd (spec, repository)
   where run = (handleFails =<<) . runErrorT
-        handleFails = either (putStrLn . ("kit error: " ++)) (const $ return ())
+        handleFails = either (\msg -> putStrLn ("kit error: " ++ msg) >> exitFailure) (const $ return ())
 
 defaultLocalRepoPath :: IO FilePath
 defaultLocalRepoPath = getHomeDirectory >>= \h -> return $ h </> ".kit" </> "repository"
