@@ -23,10 +23,13 @@ module Kit.Main where
   doPackageKit :: Command ()
   doPackageKit = mySpec >>= liftIO . package 
 
-  doDeployLocal :: Command ()
-  doDeployLocal = mySpec >>= \spec -> liftIO $ do 
-    package spec
-    publishLocal spec 
+  doPublishLocal :: Maybe String -> Command ()
+  doPublishLocal versionTag = do
+    spec <- mySpec 
+    let updatedSpec = maybe spec (\tag -> updateVersion spec (++tag)) versionTag
+    liftIO $ do
+      package updatedSpec 
+      publishLocal updatedSpec 
     return ()
       where
         publishLocal :: KitSpec -> IO ()
@@ -36,14 +39,14 @@ module Kit.Main where
                               let thisKitDir = repo </> "kits" </> packageName spec </> packageVersion spec
                               mkdirP thisKitDir
                               copyFile ("dist" </> pkg) (thisKitDir </> pkg)
-                              copyFile "KitSpec" (thisKitDir </> "KitSpec")
+                              writeSpec (thisKitDir </> "KitSpec") spec
 
   doVerify :: String -> Command ()
   doVerify sdk = do
         spec <- mySpec
         puts "Checking that the kit can be depended upon..."
         puts " #> Deploying locally"
-        doDeployLocal
+        doPublishLocal Nothing -- TODO publish with a verify tag
         puts " #> Building temporary parent project"
         tmp <- liftIO getTemporaryDirectory
         inDirectory tmp $ do
@@ -67,7 +70,7 @@ module Kit.Main where
   handleArgs :: KA.KitCmdArgs -> Command ()
   handleArgs KA.Update = doUpdate
   handleArgs KA.Package = doPackageKit
-  handleArgs KA.PublishLocal = doDeployLocal
+  handleArgs (KA.PublishLocal versionTag) = doPublishLocal versionTag 
   handleArgs (KA.Verify sdkName) = doVerify sdkName
   handleArgs (KA.CreateSpec name version) = doCreateSpec name version
 

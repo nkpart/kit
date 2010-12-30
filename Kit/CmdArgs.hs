@@ -8,7 +8,7 @@ module Kit.CmdArgs (parseArgs, KitCmdArgs(..)) where
 
   data KitCmdArgs = Update
                   | Package
-                  | PublishLocal
+                  | PublishLocal { tag :: Maybe String } 
                   | Verify { sdk :: String }
                   | CreateSpec { name :: String, version :: String } deriving (Show, Data, Typeable)
 
@@ -22,7 +22,7 @@ module Kit.CmdArgs (parseArgs, KitCmdArgs(..)) where
                             help "Write out a KitSpec file using the given name and version."
       , Package &=
                     help "Create a tar.gz wrapping this kit"
-      , PublishLocal &= explicit &= CA.name "publish-local" &=
+      , PublishLocal { tag = Nothing } &= explicit &= CA.name "publish-local" &=
                     help "Package this kit, then deploy it to the local repository (~/.kit/repository)"
       , Verify { sdk = "iphonesimulator4.0" &= typ "SDK" &= help "iphoneos, iphonesimulator4.0, etc."} &=
                     help "Package this kit, then attempt to use it as a dependency in an empty project. This will assert that the kit and all its dependencies can be compiled together."

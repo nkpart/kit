@@ -3,6 +3,7 @@ module Kit.Spec (
   -- | The Core Kit types
   KitSpec(..),
   Kit(..),
+  updateVersion,
   -- | Duck typing the name/version of a Kit/Spec
   Packageable(..),
   packageFileName,
@@ -31,6 +32,9 @@ module Kit.Spec (
     specConfigFile :: FilePath,
     specKitDepsXcodeFlags :: Maybe String
   } deriving (Show, Read)
+
+  updateVersion :: KitSpec -> (String -> String) -> KitSpec
+  updateVersion spec f = spec { specKit = (specKit spec) { kitVersion = f . kitVersion . specKit $ spec } } 
 
   data Kit = Kit {
     kitName :: String,
