@@ -1,7 +1,9 @@
-0.6.0-pre
----------
+0.6.1
+-----
+* [BUG] On error, will now use a failure exit code.
 
-* [TODO] Pass the KitSpec file name via '-f'
+0.6.0
+---------
 * KitSpec file is now parsed as YAML. Because it's a superset of JSON,
   this is backwards compatible.
 
