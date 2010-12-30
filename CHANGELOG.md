@@ -1,3 +1,9 @@
+0.6.2
+-----
+* Allow 'tagging' of kits as they're published. 
+    $ kit publish-local --tag=-HEAD
+  Assuming the Kitspec currently specifies version '1.0', this will publish it as '1.0-HEAD'
+
 0.6.1
 -----
 * [BUG] On error, will now use a failure exit code.
