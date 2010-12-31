@@ -45,5 +45,5 @@ defaultLocalRepoPath :: IO FilePath
 defaultLocalRepoPath = getHomeDirectory >>= \h -> return $ h </> ".kit" </> "repository"
 
 defaultLocalRepository :: IO KitRepository
-defaultLocalRepository = fileRepo <$> defaultLocalRepoPath
+defaultLocalRepository = KitRepository <$> defaultLocalRepoPath
 

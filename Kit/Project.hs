@@ -86,14 +86,14 @@ totalSpecDependencies kr spec = refineDeps <$> unfoldTreeM (unfoldDeps kr) spec
     -- todo: check for version ranges :)
 
 unfoldDeps :: KitRepository -> KitSpec -> KitIO (Kit, [KitSpec])
-unfoldDeps kr ks = (specKit ks,) <$> mapM (getKitSpec kr) (specDependencies ks) -- s/mapM/traverse ?
+unfoldDeps kr ks = (specKit ks,) <$> mapM (readKitSpec kr) (specDependencies ks) -- s/mapM/traverse ?
 
 installKit :: KitRepository -> Kit -> IO ()
 installKit kr kit = do
     tmpDir <- getTemporaryDirectory
     let fp = tmpDir </> (packageFileName kit ++ ".tar.gz")
     putStrLn $ " -> Installing " ++ packageFileName kit
-    fmap fromJust $ getKit kr kit fp
+    extractKit kr kit fp
     mkdirP kitDir 
     inDirectory kitDir $ system ("tar zxf " ++ fp)
     return ()
