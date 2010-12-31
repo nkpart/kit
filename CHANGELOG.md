@@ -1,3 +1,10 @@
+0.6.3
+-----
+* Resource directories. KitSpec field: resources-directory, default "resources". This 
+  directory is symlinked to Kits/Resources/<package-name> on an update. It gives a 
+  stable path to resources that need to be referenced in a parent project (data models,
+  images, etc.)
+
 0.6.2
 -----
 * Allow 'tagging' of kits as they're published. 

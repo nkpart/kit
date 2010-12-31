@@ -1,4 +1,3 @@
-{-# LANGUAGE KindSignatures, TypeSynonymInstances, NoMonomorphismRestriction, OverlappingInstances #-}
 module Kit.Spec (
   -- | The Core Kit types
   KitSpec(..),
@@ -19,6 +18,7 @@ module Kit.Spec (
   import Control.Monad.Trans
  
   import Data.Object
+  import Kit.Util.IsObject
   import qualified Data.ByteString as BS 
   import qualified Data.Object.Yaml as Y
 
@@ -28,6 +28,7 @@ module Kit.Spec (
     specSourceDirectory :: FilePath,
     specTestDirectory :: FilePath,
     specLibDirectory :: FilePath,
+    specResourcesDirectory :: FilePath,
     specPrefixFile :: FilePath,
     specConfigFile :: FilePath,
     specKitDepsXcodeFlags :: Maybe String
@@ -57,7 +58,7 @@ module Kit.Spec (
     packageVersion = kitVersion . specKit
 
   defaultSpec :: String -> String -> KitSpec
-  defaultSpec name version = KitSpec (Kit name version) [] "src" "test" "lib" "Prefix.pch" "Config.xcconfig" Nothing
+  defaultSpec name version = KitSpec (Kit name version) [] "src" "test" "lib" "resources" "Prefix.pch" "Config.xcconfig" Nothing
   -- TODO make this and the json reading use the same defaults
   -- I suspect that to do this I'll need update functions for each of
   -- fields in the KitSpec record.
@@ -72,25 +73,8 @@ module Kit.Spec (
   writeSpec :: MonadIO m => FilePath -> KitSpec -> m ()
   writeSpec fp spec = liftIO $ BS.writeFile fp $ encodeSpec spec
 
-  class IsObject x where
-    showObject :: x -> StringObject
-    readObject :: StringObject -> Maybe x
- 
-   
-  (#>) :: IsObject b => [(String, Object String String)] -> String -> Maybe b
-  obj #> key = lookupObject key obj >>= readObject
-
-  instance IsObject a => IsObject [a] where
-    showObject xs = Sequence $ map showObject xs
-    readObject x = fromSequence x >>= mapM readObject 
-
-  instance IsObject String where
-    showObject = Scalar
-    readObject = fromScalar
-
   instance IsObject Kit where
     showObject kit = Mapping [("name", w kitName), ("version", w kitVersion)] where w f = showObject . f $ kit
-
     readObject x = fromMapping x >>= \obj -> Kit <$> obj #> "name" <*> obj #> "version" 
 
   instance IsObject KitSpec where
@@ -108,6 +92,7 @@ module Kit.Spec (
                                     <*> (obj #> "source-directory" `or'` "src")
                                     <*> (obj #> "test-directory" `or'` "test")
                                     <*> (obj #> "lib-directory" `or'` "lib")
+                                    <*> (obj #> "resources-directory" `or'` "resources")
                                     <*> (obj #> "prefix-header" `or'` "Prefix.pch")
                                     <*> (obj #> "xcconfig" `or'` "Config.xcconfig")
                                     <*> (Just <$> obj #> "kitdeps-xcode-flags") `or'` Nothing
