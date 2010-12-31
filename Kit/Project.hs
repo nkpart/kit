@@ -19,6 +19,7 @@ import Data.Maybe
 import Data.List
 import Data.Tree
 import System.Cmd
+import System.Posix.Files
 
 import qualified Data.ByteString as BS
 
@@ -54,6 +55,7 @@ generateXcodeProject deps depsOnlyConfig = do
     createHeader kitsContents
     createConfig kitsContents specs
     writeFile depsConfigFile $ "#include \"" ++ xcodeConfigFile ++ "\"\n" ++ fromMaybe "" depsOnlyConfig 
+    symlinkAll specs
   where sourceDirs specs = specs >>= (\spec -> [
             kitDir </> packageFileName spec </> specSourceDirectory spec, 
             packageFileName spec </> specSourceDirectory spec
@@ -75,6 +77,21 @@ generateXcodeProject deps depsOnlyConfig = do
           let prefixHeaders = "GCC_PRECOMPILE_PREFIX_HEADER = YES\nGCC_PREFIX_HEADER = $(SRCROOT)/Prefix.pch\n"
           writeFile xcodeConfigFile $ kitHeaders ++ "\n" ++  prefixHeaders ++ "\n" ++ configToString combinedConfig ++ "\n"
           writeFile kitUpdateMakeFilePath kitUpdateMakeFile
+
+symlinkAll :: [KitSpec] -> IO ()
+symlinkAll specs = do
+  mkdirP "Resources"
+  mapM_ symlinkResources specs
+
+symlinkResources :: KitSpec -> IO ()
+symlinkResources spec = let when' a b = a >>= flip when b in do 
+  let resourcesDir = packageFileName spec </> specResourcesDirectory spec
+  let linkName = "Resources" </> packageName spec
+  print resourcesDir
+  when' (fileExist linkName) $ do
+    removeLink linkName
+  when' (doesDirectoryExist resourcesDir) $ do
+    createSymbolicLink (".." </> resourcesDir) linkName
 
 -- | Return all the (unique) children of this tree (except the top node), in reverse depth order.
 refineDeps :: Eq a => Tree a -> [a]
