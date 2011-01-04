@@ -87,10 +87,10 @@ symlinkResources :: KitSpec -> IO ()
 symlinkResources spec = let when' a b = a >>= flip when b in do 
   let resourcesDir = packageFileName spec </> specResourcesDirectory spec
   let linkName = "Resources" </> packageName spec
-  print resourcesDir
   when' (fileExist linkName) $ do
     removeLink linkName
   when' (doesDirectoryExist resourcesDir) $ do
+    puts $ "-> Linking resources in " ++ resourcesDir
     createSymbolicLink (".." </> resourcesDir) linkName
 
 -- | Return all the (unique) children of this tree (except the top node), in reverse depth order.
