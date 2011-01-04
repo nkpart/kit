@@ -10,9 +10,9 @@ data FileType = Header | Source | Archive | Unknown
   
 fileType :: String -> String 
 fileType x | ".h" `isSuffixOf` x = "sourcecode.c.h"
-fileType x | ".m" `isSuffixOf` x = "sourcecode.c.obj"
-fileType x | ".mm" `isSuffixOf` x = "sourcecode.c.obj" 
-fileType x | ".c" `isSuffixOf` x = "sourcecode.c.obj"
+fileType x | ".m" `isSuffixOf` x = "sourcecode.c.objc"
+fileType x | ".mm" `isSuffixOf` x = "sourcecode.c.objc" 
+fileType x | ".c" `isSuffixOf` x = "sourcecode.c.objc"
 fileType x | ".a" `isSuffixOf` x = "archive.ar" 
 fileType x | ".framework" `isSuffixOf` x = "wrapper.framework"
 fileType x | ".xcconfig" `isSuffixOf` x = "text.xcconfig"
