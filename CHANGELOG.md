@@ -5,6 +5,9 @@
   stable path to resources that need to be referenced in a parent project (data models,
   images, etc.)
 
+* [BUG] Fixes bug introduced in 0.6.2, which caused the Prefix.pch to be compiled twice 
+  (once as C, once as Obj-C).
+
 0.6.2
 -----
 * Allow 'tagging' of kits as they're published. 
