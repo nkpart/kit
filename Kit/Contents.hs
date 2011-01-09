@@ -41,13 +41,13 @@ readHeader :: KitSpec -> IO (Maybe String)
 readHeader spec = do
   let fp = packageFileName spec </> specPrefixFile spec
   exists <- doesFileExist fp
-  T.sequence (fmap readFile $ justTrue exists fp)
+  T.sequence (fmap readFile $ ifTrue exists fp)
 
 -- TODO report missing file
 readConfig :: KitSpec -> IO (Maybe XCConfig)
 readConfig spec = do
   let fp = packageFileName spec </> specConfigFile spec
   exists <- doesFileExist fp
-  contents <- T.sequence (fmap readFile $ justTrue exists fp)
+  contents <- T.sequence (fmap readFile $ ifTrue exists fp)
   return $ fmap (fileContentsToXCC $ packageName spec) contents
 

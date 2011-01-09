@@ -33,8 +33,8 @@ module Kit.Util(
   maybeRead :: Read a => String -> Maybe a
   maybeRead = fmap fst . listToMaybe . reads
 
-  justTrue :: Bool -> a -> Maybe a
-  justTrue p a = if p then Just a else Nothing
+  ifTrue :: MonadPlus m => Bool -> a -> m a
+  ifTrue p a = if p then return a else mzero
 
   maybeToRight :: b -> Maybe a -> Either b a
   maybeToRight v = maybe (Left v) Right

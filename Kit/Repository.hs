@@ -26,11 +26,10 @@ module Kit.Repository (
   doRead :: KitRepository -> String -> IO (Maybe BS.ByteString) 
   doRead (KitRepository baseDir) fp = let file = (baseDir </> fp) in do
     exists <- doesFileExist file
-    T.sequenceA $ justTrue exists $ BS.readFile file
+    T.sequenceA $ ifTrue exists $ BS.readFile file
 
   baseKitPath :: Kit -> String
-  baseKitPath k = joinS ["kits", kitName k, kitVersion k] "/"
-    where joinS xs x = foldl1 (++) $ L.intersperse x xs
+  baseKitPath k = stringJoin "/" ["kits", kitName k, kitVersion k] 
 
   kitPackagePath, kitSpecPath :: Kit -> String
   kitPackagePath k = baseKitPath k ++ "/" ++ packageFileName k ++ ".tar.gz"
