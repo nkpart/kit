@@ -48,19 +48,15 @@ prefixDefault = "#ifdef __OBJC__\n" ++
 
 generateXcodeProject :: [Kit] -> Maybe String -> KitIO ()
 generateXcodeProject deps depsOnlyConfig = do
-  specs <- forM deps $ \kit -> readSpec (kitDir </> packageFileName kit </> "KitSpec")  
+  specs <- forM deps $ readSpec . \kit -> kitDir </> packageFileName kit </> "KitSpec"  
   liftIO $ inDirectory kitDir $ do
-    kitsContents <- forM specs readKitContents
+    kitsContents <- mapM readKitContents specs
     createProjectFile kitsContents
     createHeader kitsContents
     createConfig kitsContents specs
     writeFile depsConfigFile $ "#include \"" ++ xcodeConfigFile ++ "\"\n" ++ fromMaybe "" depsOnlyConfig 
     symlinkAll specs
-  where sourceDirs specs = specs >>= (\spec -> [
-            kitDir </> packageFileName spec </> specSourceDirectory spec, 
-            packageFileName spec </> specSourceDirectory spec
-          ])
-        createProjectFile cs = do
+  where createProjectFile cs = do
           let headers = cs >>= contentHeaders
           let sources = cs >>= contentSources
           let libs = cs >>= contentLibs
@@ -71,9 +67,10 @@ generateXcodeProject deps depsOnlyConfig = do
           let combinedHeader = stringJoin "\n" headers
           writeFile prefixFile $ prefixDefault ++ combinedHeader ++ "\n"
         createConfig cs specs = do
+          let sourceDirs = map (\spec -> packageFileName spec </> specSourceDirectory spec) specs >>= (\s -> [s, kitDir </> s])
           let configs = mapMaybe contentConfig cs
           let combinedConfig = multiConfig "KitConfig" configs
-          let kitHeaders = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ stringJoin " " (sourceDirs specs)
+          let kitHeaders = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ stringJoin " " sourceDirs
           let prefixHeaders = "GCC_PRECOMPILE_PREFIX_HEADER = YES\nGCC_PREFIX_HEADER = $(SRCROOT)/Prefix.pch\n"
           writeFile xcodeConfigFile $ kitHeaders ++ "\n" ++  prefixHeaders ++ "\n" ++ configToString combinedConfig ++ "\n"
           writeFile kitUpdateMakeFilePath kitUpdateMakeFile
@@ -87,8 +84,7 @@ symlinkResources :: KitSpec -> IO ()
 symlinkResources spec = let when' a b = a >>= flip when b in do 
   let resourcesDir = packageFileName spec </> specResourcesDirectory spec
   let linkName = "Resources" </> packageName spec
-  when' (fileExist linkName) $ do
-    removeLink linkName
+  when' (fileExist linkName) $ removeLink linkName
   when' (doesDirectoryExist resourcesDir) $ do
     puts $ "-> Linking resources in " ++ resourcesDir
     createSymbolicLink (".." </> resourcesDir) linkName
