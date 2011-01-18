@@ -81,7 +81,8 @@ module Kit.Spec (
     showObject spec = Mapping [
          "name" ~> (val $ kitName . specKit),
          "version" ~> (val $ kitVersion . specKit),
-         "dependencies" ~> showObject (specDependencies spec)
+         "dependencies" ~> showObject (specDependencies spec),
+         "source-directory" ~> val specSourceDirectory 
       ] where a ~> b = (a, b)
               val f = Scalar . f $ spec
 

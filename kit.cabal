@@ -23,5 +23,5 @@ Executable kit
   hs-source-dirs: .
   other-modules:  Kit.Spec Kit.Main Kit.Package Kit.Project Kit.Repository Kit.Util Kit.Xcode.Builder
                   Kit.Xcode.Common Kit.Xcode.ProjectFileTemplate Kit.Xcode.XCConfig Text.PList
-                  Kit.Contents Kit.Commands Kit.CmdArgs Kit.Util.IsObject
+                  Kit.Contents Kit.Commands Kit.CmdArgs Kit.Util.IsObject Kit.Util.FSAction
   Ghc-options:    -Wall -fno-warn-unused-do-bind

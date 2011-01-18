@@ -11,6 +11,7 @@ import Kit.Spec
 import Kit.Contents
 import Kit.Repository
 import Kit.Util
+import Kit.Util.FSAction
 import Kit.Xcode.Builder
 import Kit.Xcode.XCConfig
 
@@ -48,20 +49,20 @@ prefixDefault = "#ifdef __OBJC__\n" ++
 
 generateXcodeProject :: [Kit] -> Maybe String -> KitIO ()
 generateXcodeProject deps depsOnlyConfig = do
-  specs <- forM deps $ readSpec . \kit -> kitDir </> packageFileName kit </> "KitSpec"  
+  specs <- forM deps $ readSpec . \kit -> kitDir </> packageFileName kit </> "KitSpec"
   liftIO $ inDirectory kitDir $ do
     kitsContents <- mapM readKitContents specs
-    createProjectFile kitsContents
+    runAction $ createProjectFile kitsContents
     createHeader kitsContents
     createConfig kitsContents specs
-    writeFile depsConfigFile $ "#include \"" ++ xcodeConfigFile ++ "\"\n" ++ fromMaybe "" depsOnlyConfig 
+    runAction $ FileCreate kitUpdateMakeFilePath kitUpdateMakeFile
+    runAction $ FileCreate depsConfigFile $ "#include \"" ++ xcodeConfigFile ++ "\"\n" ++ fromMaybe "" depsOnlyConfig 
     symlinkAll specs
   where createProjectFile cs = do
-          let headers = cs >>= contentHeaders
-          let sources = cs >>= contentSources
-          let libs = cs >>= contentLibs
-          mkdirP projectDir
-          writeFile projectFile $ renderXcodeProject headers sources libs "libKitDeps.a"
+          let headers = concatMap contentHeaders cs
+          let sources = concatMap contentSources cs
+          let libs = concatMap contentLibs cs
+          FileCreate projectFile $ renderXcodeProject headers sources libs "libKitDeps.a"
         createHeader cs = do
           let headers = mapMaybe namedPrefix cs
           let combinedHeader = stringJoin "\n" headers
@@ -73,7 +74,6 @@ generateXcodeProject deps depsOnlyConfig = do
           let kitHeaders = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ stringJoin " " sourceDirs
           let prefixHeaders = "GCC_PRECOMPILE_PREFIX_HEADER = YES\nGCC_PREFIX_HEADER = $(SRCROOT)/Prefix.pch\n"
           writeFile xcodeConfigFile $ kitHeaders ++ "\n" ++  prefixHeaders ++ "\n" ++ configToString combinedConfig ++ "\n"
-          writeFile kitUpdateMakeFilePath kitUpdateMakeFile
 
 symlinkAll :: [KitSpec] -> IO ()
 symlinkAll specs = do
@@ -81,7 +81,7 @@ symlinkAll specs = do
   mapM_ symlinkResources specs
 
 symlinkResources :: KitSpec -> IO ()
-symlinkResources spec = let when' a b = a >>= flip when b in do 
+symlinkResources spec = do 
   let resourcesDir = packageFileName spec </> specResourcesDirectory spec
   let linkName = "Resources" </> packageName spec
   when' (fileExist linkName) $ removeLink linkName

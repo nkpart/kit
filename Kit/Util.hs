@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE TypeSynonymInstances, PackageImports #-}
 
 module Kit.Util(
   module Kit.Util,
@@ -17,16 +17,19 @@ module Kit.Util(
 
   import Control.Applicative
   import Control.Monad
-  import Control.Monad.Error
+  import "mtl" Control.Monad.Error
 
-  import qualified Control.Monad.State as S
+  import qualified "mtl" Control.Monad.State as S
 
   popS :: S.State [a] a
   popS = do
     (x:t) <- S.get
     S.put t
     return x
-  
+
+  when' :: Monad m => m Bool -> m () -> m ()
+  when' a b = a >>= flip when b
+
   puts :: MonadIO m => String -> m ()
   puts a = liftIO $ putStrLn a
 

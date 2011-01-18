@@ -8,7 +8,6 @@ module Kit.Repository (
   import Kit.Util
 
   import Control.Monad.Error
-  import qualified Data.List as L
   import qualified Data.Traversable as T
   import qualified Data.ByteString as BS
 
