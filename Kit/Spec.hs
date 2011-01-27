@@ -1,3 +1,4 @@
+{-# LANGUAGE PackageImports #-}
 module Kit.Spec (
   -- | The Core Kit types
   KitSpec(..),
@@ -15,7 +16,7 @@ module Kit.Spec (
   ) where
 
   import Control.Applicative
-  import Control.Monad.Trans
+  import "mtl" Control.Monad.Trans
  
   import Data.Object
   import Kit.Util.IsObject
@@ -32,7 +33,7 @@ module Kit.Spec (
     specPrefixFile :: FilePath,
     specConfigFile :: FilePath,
     specKitDepsXcodeFlags :: Maybe String
-  } deriving (Show, Read)
+  } deriving (Show, Read, Eq)
 
   updateVersion :: KitSpec -> (String -> String) -> KitSpec
   updateVersion spec f = spec { specKit = (specKit spec) { kitVersion = f . kitVersion . specKit $ spec } } 
@@ -75,7 +76,9 @@ module Kit.Spec (
 
   instance IsObject Kit where
     showObject kit = Mapping [("name", w kitName), ("version", w kitVersion)] where w f = showObject . f $ kit
-    readObject x = fromMapping x >>= \obj -> Kit <$> obj #> "name" <*> obj #> "version" 
+    readObject x = fromMapping x >>= \obj -> (Kit <$> obj #> "name" <*> obj #> "version") <|> case obj of
+                                                                                                    [(key, Scalar value)] -> Just $ Kit key value
+                                                                                                    _ -> Nothing 
 
   instance IsObject KitSpec where
     showObject spec = Mapping [
