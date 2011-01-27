@@ -26,8 +26,7 @@ module Tests where
   fileA = "fileA"
   
   tests = TestList [
-        TestLabel "A" $ TestCase a
-      , spec "execute FileCreate" $ do
+        spec "execute FileCreate" $ do
           runAction $ FileCreate fileA contents 
           assertEqual "file contents" contents =<< readFile fileA
       , spec "execute SymLink" $ do

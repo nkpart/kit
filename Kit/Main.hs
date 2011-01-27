@@ -15,7 +15,7 @@ module Kit.Main where
               spec <- mySpec
               deps <- liftKit $ totalSpecDependencies repo spec
               puts $ "Dependencies: " ++ stringJoin ", " (map packageFileName deps)
-              liftIO $ mapM_ (installKit repo) deps
+              liftIO $ mapM_ (unpackKit repo . specKit) deps
               puts " -> Generating Xcode project..."
               liftKit $ generateXcodeProject deps (specKitDepsXcodeFlags spec)
               puts "Kit complete. You may need to restart Xcode for it to pick up any changes."

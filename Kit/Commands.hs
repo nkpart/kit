@@ -12,8 +12,8 @@ module Kit.Commands (
 import Kit.Util
 import Kit.Spec
 import Kit.Repository
-import Kit.Project
 
+import qualified Data.ByteString as BS
 import System.Exit (exitFailure)
 
 import Control.Monad.Error
@@ -42,8 +42,15 @@ runCommand (Command cmd) = run $ do
         handleFails = either (\msg -> putStrLn ("kit error: " ++ msg) >> exitFailure) (const $ return ())
 
 defaultLocalRepoPath :: IO FilePath
-defaultLocalRepoPath = getHomeDirectory >>= \h -> return $ h </> ".kit" </> "repository"
+defaultLocalRepoPath = (</> ".kit") <$> getHomeDirectory 
 
 defaultLocalRepository :: IO KitRepository
 defaultLocalRepository = KitRepository <$> defaultLocalRepoPath
+
+readSpec :: FilePath -> KitIO KitSpec
+readSpec path = checkExists path >>= liftIO . BS.readFile >>= ErrorT . return . parses
+  where checkExists pathToSpec = do
+          doesExist <- liftIO $ doesFileExist pathToSpec 
+          if doesExist then return pathToSpec else throwError $ "Couldn't find the spec at " ++ pathToSpec 
+        parses = maybeToRight "Parse error in KitSpec file" . decodeSpec
 

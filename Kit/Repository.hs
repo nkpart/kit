@@ -1,20 +1,34 @@
+{-# LANGUAGE PackageImports #-}
 module Kit.Repository (
-    extractKit,
-    readKitSpec,
-    KitRepository(KitRepository)
+    --
+    KitRepository(KitRepository),
+    --
+    copyKitPackage,
+    explodePackage,
+    readKitSpec
   ) where
 
   import Kit.Spec
   import Kit.Util
 
-  import Control.Monad.Error
+  import System.Process (system)
+
+  import "mtl" Control.Monad.Error
   import qualified Data.Traversable as T
   import qualified Data.ByteString as BS
 
   data KitRepository = KitRepository { repositoryBase :: FilePath } deriving (Eq, Show)
 
-  extractKit :: KitRepository -> Kit -> FilePath -> IO ()
-  extractKit repo kit destPath = copyFile (repositoryBase repo </> kitPackagePath kit) destPath
+  explodePackage :: KitRepository -> Kit -> IO ()
+  explodePackage kr kit = do
+    let packagesDir = repositoryBase kr </> "kits"
+    let packagePath = repositoryBase kr </> kitPackagePath kit
+    mkdirP packagesDir
+    inDirectory packagesDir $ system ("tar zxvf " ++ packagePath)
+    return ()
+
+  copyKitPackage :: KitRepository -> Kit -> FilePath -> IO ()
+  copyKitPackage repo kit destPath = copyFile (repositoryBase repo </> kitPackagePath kit) destPath
 
   readKitSpec :: KitRepository -> Kit -> KitIO KitSpec
   readKitSpec repo kit = do
