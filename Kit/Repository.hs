@@ -44,7 +44,9 @@ module Kit.Repository (
   baseKitPath :: Kit -> String
   baseKitPath k = stringJoin "/" ["kits", kitName k, kitVersion k] 
 
-  kitPackagePath, kitSpecPath :: Kit -> String
+  kitPackagePath :: Kit -> String
   kitPackagePath k = baseKitPath k ++ "/" ++ packageFileName k ++ ".tar.gz"
+
+  kitSpecPath :: Kit -> String
   kitSpecPath k = baseKitPath k ++ "/" ++ "KitSpec"
 

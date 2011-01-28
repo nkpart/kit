@@ -42,7 +42,7 @@ runCommand (Command cmd) = run $ do
         handleFails = either (\msg -> putStrLn ("kit error: " ++ msg) >> exitFailure) (const $ return ())
 
 defaultLocalRepoPath :: IO FilePath
-defaultLocalRepoPath = (</> ".kit") <$> getHomeDirectory 
+defaultLocalRepoPath = (</> ".kit" </> "repository") <$> getHomeDirectory 
 
 defaultLocalRepository :: IO KitRepository
 defaultLocalRepository = KitRepository <$> defaultLocalRepoPath
