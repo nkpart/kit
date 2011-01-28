@@ -4,7 +4,7 @@ module Kit.CmdArgs (parseArgs, KitCmdArgs(..)) where
   import System.Console.CmdArgs as CA
 
   appVersion :: String
-  appVersion = "0.6.4" -- TODO how to keep this up to date with kit.cabal?
+  appVersion = "0.6.5" -- TODO how to keep this up to date with kit.cabal?
 
   data KitCmdArgs = Update
                   | Package
