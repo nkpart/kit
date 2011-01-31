@@ -3,6 +3,7 @@ module Kit.Commands (
   Command,
   liftKit,
   mySpec,
+  mySpecFile,
   myRepository,
   runCommand,
   defaultLocalRepoPath,
@@ -32,6 +33,9 @@ mySpec = Command $ fmap fst ask
 
 myRepository :: Command KitRepository
 myRepository = Command $ fmap snd ask
+
+mySpecFile :: Command FilePath
+mySpecFile = return "KitSpec"
 
 runCommand :: Command a -> IO ()
 runCommand (Command cmd) = run $ do

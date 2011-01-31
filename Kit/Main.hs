@@ -26,20 +26,21 @@ module Kit.Main where
   doPublishLocal :: Maybe String -> Command ()
   doPublishLocal versionTag = do
     spec <- mySpec 
+    specFile <- mySpecFile
     let updatedSpec = maybe spec (\tag -> updateVersion spec (++tag)) versionTag
     liftIO $ do
       package updatedSpec 
-      publishLocal updatedSpec 
+      publishLocal updatedSpec specFile
     return ()
       where
-        publishLocal :: KitSpec -> IO ()
-        publishLocal spec = let pkg = (packageFileName spec ++ ".tar.gz")
+        publishLocal :: KitSpec -> FilePath -> IO ()
+        publishLocal spec specFile = let pkg = (packageFileName spec ++ ".tar.gz")
                             in do
                               repo <- defaultLocalRepoPath
                               let thisKitDir = repo </> "kits" </> packageName spec </> packageVersion spec
                               mkdirP thisKitDir
                               copyFile ("dist" </> pkg) (thisKitDir </> pkg)
-                              writeSpec (thisKitDir </> "KitSpec") spec
+                              copyFile specFile (thisKitDir </> "KitSpec") 
 
   doVerify :: String -> Command ()
   doVerify sdk = do
