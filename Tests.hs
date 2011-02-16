@@ -25,6 +25,10 @@ module Tests where
   contents = "loltents"
   fileA = "fileA"
   
+
+-- Todo
+-- * depsonly.xcconfig should specifiy SKIP_INSTALL=YES
+-- * FSAction for symlinks, making the target file relative to the name
   tests = TestList [
         spec "execute FileCreate" $ do
           runAction $ FileCreate fileA contents 

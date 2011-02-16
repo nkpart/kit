@@ -4,6 +4,7 @@ import System.FilePath
 import System.Posix.Files
 
 import Kit.Util
+import Data.List (intersperse)
 
 data FSAction = 
     FileCreate FilePath String
@@ -19,8 +20,11 @@ runAction (FileCreate atPath contents) = do
   mkdirP $ dropFileName atPath 
   writeFile atPath contents
 runAction (Symlink target name) = do
-  when' (fileExist name) $ removeLink name 
-  createSymbolicLink target name
+  catch (removeLink name) (\_ -> return ())
+  -- When a `name` has parent directories, symbolic link target needs to be made relative to that file
+  -- need to consider "./name"
+  let relFix = join $ intersperse "/" $ map (const "..") (init $ splitDirectories name)
+  when' (fileExist target) $ createSymbolicLink (relFix </> target) name
 runAction (InDir dir action) = do
   mkdirP dir
   inDirectory dir $ runAction action

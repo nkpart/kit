@@ -16,7 +16,6 @@ module Kit.Xcode.XCConfig where
     configSettings :: M.Map String String, 
     configIncludes :: [XCCInclude]
   } deriving (Eq, Show)
-  
 
   includeStart :: String
   includeStart = "#include "
