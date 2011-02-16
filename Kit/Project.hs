@@ -17,6 +17,7 @@ import Kit.Xcode.XCConfig
 import Control.Monad.Error
 import Data.Maybe
 import Data.List
+import qualified Data.Map as M
 import Data.Tree
 import System.Cmd
 
@@ -89,10 +90,13 @@ generateXcodeProject specs depsOnlyConfig = do
         createConfig cs = do
           let sourceDirs = map (\spec -> packageFileName spec </> specSourceDirectory spec) specs >>= (\s -> [s, kitDir </> s])
           let configs = mapMaybe contentConfig cs
-          let combinedConfig = multiConfig "KitConfig" configs
-          let kitHeaders = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ stringJoin " " sourceDirs
-          let prefixHeaders = "GCC_PRECOMPILE_PREFIX_HEADER = YES\nGCC_PREFIX_HEADER = $(SRCROOT)/Prefix.pch\n"
-          kitHeaders ++ "\n" ++  prefixHeaders ++ "\n" ++ configToString combinedConfig ++ "\n"
+          let parentConfig = XCC "Base" (M.fromList [
+                                                    ("HEADER_SEARCH_PATHS", "$(HEADER_SEARCH_PATHS) " ++ stringJoin " " sourceDirs),
+                                                    ("GCC_PRECOMPILE_PREFIX_HEADER", "YES"),
+                                                    ("GCC_PREFIX_HEADER","$(SRCROOT)/Prefix.pch")
+                                                  ]) []
+          let combinedConfig = multiConfig "KitConfig" (parentConfig:configs)
+          configToString combinedConfig ++ "\n"
 
 resourceLink :: KitSpec -> (FilePath, FilePath) 
 resourceLink spec = 
