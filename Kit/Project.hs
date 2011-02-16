@@ -2,7 +2,7 @@
 module Kit.Project (
   totalSpecDependencies,
   unpackKit,
-  generateXcodeProject
+  generateKitProjectFromSpecs
   )
     where
 
@@ -19,7 +19,6 @@ import Data.Maybe
 import Data.List
 import Data.Tree
 import System.Cmd
-import System.Posix.Files
 
 -- Paths
 
@@ -44,47 +43,62 @@ prefixDefault = "#ifdef __OBJC__\n" ++
                 "    #import <UIKit/UIKit.h>\n" ++ 
                 "#endif\n"
 
-generateXcodeProject :: [KitSpec] -> Maybe String -> KitIO ()
+data KitProject = KitProject {
+  kitProjectFile :: String,
+  kitProjectPrefix :: String,
+  kitProjectConfig :: String,
+  kitProjectDepsConfig :: String,
+  kitProjectResourceDirs :: [(FilePath, FilePath)]
+} deriving (Eq, Show)
+
+generateKitProject :: KitProject -> KitIO ()
+generateKitProject kp = liftIO $ inDirectory kitDir $ do
+  runAction $ FileCreate projectFile $ kitProjectFile kp
+  runAction $ FileCreate prefixFile $ kitProjectPrefix kp
+  runAction $ FileCreate xcodeConfigFile $ kitProjectConfig kp
+  runAction $ FileCreate kitUpdateMakeFilePath kitUpdateMakeFile
+  runAction $ FileCreate depsConfigFile $ kitProjectDepsConfig kp
+  puts $ " -> Linking resources: " ++ stringJoin ", " (map fst $ kitProjectResourceDirs kp)
+  mapM_ (\(tgt,name) -> runAction $ Symlink tgt name) $ kitProjectResourceDirs kp
+
+generateKitProjectFromSpecs :: [KitSpec] -> Maybe String -> KitIO ()
+generateKitProjectFromSpecs specs depsOnlyConfig = do
+  kp <- generateXcodeProject specs depsOnlyConfig 
+  generateKitProject kp
+
+generateXcodeProject :: [KitSpec] -> Maybe String -> KitIO KitProject 
 generateXcodeProject specs depsOnlyConfig = do
   liftIO $ inDirectory kitDir $ do
     kitsContents <- mapM readKitContents specs
-    runAction $ createProjectFile kitsContents
-    runAction $ createHeader kitsContents
-    runAction $ createConfig kitsContents
-    runAction $ FileCreate kitUpdateMakeFilePath kitUpdateMakeFile
-    runAction $ FileCreate depsConfigFile $ "#include \"" ++ xcodeConfigFile ++ "\"\n" ++ fromMaybe "" depsOnlyConfig 
-    symlinkAll specs
+    let pf = createProjectFile kitsContents
+    let header = createHeader kitsContents
+    let config = createConfig kitsContents
+    -- TODO: Make this specify an xcconfig
+    let depsConfig = "#include \"" ++ xcodeConfigFile ++ "\"\n\nSKIP_INSTALL=YES\n\n" ++ fromMaybe "" depsOnlyConfig 
+    resources <- filterM (doesDirectoryExist . fst) $ map resourceLink specs 
+    return $ KitProject pf header config depsConfig resources
   where createProjectFile cs = do
           let headers = concatMap contentHeaders cs
           let sources = concatMap contentSources cs
           let libs = concatMap contentLibs cs
-          FileCreate projectFile $ renderXcodeProject headers sources libs "libKitDeps.a"
+          renderXcodeProject headers sources libs "libKitDeps.a"
         createHeader cs = do
           let headers = mapMaybe namedPrefix cs
           let combinedHeader = stringJoin "\n" headers
-          FileCreate prefixFile $ prefixDefault ++ combinedHeader ++ "\n"
+          prefixDefault ++ combinedHeader ++ "\n"
         createConfig cs = do
           let sourceDirs = map (\spec -> packageFileName spec </> specSourceDirectory spec) specs >>= (\s -> [s, kitDir </> s])
           let configs = mapMaybe contentConfig cs
           let combinedConfig = multiConfig "KitConfig" configs
           let kitHeaders = "HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) " ++ stringJoin " " sourceDirs
           let prefixHeaders = "GCC_PRECOMPILE_PREFIX_HEADER = YES\nGCC_PREFIX_HEADER = $(SRCROOT)/Prefix.pch\n"
-          FileCreate xcodeConfigFile $ kitHeaders ++ "\n" ++  prefixHeaders ++ "\n" ++ configToString combinedConfig ++ "\n"
+          kitHeaders ++ "\n" ++  prefixHeaders ++ "\n" ++ configToString combinedConfig ++ "\n"
 
-symlinkAll :: [KitSpec] -> IO ()
-symlinkAll specs = do
-  mkdirP "Resources"
-  mapM_ symlinkResources specs
-
-symlinkResources :: KitSpec -> IO ()
-symlinkResources spec = do 
-  let resourcesDir = packageFileName spec </> specResourcesDirectory spec
-  let linkName = "Resources" </> packageName spec
-  when' (fileExist linkName) $ removeLink linkName
-  when' (doesDirectoryExist resourcesDir) $ do
-    puts $ "-> Linking resources in " ++ resourcesDir
-    -- symbolic link target paths are relative to the the link
-    createSymbolicLink (".." </> resourcesDir) linkName
+resourceLink :: KitSpec -> (FilePath, FilePath) 
+resourceLink spec = 
+  let specResources = packageFileName spec </> specResourcesDirectory spec
+      linkName = "Resources" </> packageName spec
+   in (specResources, linkName)
 
 -- | Return all the (unique) children of this tree (except the top node), in reverse depth order.
 refineDeps :: Eq a => Tree a -> [a]
