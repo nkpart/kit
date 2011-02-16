@@ -18,7 +18,7 @@ Executable kit
                   filepath -any, directory -any, containers -any, cmdargs >=0.3,
                   bytestring -any, base >=3 && <5,
                   HTTP >=4000.0.9, Glob >= 0.5, data-object -any, data-object-yaml -any,
-                  unix >= 2.4 && < 2.5
+                  unix >= 2.4 && < 2.5, ansi-terminal >= 0.5.5
 
   hs-source-dirs: .
   other-modules:  Kit.Spec Kit.Main Kit.Package Kit.Project Kit.Repository Kit.Util Kit.Xcode.Builder

@@ -9,16 +9,26 @@ module Kit.Main where
   import Kit.Util
   import System.Cmd
 
+  import System.Console.ANSI
+  
+  say :: MonadIO m => Color -> String -> m ()
+  say color msg = do
+    liftIO $ setSGR [SetColor Foreground Vivid color]
+    puts msg
+    liftIO $ setSGR []
+
+  alert :: MonadIO m => String -> m ()
+  alert = say Red
+
   doUpdate :: Command ()
   doUpdate = do
               repo <- myRepository
               spec <- mySpec
               deps <- liftKit $ totalSpecDependencies repo spec
-              puts $ "Dependencies: " ++ stringJoin ", " (map packageFileName deps)
               liftIO $ mapM_ (unpackKit repo . specKit) deps
               puts " -> Generating Xcode project..."
-              puts "Kit complete. You may need to restart Xcode for it to pick up any changes."
               liftKit $ generateKitProjectFromSpecs deps (specKitDepsXcodeFlags spec)
+              say Green "\n\tKit complete. You may need to restart Xcode for it to pick up any changes.\n"
 
   doPackageKit :: Command ()
   doPackageKit = mySpec >>= liftIO . package 
