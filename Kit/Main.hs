@@ -8,6 +8,7 @@ module Kit.Main where
   import Kit.Project
   import Kit.Util
   import System.Cmd
+  import System.Exit
 
   import System.Console.ANSI
   
@@ -86,7 +87,10 @@ module Kit.Main where
   handleArgs (KA.CreateSpec name version) = doCreateSpec name version
 
   kitMain :: IO ()
-  kitMain = do
-      mkdirP =<< defaultLocalRepoPath 
-      runCommand . handleArgs =<< KA.parseArgs
+  kitMain = let f = do
+                      mkdirP =<< defaultLocalRepoPath 
+                      runCommand . handleArgs =<< KA.parseArgs
+            in catch f $ \e -> do
+                alert $ show e
+                exitWith $ ExitFailure 1 
 
