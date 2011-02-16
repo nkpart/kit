@@ -2,18 +2,24 @@
 module Kit.Util.IsObject where
   import Data.Object
 
-  class IsObject x where
+  class ShowObject x where
     showObject :: x -> StringObject
+
+  class ReadObject x where
     readObject :: StringObject -> Maybe x
    
-  (#>) :: IsObject b => [(String, Object String String)] -> String -> Maybe b
+  (#>) :: ReadObject b => [(String, Object String String)] -> String -> Maybe b
   obj #> key = lookupObject key obj >>= readObject
 
-  instance IsObject a => IsObject [a] where
+  instance ShowObject a => ShowObject [a] where
     showObject xs = Sequence $ map showObject xs
+
+  instance ReadObject a => ReadObject [a] where
     readObject x = fromSequence x >>= mapM readObject 
 
-  instance IsObject String where
+  instance ShowObject String where
     showObject = Scalar
+
+  instance ReadObject String where
     readObject = fromScalar
 

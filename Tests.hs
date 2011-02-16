@@ -49,5 +49,6 @@ module Tests where
   main = do
       runProps
       runTests
+      return ()
     where runProps = mapM_ (\(s,a) -> printf "%-25s: " s >> a) props
           runTests = runTestTT tests

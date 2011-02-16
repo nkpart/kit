@@ -74,13 +74,15 @@ module Kit.Spec (
   writeSpec :: MonadIO m => FilePath -> KitSpec -> m ()
   writeSpec fp spec = liftIO $ BS.writeFile fp $ encodeSpec spec
 
-  instance IsObject Kit where
+  instance ShowObject Kit where
     showObject kit = Mapping [("name", w kitName), ("version", w kitVersion)] where w f = showObject . f $ kit
+
+  instance ReadObject Kit where
     readObject x = fromMapping x >>= \obj -> (Kit <$> obj #> "name" <*> obj #> "version") <|> case obj of
                                                                                                     [(key, Scalar value)] -> Just $ Kit key value
                                                                                                     _ -> Nothing 
 
-  instance IsObject KitSpec where
+  instance ShowObject KitSpec where
     showObject spec = Mapping [
          "name" ~> (val $ kitName . specKit),
          "version" ~> (val $ kitVersion . specKit),
@@ -89,6 +91,7 @@ module Kit.Spec (
       ] where a ~> b = (a, b)
               val f = Scalar . f $ spec
 
+  instance ReadObject KitSpec where
     readObject x = fromMapping x >>= parser
         where or' a b = a <|> pure b
               parser obj =  KitSpec <$> readObject x
