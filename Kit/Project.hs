@@ -59,8 +59,9 @@ generateKitProject kp = liftIO $ inDirectory kitDir $ do
   runAction $ FileCreate xcodeConfigFile $ kitProjectConfig kp
   runAction $ FileCreate kitUpdateMakeFilePath kitUpdateMakeFile
   runAction $ FileCreate depsConfigFile $ kitProjectDepsConfig kp
-  puts $ " -> Linking resources: " ++ stringJoin ", " (map fst $ kitProjectResourceDirs kp)
-  mapM_ (\(tgt,name) -> runAction $ Symlink tgt name) $ kitProjectResourceDirs kp
+  when (not . null . kitProjectResourceDirs $ kp) $ do
+    puts $ " -> Linking resources: " ++ stringJoin ", " (map fst $ kitProjectResourceDirs kp)
+    mapM_ (\(tgt,name) -> runAction $ Symlink tgt name) $ kitProjectResourceDirs kp
 
 generateKitProjectFromSpecs :: [KitSpec] -> Maybe String -> KitIO ()
 generateKitProjectFromSpecs specs depsOnlyConfig = do
