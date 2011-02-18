@@ -4,7 +4,7 @@ module Kit.CmdArgs (parseArgs, KitCmdArgs(..)) where
   import System.Console.CmdArgs as CA
 
   appVersion :: String
-  appVersion = "0.6.6" -- TODO how to keep this up to date with kit.cabal?
+  appVersion = "0.6.7" -- TODO how to keep this up to date with kit.cabal?
 
   data KitCmdArgs = Update
                   | Package
@@ -29,5 +29,5 @@ module Kit.CmdArgs (parseArgs, KitCmdArgs(..)) where
     ]
 
   parseArgs :: IO KitCmdArgs
-  parseArgs = cmdArgs $ parseMode &= program "kit" &= summary ("Kit v" ++ appVersion ++ ". It's a dependency manager for Objective-C projects built with Xcode.")
+  parseArgs = cmdArgs $ parseMode &= program "kit" &= summary ("Kit " ++ appVersion)
 
