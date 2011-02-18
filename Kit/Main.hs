@@ -66,9 +66,9 @@ module Kit.Main where
           cleanOrCreate kitVerifyDir
           inDirectory kitVerifyDir $ do
             writeSpec "KitSpec" (defaultSpec "verify-kit" "1.0") { specDependencies = [specKit spec] }
-            doUpdate
+            liftIO $ runCommand doUpdate  
             inDirectory "Kits" $ do
-              liftIO $ system "open KitDeps.xcodeproj"
+              liftIO $ system "open ."
               liftIO $ system $ "xcodebuild -sdk " ++ sdk
           puts "OK."
         puts "End checks."
