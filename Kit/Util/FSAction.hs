@@ -24,6 +24,7 @@ runAction (Symlink target name) = do
   -- When a `name` has parent directories, symbolic link target needs to be made relative to that file
   -- need to consider "./name"
   let relFix = join $ intersperse "/" $ map (const "..") (init $ splitDirectories name)
+  mkdirP $ dropFileName name
   catch (when' (fileExist target) $ createSymbolicLink (relFix </> target) name) $ \e -> do
     error $ "An error occured when creating a symlink to " ++ target ++ " called " ++ name ++ ": " ++ show e
 
