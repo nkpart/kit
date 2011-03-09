@@ -3,9 +3,9 @@
 module Kit.Util(
   module Kit.Util,
   module Control.Applicative,
-  module System.FilePath.Posix,
+  module Control.Monad,
   module System.Directory,
-  module Control.Monad
+  module System.FilePath.Posix
   ) where
   import System.Directory
   import System.FilePath.Posix
@@ -17,9 +17,9 @@ module Kit.Util(
 
   import Control.Applicative
   import Control.Monad
-  import "mtl" Control.Monad.Error
+  import Control.Monad.Error
 
-  import qualified "mtl" Control.Monad.State as S
+  import qualified Control.Monad.State as S
 
   popS :: S.State [a] a
   popS = do
