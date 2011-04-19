@@ -80,8 +80,7 @@ module Kit.Spec (
   instance ReadObject Kit where
     readObject x = fromMapping x >>= \obj -> (Kit <$> obj #> "name" <*> obj #> "version") <|> case obj of
                                                                                                     [(key, Scalar value)] -> Just $ Kit key value
-                                                                                                    _ -> Nothing 
-
+  -- TODO this + ReadObject should be identity
   instance ShowObject KitSpec where
     showObject spec = Mapping [
          "name" ~> (val $ kitName . specKit),

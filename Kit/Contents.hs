@@ -23,11 +23,14 @@ data KitContents = KitContents {
 namedPrefix :: KitContents -> Maybe String
 namedPrefix kc = fmap (\s -> "//" ++ (packageFileName . contentKit $ kc) ++ "\n" ++ s) $ contentPrefix kc
 
--- | Determine the contents for a Kit, assumes that we're in a projects 'Kits' folder.
+-- | Determine the contents for a Kit, assumes that we're in a 
+-- folder containing exploded kits
 readKitContents :: KitSpec -> IO KitContents
 readKitContents spec  =
   let kitDir = packageFileName spec
-      find dir tpe = glob ((kitDir </> dir </> "**/*") ++ tpe)
+      find dir tpe = do
+        files <- glob ((kitDir </> dir </> "**/*") ++ tpe)
+        mapM canonicalizePath files
       findSrc = find $ specSourceDirectory spec
       headers = findSrc ".h"
       sources = join <$> mapM findSrc [".m", ".mm", ".c"]
