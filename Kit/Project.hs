@@ -71,7 +71,8 @@ generateKitProjectFromSpecs specs depsOnlyConfig = do
 generateXcodeProject :: [KitSpec] -> Maybe String -> KitIO KitProject 
 generateXcodeProject specs depsOnlyConfig = do
   liftIO $ inDirectory kitDir $ do
-    kitsContents <- mapM readKitContents specs
+    currentDir <- getCurrentDirectory
+    kitsContents <- mapM (fmap (makeContentsRelative currentDir) . readKitContents) specs
     let pf = createProjectFile kitsContents
     let header = createHeader kitsContents
     let config = createConfig kitsContents

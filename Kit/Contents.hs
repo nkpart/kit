@@ -1,7 +1,8 @@
 module Kit.Contents (
   KitContents(..),
   readKitContents,
-  namedPrefix
+  namedPrefix,
+  makeContentsRelative 
   ) where
 
 import Kit.Spec
@@ -19,6 +20,13 @@ data KitContents = KitContents {
   contentConfig :: Maybe XCConfig,  -- ^ Contents of the xcconfig base file
   contentPrefix :: Maybe String     -- ^ Contents of the prefix header
 }
+
+makeContentsRelative :: FilePath -> KitContents -> KitContents
+makeContentsRelative base kc = let f p = map (makeRelative base) (p kc)
+                                in kc { contentHeaders = f contentHeaders,
+                                        contentSources = f contentSources,
+                                        contentLibs = f contentLibs
+                                      } 
 
 namedPrefix :: KitContents -> Maybe String
 namedPrefix kc = fmap (\s -> "//" ++ (packageFileName . contentKit $ kc) ++ "\n" ++ s) $ contentPrefix kc
