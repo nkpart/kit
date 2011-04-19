@@ -10,7 +10,9 @@ module Kit.CmdArgs (parseArgs, KitCmdArgs(..)) where
                   | Package
                   | PublishLocal { tag :: Maybe String } 
                   | Verify { sdk :: String }
-                  | CreateSpec { name :: String, version :: String } deriving (Show, Data, Typeable)
+                  | CreateSpec { name :: String, version :: String } 
+                  | ShowTree
+                  deriving (Show, Data, Typeable)
 
   parseMode :: KitCmdArgs
   parseMode = modes [
@@ -26,6 +28,7 @@ module Kit.CmdArgs (parseArgs, KitCmdArgs(..)) where
                     help "Package this kit, then deploy it to the local repository (~/.kit/repository)"
       , Verify { sdk = "iphonesimulator4.0" &= typ "SDK" &= help "iphoneos, iphonesimulator4.0, etc."} &=
                     help "Package this kit, then attempt to use it as a dependency in an empty project. This will assert that the kit and all its dependencies can be compiled together."
+      , ShowTree &= help "Print out the dependency tree for this spec"
     ]
 
   parseArgs :: IO KitCmdArgs

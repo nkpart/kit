@@ -2,7 +2,8 @@
 module Kit.Project (
   totalSpecDependencies,
   unpackKit,
-  generateKitProjectFromSpecs
+  generateKitProjectFromSpecs,
+  dependencyTree
   )
     where
 
@@ -114,6 +115,9 @@ refineDeps = nub . concat . reverse . drop 1 . levels
 -- todo: check for version ranges :)
 totalSpecDependencies :: KitRepository -> KitSpec -> KitIO [KitSpec]
 totalSpecDependencies kr spec = refineDeps <$> unfoldTreeM (unfoldDeps kr) spec
+
+dependencyTree :: KitRepository -> KitSpec -> KitIO (Tree KitSpec)
+dependencyTree kr spec = unfoldTreeM (unfoldDeps kr) spec
 
 unfoldDeps :: KitRepository -> KitSpec -> KitIO (KitSpec, [KitSpec])
 unfoldDeps kr ks = (ks,) <$> mapM (readKitSpec kr) (specDependencies ks) -- s/mapM/traverse ?

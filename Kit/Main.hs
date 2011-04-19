@@ -9,6 +9,7 @@ module Kit.Main where
   import Kit.Util
   import System.Cmd
   import System.Exit
+  import Data.Tree (drawTree)
 
   import System.Console.ANSI
   
@@ -30,6 +31,13 @@ module Kit.Main where
               puts " -> Generating Xcode project..."
               liftKit $ generateKitProjectFromSpecs deps (specKitDepsXcodeFlags spec)
               say Green "\n\tKit complete. You may need to restart Xcode for it to pick up any changes.\n"
+
+  doShowTree :: Command ()
+  doShowTree = do
+    repo <- myRepository
+    spec <- mySpec
+    tree <- liftKit $ dependencyTree repo spec
+    liftIO $ putStrLn $ drawTree $ fmap packageFileName $ tree
 
   doPackageKit :: Command ()
   doPackageKit = mySpec >>= liftIO . package 
@@ -85,6 +93,7 @@ module Kit.Main where
   handleArgs (KA.PublishLocal versionTag) = doPublishLocal versionTag 
   handleArgs (KA.Verify sdkName) = doVerify sdkName
   handleArgs (KA.CreateSpec name version) = doCreateSpec name version
+  handleArgs KA.ShowTree = doShowTree
 
   kitMain :: IO ()
   kitMain = let f = do
