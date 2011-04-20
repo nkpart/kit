@@ -29,7 +29,7 @@ module Kit.Main where
               deps <- liftKit $ totalSpecDependencies repo spec
               liftIO $ mapM_ (unpackKit repo . specKit) deps
               puts " -> Generating Xcode project..."
-              liftKit $ generateKitProjectFromSpecs deps (specKitDepsXcodeFlags spec)
+              liftKit $ writeKitProjectFromSpecs deps (specKitDepsXcodeFlags spec)
               say Green "\n\tKit complete. You may need to restart Xcode for it to pick up any changes.\n"
 
   doShowTree :: Command ()
