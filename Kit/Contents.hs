@@ -18,14 +18,16 @@ data KitContents = KitContents {
   contentSources :: [FilePath],     -- ^ Paths to source files
   contentLibs :: [FilePath],        -- ^ Paths to static libs
   contentConfig :: Maybe XCConfig,  -- ^ Contents of the xcconfig base file
-  contentPrefix :: Maybe String     -- ^ Contents of the prefix header
+  contentPrefix :: Maybe String,     -- ^ Contents of the prefix header
+  contentResourceDir :: Maybe FilePath
 }
 
 makeContentsRelative :: FilePath -> KitContents -> KitContents
-makeContentsRelative base kc = let f p = map (makeRelative base) (p kc)
+makeContentsRelative base kc = let f p = fmap (makeRelative base) (p kc)
                                 in kc { contentHeaders = f contentHeaders,
                                         contentSources = f contentSources,
-                                        contentLibs = f contentLibs
+                                        contentLibs = f contentLibs,
+                                        contentResourceDir = f contentResourceDir
                                       } 
 
 namedPrefix :: KitContents -> Maybe String
@@ -34,7 +36,7 @@ namedPrefix kc = fmap (\s -> "//" ++ (packageFileName . contentKit $ kc) ++ "\n"
 -- | Determine the contents for a Kit, assumes that we're in a 
 -- folder containing exploded kits
 readKitContents :: KitSpec -> IO KitContents
-readKitContents spec  =
+readKitContents spec =
   let kitDir = packageFileName spec
       find dir tpe = do
         files <- glob ((kitDir </> dir </> "**/*") ++ tpe)
@@ -45,7 +47,13 @@ readKitContents spec  =
       libs = find (specLibDirectory spec) ".a" 
       config = readConfig spec
       prefix = readHeader spec
-  in  KitContents (specKit spec) <$> headers <*> sources <*> libs <*> config <*> prefix
+      resourceDir = do
+        b <- doesDirectoryExist (kitDir </> specResourcesDirectory spec)
+        if b then
+                Just <$> canonicalizePath (kitDir </> specResourcesDirectory spec)
+             else
+                return Nothing
+  in  KitContents (specKit spec) <$> headers <*> sources <*> libs <*> config <*> prefix <*> resourceDir
 
 -- TODO report missing file
 readHeader :: KitSpec -> IO (Maybe String)

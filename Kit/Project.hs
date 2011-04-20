@@ -73,13 +73,14 @@ generateXcodeProject :: [KitSpec] -> Maybe String -> KitIO KitProject
 generateXcodeProject specs depsOnlyConfig = do
   liftIO $ inDirectory kitDir $ do
     currentDir <- getCurrentDirectory
-    kitsContents <- mapM (fmap (makeContentsRelative currentDir) . readKitContents) specs
+    originalContents <- mapM readKitContents specs
+    let kitsContents = fmap (makeContentsRelative currentDir) originalContents
     let pf = createProjectFile kitsContents
     let header = createHeader kitsContents
     let config = createConfig kitsContents
     -- TODO: Make this specify an xcconfig
     let depsConfig = "#include \"" ++ xcodeConfigFile ++ "\"\n\nSKIP_INSTALL=YES\n\n" ++ fromMaybe "" depsOnlyConfig 
-    resources <- filterM (doesDirectoryExist . fst) $ map resourceLink specs 
+    let resources = mapMaybe resourceLink kitsContents
     return $ KitProject pf header config depsConfig resources
   where createProjectFile cs = do
           let headers = concatMap contentHeaders cs
@@ -101,11 +102,11 @@ generateXcodeProject specs depsOnlyConfig = do
           let combinedConfig = multiConfig "KitConfig" (parentConfig:configs)
           configToString combinedConfig ++ "\n"
 
-resourceLink :: KitSpec -> (FilePath, FilePath) 
-resourceLink spec = 
-  let specResources = packageFileName spec </> specResourcesDirectory spec
-      linkName = "Resources" </> packageName spec
-   in (specResources, linkName)
+resourceLink :: KitContents -> Maybe (FilePath, FilePath) 
+resourceLink contents = 
+  let specResources = contentResourceDir contents
+      linkName = "Resources" </> packageName (contentKit contents)
+   in (,linkName) <$> specResources
 
 -- | Return all the (unique) children of this tree (except the top node), in reverse depth order.
 refineDeps :: Eq a => Tree a -> [a]

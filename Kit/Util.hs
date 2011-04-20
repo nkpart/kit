@@ -17,9 +17,9 @@ module Kit.Util(
 
   import Control.Applicative
   import Control.Monad
-  import Control.Monad.Error
+  import "mtl" Control.Monad.Error
 
-  import qualified Control.Monad.State as S
+  import qualified "mtl" Control.Monad.State as S
 
   popS :: S.State [a] a
   popS = do

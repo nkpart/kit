@@ -7,9 +7,13 @@ module Tests where
   import Text.Printf
 
   import Control.Applicative 
+  import System.Directory
   import System.FilePath.Posix
 
+  import qualified Kit.Contents as KC
+  import Kit.Spec
   import Kit.Util.FSAction as FSA
+  import Kit.Util
 
   -- reversing twice a finite list, is the same as identity
   prop_reversereverse s = (reverse . reverse) s == s where _ = s :: [Int]
@@ -22,14 +26,14 @@ module Tests where
 
   spec x f = TestLabel x $ TestCase f 
   
-  contents = "loltents"
-  fileA = "fileA"
-  
-
 -- Todo
 -- * depsonly.xcconfig should specifiy SKIP_INSTALL=YES
--- * FSAction for symlinks, making the target file relative to the name
-  tests = TestList [
+
+-- FSAction tests
+  contents = "loltents"
+  fileA = "fileA"
+
+  fsActionTests = [
         spec "execute FileCreate" $ do
           runAction $ FileCreate fileA contents 
           assertEqual "file contents" contents =<< readFile fileA
@@ -50,9 +54,23 @@ module Tests where
           assertEqual "rebased link" contents =<< readFile (basedir </> linkname)
     ]
 
+-- KitContents tests
+  kitContentsTest = [
+      spec "check for resource contents" $ do
+        createDirectoryIfMissing True "Kits/some-kit-0.1/resources"
+        let spec = defaultSpec "some-kit" "0.1"
+        inDirectory "Kits" $ do
+          kc <- KC.readKitContents spec
+          assertEqual "resource dir found" (Just "resources") (KC.contentResourceDir kc)
+          kc <- KC.readKitContents spec { specResourcesDirectory = "lolburger" }
+          assertEqual "resource dir not found" (Nothing) (KC.contentResourceDir kc)
+    ]
+
   main = do
+      createDirectoryIfMissing True "test-output"
+      setCurrentDirectory "test-output"
       runProps
       runTests
       return ()
     where runProps = mapM_ (\(s,a) -> printf "%-25s: " s >> a) props
-          runTests = runTestTT tests
+          runTests = runTestTT (TestList (fsActionTests ++ kitContentsTest))
