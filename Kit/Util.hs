@@ -14,6 +14,7 @@ module Kit.Util(
   import Data.List
   import Data.Maybe
   import Data.Monoid
+  import Data.Traversable as T
 
   import Control.Applicative
   import Control.Monad
@@ -73,3 +74,12 @@ module Kit.Util(
   stringJoin :: Monoid a => a -> [a] -> a
   stringJoin x = mconcat . intersperse x
   
+  -- | Lifting bind into a monad. Often denoted /concatMapM/.
+  (.=<<.) ::
+    (Monad q, Monad m, Traversable m) =>
+    (a -> q (m b))
+    -> m a
+    -> q (m b)
+  (.=<<.) f =
+    liftM join . T.mapM f
+    
