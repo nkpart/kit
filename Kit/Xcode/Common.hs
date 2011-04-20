@@ -46,13 +46,14 @@ fileReferenceItem :: PBXFileReference -> PListObjectItem
 fileReferenceItem fr = fileReferenceId fr ~> dict
   where
     fileName = fileReferenceName fr
+    path = fileReferencePath fr
     dict = obj [
         "isa" ~> val "PBXFileReference",
         "fileEncoding" ~> val "4",
         "lastKnownFileType" ~> val (fileType fileName),
         "name" ~> val fileName,
-        "path" ~> val (fileReferencePath fr),
-        "sourceTree" ~> val "<group>"
+        "path" ~> val path,
+        "sourceTree" ~> val (if (isAbsolute path) then "<absolute" else "<group>")
       ]
 
 fileReferenceName :: PBXFileReference -> String
