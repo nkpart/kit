@@ -2,7 +2,8 @@
 module Kit.Project (
   totalSpecDependencies,
   writeKitProjectFromSpecs,
-  dependencyTree
+  dependencyTree,
+  isDevPackage
   )
     where
 
@@ -22,7 +23,7 @@ import Data.Tree
 
 -- Paths
 
-kitDir, projectDir, prefixFile, projectFile, xcodeConfigFile, depsConfigFile, kitUpdateMakeFilePath, kitResourceDir :: FilePath
+kitDir, devKitDir, projectDir, prefixFile, projectFile, xcodeConfigFile, depsConfigFile, kitUpdateMakeFilePath, kitResourceDir :: FilePath
 
 kitDir = "." </> "Kits"
 projectDir = "KitDeps.xcodeproj"
@@ -32,6 +33,7 @@ xcodeConfigFile = "Kit.xcconfig"
 depsConfigFile = "DepsOnly.xcconfig"
 kitUpdateMakeFilePath = "Makefile"
 kitResourceDir = "Resources"
+devKitDir = "dev-packages"
 
 kitUpdateMakeFile :: String
 kitUpdateMakeFile = "kit: Kit.xcconfig\n" ++
@@ -57,6 +59,9 @@ projectFromSpecs specs depsOnlyConfig packagesDirectory = do
   kitsContents <- readAllKitsContents specs packagesDirectory
   return $ makeXcodeProjectFromContents kitsContents depsOnlyConfig packagesDirectory
 
+isDevPackage :: KitSpec -> IO Bool
+isDevPackage spec = doesDirectoryExist $ devKitDir </> packageName spec
+
 writeKitProject :: KitProject -> KitIO ()
 writeKitProject kp = do
     mkdirP kitDir
@@ -75,13 +80,16 @@ writeKitProjectFromSpecs :: [KitSpec] -> Maybe String -> FilePath -> KitIO ()
 writeKitProjectFromSpecs specs depsOnlyConfig packagesDirectory = writeKitProject =<< projectFromSpecs specs depsOnlyConfig packagesDirectory
 
 readAllKitsContents specs packagesDirectory = do
-    currentDir <- liftIO getCurrentDirectory
     forM specs $ \spec -> do
-      -- TODO log here if we use a local kit
-      base <- liftIO $ canonicalizePath packagesDirectory
-      contents <- readKitContents' base packageFileName spec
-      return $ makeContentsRelative (currentDir </> "Kits") contents
-
+      d <- liftIO $ isDevPackage spec
+      if d 
+        then do
+          base <- liftIO $ canonicalizePath devKitDir
+          readKitContents' base packageName spec
+        else do
+          base <- liftIO $ canonicalizePath packagesDirectory
+          readKitContents' base packageFileName spec 
+      
 makeXcodeProjectFromContents :: [KitContents] -> Maybe String -> FilePath -> KitProject
 makeXcodeProjectFromContents kitsContents depsOnlyConfig packagesDirectory = 
   let pf = createProjectFile kitsContents
@@ -117,6 +125,8 @@ resourceLink contents =
       linkName = kitResourceDir </> packageName (contentSpec contents)
    in (,linkName) <$> specResources
 
+-- TODO move all this into Kit.Repository?
+
 -- | Return all the (unique) children of this tree (except the top node), in reverse depth order.
 refineDeps :: Eq a => Tree a -> [a]
 refineDeps = nub . concat . reverse . drop 1 . levels
@@ -124,7 +134,7 @@ refineDeps = nub . concat . reverse . drop 1 . levels
 -- todo: check for conflicts
 -- todo: check for version ranges :)
 totalSpecDependencies :: KitRepository -> KitSpec -> KitIO [KitSpec]
-totalSpecDependencies kr spec = refineDeps <$> unfoldTreeM (unfoldDeps kr) spec
+totalSpecDependencies kr spec = refineDeps <$> dependencyTree kr spec
 
 dependencyTree :: KitRepository -> KitSpec -> KitIO (Tree KitSpec)
 dependencyTree kr spec = unfoldTreeM (unfoldDeps kr) spec

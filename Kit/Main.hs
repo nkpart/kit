@@ -12,23 +12,17 @@ module Kit.Main where
   import Data.Tree (drawTree)
   import Kit.Repository (unpackKit, packagesDirectory)
 
-  import System.Console.ANSI
-  
-  say :: MonadIO m => Color -> String -> m ()
-  say color msg = do
-    liftIO $ setSGR [SetColor Foreground Vivid color]
-    puts msg
-    liftIO $ setSGR []
-
-  alert :: MonadIO m => String -> m ()
-  alert = say Red
-
   doUpdate :: Command ()
   doUpdate = do
               repo <- myRepository
               spec <- mySpec
               deps <- liftKit $ totalSpecDependencies repo spec
-              liftIO $ mapM_ (unpackKit repo . specKit) deps
+              -- TODO breakM
+              notDevPackages <- liftIO $ filterM (\s -> not <$> isDevPackage s) deps
+              devPackages <- liftIO $ filterM isDevPackage deps
+              liftIO $ mapM_ (unpackKit repo . specKit) $ notDevPackages
+              liftIO $ mapM_ (\spec -> say Red $ " -> Using dev package: " ++ packageName spec) devPackages
+          
               puts " -> Generating Xcode project..."
               liftKit $ writeKitProjectFromSpecs deps (specKitDepsXcodeFlags spec) (packagesDirectory repo)
               say Green "\n\tKit complete. You may need to restart Xcode for it to pick up any changes.\n"
