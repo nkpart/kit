@@ -5,7 +5,8 @@ module Kit.Util(
   module Control.Applicative,
   module Control.Monad,
   module System.Directory,
-  module System.FilePath.Posix
+  module System.FilePath.Posix,
+  Color(..)
   ) where
   import System.Directory
   import System.FilePath.Posix
@@ -19,6 +20,8 @@ module Kit.Util(
   import Control.Applicative
   import Control.Monad
   import "mtl" Control.Monad.Error
+
+  import System.Console.ANSI
 
   import qualified "mtl" Control.Monad.State as S
 
@@ -83,3 +86,13 @@ module Kit.Util(
   (.=<<.) f =
     liftM join . T.mapM f
     
+  
+  say :: MonadIO m => Color -> String -> m ()
+  say color msg = do
+    liftIO $ setSGR [SetColor Foreground Vivid color]
+    puts msg
+    liftIO $ setSGR []
+
+  alert :: MonadIO m => String -> m ()
+  alert = say Red
+

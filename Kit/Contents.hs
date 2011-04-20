@@ -1,15 +1,13 @@
 module Kit.Contents (
   KitContents(..),
   readKitContents',
-  namedPrefix,
-  makeContentsRelative 
+  namedPrefix
   ) where
 
 import Kit.Spec
 import Kit.Util
 import Kit.Xcode.XCConfig
 import Control.Monad.Trans
-import Debug.Trace
 
 import qualified Data.Traversable as T
 
@@ -23,14 +21,6 @@ data KitContents = KitContents {
   contentPrefix :: Maybe String,     -- ^ Contents of the prefix header
   contentResourceDir :: Maybe FilePath
 }
-
-makeContentsRelative :: FilePath -> KitContents -> KitContents
-makeContentsRelative base kc = let f p = fmap (makeRelative base) (p kc)
-                                in kc { contentHeaders = f contentHeaders,
-                                        contentSources = f contentSources,
-                                        contentLibs = f contentLibs,
-                                        contentResourceDir = f contentResourceDir
-                                      } 
 
 namedPrefix :: KitContents -> Maybe String
 namedPrefix kc = fmap (\s -> "//" ++ (packageFileName . contentSpec $ kc) ++ "\n" ++ s) $ contentPrefix kc
