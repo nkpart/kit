@@ -10,6 +10,7 @@ module Kit.Main where
   import System.Cmd
   import System.Exit
   import Data.Tree (drawTree)
+  import Kit.Repository (unpackKit, packagesDirectory)
 
   import System.Console.ANSI
   
@@ -29,7 +30,7 @@ module Kit.Main where
               deps <- liftKit $ totalSpecDependencies repo spec
               liftIO $ mapM_ (unpackKit repo . specKit) deps
               puts " -> Generating Xcode project..."
-              liftKit $ writeKitProjectFromSpecs deps (specKitDepsXcodeFlags spec)
+              liftKit $ writeKitProjectFromSpecs deps (specKitDepsXcodeFlags spec) (packagesDirectory repo)
               say Green "\n\tKit complete. You may need to restart Xcode for it to pick up any changes.\n"
 
   doShowTree :: Command ()

@@ -1,7 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 module Kit.Project (
   totalSpecDependencies,
-  unpackKit,
   writeKitProjectFromSpecs,
   dependencyTree
   )
@@ -9,7 +8,7 @@ module Kit.Project (
 
 import Kit.Spec
 import Kit.Contents
-import Kit.Repository
+import Kit.Repository hiding (packagesDirectory)
 import Kit.Util
 import Kit.Util.FSAction
 import Kit.Xcode.Builder
@@ -20,7 +19,6 @@ import Data.Maybe
 import Data.List
 import qualified Data.Map as M
 import Data.Tree
-import System.Cmd
 
 -- Paths
 
@@ -54,39 +52,38 @@ data KitProject = KitProject {
   kitProjectResourceDirs :: [(FilePath, FilePath)]
 } deriving (Eq, Show)
 
-projectFromSpecs :: [KitSpec] -> Maybe String -> KitIO KitProject 
-projectFromSpecs specs depsOnlyConfig = do
-  kitsContents <- readAllKitsContents specs
-  return $ makeXcodeProjectFromContents kitsContents depsOnlyConfig
+projectFromSpecs :: [KitSpec] -> Maybe String -> FilePath -> KitIO KitProject 
+projectFromSpecs specs depsOnlyConfig packagesDirectory = do
+  kitsContents <- readAllKitsContents specs packagesDirectory
+  return $ makeXcodeProjectFromContents kitsContents depsOnlyConfig packagesDirectory
 
 writeKitProject :: KitProject -> KitIO ()
-writeKitProject kp = liftIO $ inDirectory kitDir $ do
-  runAction $ FileCreate projectFile $ kitProjectFile kp
-  runAction $ FileCreate prefixFile $ kitProjectPrefix kp
-  runAction $ FileCreate xcodeConfigFile $ kitProjectConfig kp
-  runAction $ FileCreate kitUpdateMakeFilePath kitUpdateMakeFile
-  runAction $ FileCreate depsConfigFile $ kitProjectDepsConfig kp
-  let resourceDirs = kitProjectResourceDirs kp
-  when (not $ null resourceDirs) $ do
-    puts $ " -> Linking resources: " ++ stringJoin ", " (map fst resourceDirs)
-    mapM_ (\(tgt,name) -> runAction $ Symlink tgt name) resourceDirs
+writeKitProject kp = do
+    mkdirP kitDir
+    liftIO $ inDirectory kitDir $ do
+      runAction $ FileCreate projectFile $ kitProjectFile kp
+      runAction $ FileCreate prefixFile $ kitProjectPrefix kp
+      runAction $ FileCreate xcodeConfigFile $ kitProjectConfig kp
+      runAction $ FileCreate kitUpdateMakeFilePath kitUpdateMakeFile
+      runAction $ FileCreate depsConfigFile $ kitProjectDepsConfig kp
+      let resourceDirs = kitProjectResourceDirs kp
+      when (not $ null resourceDirs) $ do
+        puts $ " -> Linking resources: " ++ stringJoin ", " (map fst resourceDirs)
+        mapM_ (\(tgt,name) -> runAction $ Symlink tgt name) resourceDirs
 
-writeKitProjectFromSpecs :: [KitSpec] -> Maybe String -> KitIO ()
-writeKitProjectFromSpecs specs depsOnlyConfig = writeKitProject =<< projectFromSpecs specs depsOnlyConfig 
+writeKitProjectFromSpecs :: [KitSpec] -> Maybe String -> FilePath -> KitIO ()
+writeKitProjectFromSpecs specs depsOnlyConfig packagesDirectory = writeKitProject =<< projectFromSpecs specs depsOnlyConfig packagesDirectory
 
-readAllKitsContents specs = do
-    -- changing this is hard, because it makes an assumption that it's running from within Kits. Fix!
-    originalContents <- mapM (readKitContents' (("Kits" </>) . packageFileName)) specs
+readAllKitsContents specs packagesDirectory = do
     currentDir <- liftIO getCurrentDirectory
-    puts $ show currentDir </> "Kits"
-    puts $ show $ take 5 $ concatMap contentSources originalContents
-    let vs = fmap (makeContentsRelative (currentDir </> "Kits")) originalContents
-    puts $ show $ take 5 $ concatMap contentSources vs
-    return vs
-    
+    forM specs $ \spec -> do
+      -- TODO log here if we use a local kit
+      base <- liftIO $ canonicalizePath packagesDirectory
+      contents <- readKitContents' base packageFileName spec
+      return $ makeContentsRelative (currentDir </> "Kits") contents
 
-makeXcodeProjectFromContents :: [KitContents] -> Maybe String -> KitProject
-makeXcodeProjectFromContents kitsContents depsOnlyConfig = 
+makeXcodeProjectFromContents :: [KitContents] -> Maybe String -> FilePath -> KitProject
+makeXcodeProjectFromContents kitsContents depsOnlyConfig packagesDirectory = 
   let pf = createProjectFile kitsContents
       header = createHeader kitsContents
       config = createConfig kitsContents
@@ -104,7 +101,7 @@ makeXcodeProjectFromContents kitsContents depsOnlyConfig =
           let combinedHeader = stringJoin "\n" headers
           prefixDefault ++ combinedHeader ++ "\n"
         createConfig cs = do
-          let sourceDirs = map ((\spec -> packageFileName spec </> specSourceDirectory spec) . contentSpec) cs >>= (\s -> [s, kitDir </> s])
+          let sourceDirs = map ((\spec -> packageFileName spec </> specSourceDirectory spec) . contentSpec) cs >>= (\s -> [s, packagesDirectory </> s])
           let configs = mapMaybe contentConfig cs
           let parentConfig = XCC "Base" (M.fromList [
                                                     ("HEADER_SEARCH_PATHS", "$(HEADER_SEARCH_PATHS) " ++ stringJoin " " sourceDirs),
@@ -134,17 +131,4 @@ dependencyTree kr spec = unfoldTreeM (unfoldDeps kr) spec
 
 unfoldDeps :: KitRepository -> KitSpec -> KitIO (KitSpec, [KitSpec])
 unfoldDeps kr ks = (ks,) <$> mapM (readKitSpec kr) (specDependencies ks) -- s/mapM/traverse ?
-
--- Note: this is here because it unpacks to the 'Kits', directory, which is kinda related to the project...
--- TODO: this will become a repository function when it unpacks into the exploded dir of kits within the 
--- local repo. then we won't need unpacking into 'Kits'!
-unpackKit :: KitRepository -> Kit -> IO ()
-unpackKit kr kit = do
-    tmpDir <- getTemporaryDirectory
-    let fp = tmpDir </> (packageFileName kit ++ ".tar.gz")
-    putStrLn $ " -> Installing " ++ packageFileName kit
-    copyKitPackage kr kit fp
-    mkdirP kitDir 
-    inDirectory kitDir $ system ("tar zxf " ++ fp)
-    return ()
 

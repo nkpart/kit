@@ -1,6 +1,5 @@
 module Kit.Contents (
   KitContents(..),
-  readKitContents,
   readKitContents',
   namedPrefix,
   makeContentsRelative 
@@ -10,6 +9,7 @@ import Kit.Spec
 import Kit.Util
 import Kit.Xcode.XCConfig
 import Control.Monad.Trans
+import Debug.Trace
 
 import qualified Data.Traversable as T
 
@@ -35,28 +35,23 @@ makeContentsRelative base kc = let f p = fmap (makeRelative base) (p kc)
 namedPrefix :: KitContents -> Maybe String
 namedPrefix kc = fmap (\s -> "//" ++ (packageFileName . contentSpec $ kc) ++ "\n" ++ s) $ contentPrefix kc
 
--- | Determine the contents for a Kit, assumes that we're in a 
--- folder containing exploded kits
-
-readKitContents :: KitSpec -> IO KitContents
-readKitContents = readKitContents' packageFileName
-
-readKitContents' :: (Applicative m, MonadIO m) => (KitSpec -> FilePath) -> KitSpec -> m KitContents
-readKitContents' f spec =
+readKitContents' :: (Applicative m, MonadIO m) => FilePath -> (KitSpec -> FilePath) -> KitSpec -> m KitContents
+readKitContents' base f spec =
   let kitDir = f spec
-      find dir tpe = liftIO $ do
+      find dir tpe = liftIO $ inDirectory base $ do
         files <- glob ((kitDir </> dir </> "**/*") ++ tpe)
         mapM canonicalizePath files
       findSrc = find $ specSourceDirectory spec
       headers = findSrc ".h"
       sources = findSrc .=<<. [".m", ".mm", ".c"]
       libs = find (specLibDirectory spec) ".a" 
-      config = liftIO $ readConfig kitDir spec
-      prefix = liftIO $ readHeader kitDir spec
+      config = liftIO $ readConfig (base </> kitDir) spec
+      prefix = liftIO $ readHeader (base </> kitDir) spec
       resourceDir = liftIO $ do
-        b <- doesDirectoryExist (kitDir </> specResourcesDirectory spec)
+        let r = base </> kitDir </> specResourcesDirectory spec
+        b <- doesDirectoryExist r
         if b then
-                Just <$> canonicalizePath (kitDir </> specResourcesDirectory spec)
+                Just <$> canonicalizePath r
              else
                 return Nothing
   in  KitContents spec <$> headers <*> sources <*> libs <*> config <*> prefix <*> resourceDir
