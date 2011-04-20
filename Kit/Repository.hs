@@ -5,7 +5,9 @@ module Kit.Repository (
     --
     copyKitPackage,
     explodePackage,
-    readKitSpec
+    readKitSpec,
+    unpackKit,
+    packagesDirectory
   ) where
 
   import Kit.Spec
@@ -49,4 +51,21 @@ module Kit.Repository (
 
   kitSpecPath :: Kit -> String
   kitSpecPath k = baseKitPath k ++ "/" ++ "KitSpec"
+
+  packagesDirectory :: KitRepository -> FilePath
+  packagesDirectory kr = (repositoryBase kr </> ".." </> "packages")
+
+  unpackKit :: KitRepository -> Kit -> IO ()
+  unpackKit kr kit = do
+      let source = (repositoryBase kr </> kitPackagePath kit)
+      let dest = packagesDirectory kr
+      d <- doesDirectoryExist $ dest </> packageFileName kit
+      if not d then do
+          putStrLn $ " -> Unpacking from cache: " ++ packageFileName kit
+          mkdirP dest 
+          inDirectory dest $ system ("tar zxf " ++ source)
+          return ()
+        else 
+          putStrLn $ " -> Using local package: " ++ packageFileName kit
+      return ()
 
