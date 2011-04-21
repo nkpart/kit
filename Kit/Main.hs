@@ -7,16 +7,22 @@ module Kit.Main where
   import Kit.Package
   import Kit.Project
   import Kit.Util
+  import Kit.Contents
+  import Kit.Dependency
+  import Kit.WorkingCopy
   import System.Cmd
   import System.Exit
   import Data.Tree (drawTree)
+  import Data.List (partition)
   import Kit.Repository (unpackKit, packagesDirectory)
 
+  f2 spec = do 
+          base <- liftIO $ canonicalizePath devKitDir
+          readKitContents' base packageName spec
 
-  -- TODO
-  -- Build up a `Map String KitSpec` of development specs, when the tree
-  -- is determined, look for a package in the map (by name) first, then default
-  -- to the repo.
+  f1 packagesDirectory spec = do
+          base <- liftIO $ canonicalizePath packagesDirectory
+          readKitContents' base packageFileName spec 
 
   doUpdate :: Command ()
   doUpdate = do
@@ -24,21 +30,21 @@ module Kit.Main where
               workingCopy <- myWorkingCopy
               let spec = workingKitSpec workingCopy
               deps <- liftKit $ totalSpecDependencies repo workingCopy
-              -- TODO breakM
-              notDevPackages <- liftIO $ filterM (\s -> not <$> isDevPackage s) deps
-              devPackages <- liftIO $ filterM isDevPackage deps
-              liftIO $ mapM_ (unpackKit repo . specKit) $ notDevPackages
-              liftIO $ mapM_ (\s -> say Red $ " -> Using dev package: " ++ packageName s) devPackages
+              let (devPackages, notDevPackages) = partition isDevDep deps
+              liftIO $ mapM_ (unpackKit repo . specKit) $ map depSpec notDevPackages
+              liftIO $ mapM_ (\s -> say Red $ " -> Using dev package: " ++ packageName (depSpec s)) devPackages
               puts " -> Generating Xcode project..."
-              liftKit $ writeKitProjectFromSpecs deps (specKitDepsXcodeFlags spec) (packagesDirectory repo)
+              devSpecs <- mapM (f2 . depSpec) devPackages
+              notDevSpecs <- mapM (f1 (packagesDirectory repo) . depSpec) notDevPackages
+              liftKit $ writeKitProjectFromContents (devSpecs ++ notDevSpecs) (specKitDepsXcodeFlags spec) (packagesDirectory repo)
               say Green "\n\tKit complete. You may need to restart Xcode for it to pick up any changes.\n"
 
   doShowTree :: Command ()
   doShowTree = do
     repo <- myRepository
-    spec <- mySpec
-    tree <- liftKit $ dependencyTree repo spec
-    liftIO $ putStrLn $ drawTree $ fmap packageFileName $ tree
+    wc <- myWorkingCopy
+    tree <- liftKit $ dependencyTree repo wc
+    liftIO $ putStrLn $ drawTree $ fmap (packageFileName . depSpec) $ tree
 
   doPackageKit :: Command ()
   doPackageKit = mySpec >>= liftIO . package 

@@ -1,25 +1,19 @@
 {-# LANGUAGE TupleSections #-}
 module Kit.Project (
-  totalSpecDependencies,
-  writeKitProjectFromSpecs,
-  dependencyTree
+  writeKitProjectFromContents
   )
     where
 
 import Kit.Spec
 import Kit.Contents
-import Kit.Repository hiding (packagesDirectory)
 import Kit.Util
 import Kit.Util.FSAction
-import Kit.WorkingCopy
 import Kit.Xcode.Builder
 import Kit.Xcode.XCConfig
 
 import Control.Monad.Error
 import Data.Maybe
-import Data.List
 import qualified Data.Map as M
-import Data.Tree
 
 -- Paths
 
@@ -53,43 +47,27 @@ data KitProject = KitProject {
   kitProjectResourceDirs :: [(FilePath, FilePath)]
 } deriving (Eq, Show)
 
-projectFromSpecs :: [KitSpec] -> Maybe String -> FilePath -> KitIO KitProject 
-projectFromSpecs specs depsOnlyConfig packagesDirectory = do
-  kitsContents <- readAllKitsContents packagesDirectory specs
-  return $ makeXcodeProjectFromContents kitsContents depsOnlyConfig packagesDirectory
+writeKitProjectFromContents :: [KitContents] -> Maybe String -> FilePath -> KitIO ()
+writeKitProjectFromContents contents depsOnlyConfig packagesDirectory = writeKitProject $ makeKitProject contents depsOnlyConfig packagesDirectory
 
 writeKitProject :: KitProject -> KitIO ()
 writeKitProject kp = do
-    mkdirP kitDir
-    liftIO $ inDirectory kitDir $ do
-      mapM_ runAction [
+    liftIO $ mapM_ (runAction . within kitDir) [
           FileCreate projectFile (kitProjectFile kp),
           FileCreate prefixFile (kitProjectPrefix kp),
           FileCreate xcodeConfigFile (kitProjectConfig kp),
           FileCreate kitUpdateMakeFilePath kitUpdateMakeFile,
           FileCreate depsConfigFile (kitProjectDepsConfig kp)
         ]
+    mkdirP kitDir
+    liftIO $ inDirectory kitDir $ do
       let resourceDirs = kitProjectResourceDirs kp
       when (not $ null resourceDirs) $ do
         puts $ " -> Linking resources: " ++ stringJoin ", " (map fst resourceDirs)
         mapM_ (\(tgt,name) -> runAction $ Symlink tgt name) resourceDirs
 
-writeKitProjectFromSpecs :: [KitSpec] -> Maybe String -> FilePath -> KitIO ()
-writeKitProjectFromSpecs specs depsOnlyConfig packagesDirectory = writeKitProject =<< projectFromSpecs specs depsOnlyConfig packagesDirectory
-
-readAllKitsContents packagesDirectory = do
-    mapM $ \spec -> do
-      d <- liftIO $ isDevPackage spec
-      if d 
-        then do
-          base <- liftIO $ canonicalizePath devKitDir
-          readKitContents' base packageName spec
-        else do
-          base <- liftIO $ canonicalizePath packagesDirectory
-          readKitContents' base packageFileName spec 
-      
-makeXcodeProjectFromContents :: [KitContents] -> Maybe String -> FilePath -> KitProject
-makeXcodeProjectFromContents kitsContents depsOnlyConfig packagesDirectory = 
+makeKitProject :: [KitContents] -> Maybe String -> FilePath -> KitProject
+makeKitProject kitsContents depsOnlyConfig packagesDirectory = 
   let pf = createProjectFile kitsContents
       header = createHeader kitsContents
       config = createConfig kitsContents

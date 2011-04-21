@@ -4,6 +4,7 @@ module Kit.Commands (
   liftKit,
   mySpec,
   mySpecFile,
+  myWorkingCopy,
   myRepository,
   runCommand,
   defaultLocalRepoPath,
@@ -20,7 +21,7 @@ import System.Exit (exitFailure)
 import Control.Monad.Error
 import Control.Monad.Reader
 
-newtype Command a = Command (ReaderT (WorkingCopy, KitRepository) (ErrorT String IO) a) deriving Monad
+newtype Command a = Command (ReaderT (WorkingCopy, KitRepository) (ErrorT String IO) a) deriving (Monad, Functor, Applicative)
 
 instance MonadIO Command where
   liftIO a = Command $ liftIO a
