@@ -12,17 +12,23 @@ module Kit.Main where
   import Data.Tree (drawTree)
   import Kit.Repository (unpackKit, packagesDirectory)
 
+
+  -- TODO
+  -- Build up a `Map String KitSpec` of development specs, when the tree
+  -- is determined, look for a package in the map (by name) first, then default
+  -- to the repo.
+
   doUpdate :: Command ()
   doUpdate = do
               repo <- myRepository
-              spec <- mySpec
-              deps <- liftKit $ totalSpecDependencies repo spec
+              workingCopy <- myWorkingCopy
+              let spec = workingKitSpec workingCopy
+              deps <- liftKit $ totalSpecDependencies repo workingCopy
               -- TODO breakM
               notDevPackages <- liftIO $ filterM (\s -> not <$> isDevPackage s) deps
               devPackages <- liftIO $ filterM isDevPackage deps
               liftIO $ mapM_ (unpackKit repo . specKit) $ notDevPackages
-              liftIO $ mapM_ (\spec -> say Red $ " -> Using dev package: " ++ packageName spec) devPackages
-          
+              liftIO $ mapM_ (\s -> say Red $ " -> Using dev package: " ++ packageName s) devPackages
               puts " -> Generating Xcode project..."
               liftKit $ writeKitProjectFromSpecs deps (specKitDepsXcodeFlags spec) (packagesDirectory repo)
               say Green "\n\tKit complete. You may need to restart Xcode for it to pick up any changes.\n"

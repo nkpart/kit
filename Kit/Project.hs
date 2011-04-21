@@ -2,8 +2,7 @@
 module Kit.Project (
   totalSpecDependencies,
   writeKitProjectFromSpecs,
-  dependencyTree,
-  isDevPackage
+  dependencyTree
   )
     where
 
@@ -12,6 +11,7 @@ import Kit.Contents
 import Kit.Repository hiding (packagesDirectory)
 import Kit.Util
 import Kit.Util.FSAction
+import Kit.WorkingCopy
 import Kit.Xcode.Builder
 import Kit.Xcode.XCConfig
 
@@ -23,7 +23,7 @@ import Data.Tree
 
 -- Paths
 
-kitDir, devKitDir, projectDir, prefixFile, projectFile, xcodeConfigFile, depsConfigFile, kitUpdateMakeFilePath, kitResourceDir :: FilePath
+kitDir, projectDir, prefixFile, projectFile, xcodeConfigFile, depsConfigFile, kitUpdateMakeFilePath, kitResourceDir :: FilePath
 
 kitDir = "." </> "Kits"
 projectDir = "KitDeps.xcodeproj"
@@ -33,7 +33,6 @@ xcodeConfigFile = "Kit.xcconfig"
 depsConfigFile = "DepsOnly.xcconfig"
 kitUpdateMakeFilePath = "Makefile"
 kitResourceDir = "Resources"
-devKitDir = "dev-packages"
 
 kitUpdateMakeFile :: String
 kitUpdateMakeFile = "kit: Kit.xcconfig\n" ++
@@ -56,21 +55,20 @@ data KitProject = KitProject {
 
 projectFromSpecs :: [KitSpec] -> Maybe String -> FilePath -> KitIO KitProject 
 projectFromSpecs specs depsOnlyConfig packagesDirectory = do
-  kitsContents <- readAllKitsContents specs packagesDirectory
+  kitsContents <- readAllKitsContents packagesDirectory specs
   return $ makeXcodeProjectFromContents kitsContents depsOnlyConfig packagesDirectory
-
-isDevPackage :: KitSpec -> IO Bool
-isDevPackage spec = doesDirectoryExist $ devKitDir </> packageName spec
 
 writeKitProject :: KitProject -> KitIO ()
 writeKitProject kp = do
     mkdirP kitDir
     liftIO $ inDirectory kitDir $ do
-      runAction $ FileCreate projectFile $ kitProjectFile kp
-      runAction $ FileCreate prefixFile $ kitProjectPrefix kp
-      runAction $ FileCreate xcodeConfigFile $ kitProjectConfig kp
-      runAction $ FileCreate kitUpdateMakeFilePath kitUpdateMakeFile
-      runAction $ FileCreate depsConfigFile $ kitProjectDepsConfig kp
+      mapM_ runAction [
+          FileCreate projectFile (kitProjectFile kp),
+          FileCreate prefixFile (kitProjectPrefix kp),
+          FileCreate xcodeConfigFile (kitProjectConfig kp),
+          FileCreate kitUpdateMakeFilePath kitUpdateMakeFile,
+          FileCreate depsConfigFile (kitProjectDepsConfig kp)
+        ]
       let resourceDirs = kitProjectResourceDirs kp
       when (not $ null resourceDirs) $ do
         puts $ " -> Linking resources: " ++ stringJoin ", " (map fst resourceDirs)
@@ -79,8 +77,8 @@ writeKitProject kp = do
 writeKitProjectFromSpecs :: [KitSpec] -> Maybe String -> FilePath -> KitIO ()
 writeKitProjectFromSpecs specs depsOnlyConfig packagesDirectory = writeKitProject =<< projectFromSpecs specs depsOnlyConfig packagesDirectory
 
-readAllKitsContents specs packagesDirectory = do
-    forM specs $ \spec -> do
+readAllKitsContents packagesDirectory = do
+    mapM $ \spec -> do
       d <- liftIO $ isDevPackage spec
       if d 
         then do
@@ -120,25 +118,7 @@ makeXcodeProjectFromContents kitsContents depsOnlyConfig packagesDirectory =
           configToString combinedConfig ++ "\n"
 
 resourceLink :: KitContents -> Maybe (FilePath, FilePath) 
-resourceLink contents = 
-  let specResources = contentResourceDir contents
-      linkName = kitResourceDir </> packageName (contentSpec contents)
-   in (,linkName) <$> specResources
-
--- TODO move all this into Kit.Repository?
-
--- | Return all the (unique) children of this tree (except the top node), in reverse depth order.
-refineDeps :: Eq a => Tree a -> [a]
-refineDeps = nub . concat . reverse . drop 1 . levels
-
--- todo: check for conflicts
--- todo: check for version ranges :)
-totalSpecDependencies :: KitRepository -> KitSpec -> KitIO [KitSpec]
-totalSpecDependencies kr spec = refineDeps <$> dependencyTree kr spec
-
-dependencyTree :: KitRepository -> KitSpec -> KitIO (Tree KitSpec)
-dependencyTree kr spec = unfoldTreeM (unfoldDeps kr) spec
-
-unfoldDeps :: KitRepository -> KitSpec -> KitIO (KitSpec, [KitSpec])
-unfoldDeps kr ks = (ks,) <$> mapM (readKitSpec kr) (specDependencies ks) -- s/mapM/traverse ?
+resourceLink contents = let specResources = contentResourceDir contents
+                            linkName = kitResourceDir </> packageName (contentSpec contents)
+                         in (,linkName) <$> specResources
 
