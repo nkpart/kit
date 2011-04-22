@@ -66,6 +66,11 @@ writeKitProject kp = do
         puts $ " -> Linking resources: " ++ stringJoin ", " (map fst resourceDirs)
         mapM_ (\(tgt,name) -> runAction $ Symlink tgt name) resourceDirs
 
+resourceLink :: KitContents -> Maybe (FilePath, FilePath) 
+resourceLink contents = let specResources = contentResourceDir contents
+                            linkName = kitResourceDir </> packageName (contentSpec contents)
+                         in (,linkName) <$> specResources
+
 makeKitProject :: [KitContents] -> Maybe String -> FilePath -> KitProject
 makeKitProject kitsContents depsOnlyConfig packagesDirectory = 
   let pf = createProjectFile kitsContents
@@ -94,9 +99,4 @@ makeKitProject kitsContents depsOnlyConfig packagesDirectory =
                                                   ]) []
           let combinedConfig = multiConfig "KitConfig" (parentConfig:configs)
           configToString combinedConfig ++ "\n"
-
-resourceLink :: KitContents -> Maybe (FilePath, FilePath) 
-resourceLink contents = let specResources = contentResourceDir contents
-                            linkName = kitResourceDir </> packageName (contentSpec contents)
-                         in (,linkName) <$> specResources
 

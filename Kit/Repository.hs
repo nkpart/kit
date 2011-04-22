@@ -44,13 +44,13 @@ module Kit.Repository (
     T.sequenceA $ ifTrue exists $ BS.readFile file
 
   baseKitPath :: Kit -> String
-  baseKitPath k = stringJoin "/" ["kits", kitName k, kitVersion k] 
+  baseKitPath k = "kits" </> kitName k </> kitVersion k
 
   kitPackagePath :: Kit -> String
-  kitPackagePath k = baseKitPath k ++ "/" ++ packageFileName k ++ ".tar.gz"
+  kitPackagePath k = baseKitPath k </> packageFileName k ++ ".tar.gz"
 
   kitSpecPath :: Kit -> String
-  kitSpecPath k = baseKitPath k ++ "/" ++ "KitSpec"
+  kitSpecPath k = baseKitPath k </> "KitSpec"
 
   packagesDirectory :: KitRepository -> FilePath
   packagesDirectory kr = (repositoryBase kr </> ".." </> "packages")
