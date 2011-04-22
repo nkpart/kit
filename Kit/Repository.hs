@@ -40,7 +40,7 @@ module Kit.Repository (
     where f contents = maybeToKitIO ("Invalid KitSpec file for " ++ packageFileName kit) $ decodeSpec contents
 
   doRead :: KitRepository -> String -> IO (Maybe BS.ByteString) 
-  doRead (KitRepository baseDir) fp = let file = (baseDir </> fp) in do
+  doRead kr fp = let file = (repositoryBase kr </> fp) in do
     exists <- doesFileExist file
     T.sequenceA $ ifTrue exists $ BS.readFile file
 
