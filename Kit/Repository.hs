@@ -7,7 +7,8 @@ module Kit.Repository (
     explodePackage,
     readKitSpec,
     unpackKit,
-    packagesDirectory
+    packagesDirectory,
+    publishLocally
   ) where
 
   import Kit.Spec
@@ -68,4 +69,13 @@ module Kit.Repository (
         else 
           putStrLn $ " -> Using local package: " ++ packageFileName kit
       return ()
+
+  publishLocally :: KitRepository -> KitSpec -> FilePath -> FilePath -> IO ()
+  publishLocally kr ks specFile packageFile = do
+                              let repo = repositoryBase kr
+                              let thisKitDir = repo </> baseKitPath (specKit ks)
+                              mkdirP thisKitDir
+                              let fname = takeFileName packageFile
+                              copyFile packageFile (thisKitDir </> fname)
+                              copyFile specFile (thisKitDir </> "KitSpec") 
 

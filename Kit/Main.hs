@@ -14,7 +14,7 @@ module Kit.Main where
   import System.Exit
   import Data.Tree (drawTree)
   import Data.List (partition)
-  import Kit.Repository (unpackKit, packagesDirectory)
+  import Kit.Repository (unpackKit, packagesDirectory, publishLocally)
 
   f2 spec = do 
           base <- liftIO $ canonicalizePath devKitDir
@@ -52,21 +52,13 @@ module Kit.Main where
   doPublishLocal :: Maybe String -> Command ()
   doPublishLocal versionTag = do
     spec <- mySpec 
-    specFile <- mySpecFile
+    specFile <- workingSpecFile <$> myWorkingCopy
+    repo <- myRepository
     let updatedSpec = maybe spec (\tag -> updateVersion spec (++tag)) versionTag
     liftIO $ do
       package updatedSpec 
-      publishLocal updatedSpec specFile
+      publishLocally repo updatedSpec specFile $ "dist" </> packageFileName updatedSpec ++ ".tar.gz"
     return ()
-      where
-        publishLocal :: KitSpec -> FilePath -> IO ()
-        publishLocal spec specFile = let pkg = (packageFileName spec ++ ".tar.gz")
-                            in do
-                              repo <- defaultLocalRepoPath
-                              let thisKitDir = repo </> "kits" </> packageName spec </> packageVersion spec
-                              mkdirP thisKitDir
-                              copyFile ("dist" </> pkg) (thisKitDir </> pkg)
-                              copyFile specFile (thisKitDir </> "KitSpec") 
 
   doVerify :: String -> Command ()
   doVerify sdk = do
@@ -103,9 +95,7 @@ module Kit.Main where
   handleArgs KA.ShowTree = doShowTree
 
   kitMain :: IO ()
-  kitMain = let f = do
-                      mkdirP =<< defaultLocalRepoPath 
-                      runCommand . handleArgs =<< KA.parseArgs
+  kitMain = let f = runCommand . handleArgs =<< KA.parseArgs
             in catch f $ \e -> do
                 alert $ show e
                 exitWith $ ExitFailure 1 

@@ -18,16 +18,18 @@ devKitDir = "dev-packages"
 
 data WorkingCopy = WorkingCopy {
   workingKitSpec :: KitSpec,
+  workingSpecFile :: FilePath,
   workingDevPackages :: [(FilePath, KitSpec)]
 } deriving (Eq, Show)
 
 currentWorkingCopy :: KitIO WorkingCopy
 currentWorkingCopy = do
-  spec <- readSpec "KitSpec"
+  let specFile = "KitSpec"
+  spec <- readSpec specFile
   devKitSpecFiles <- liftIO $ glob "dev-packages/*/KitSpec"
   let f path = (takeFileName . takeDirectory $ path,) <$> readSpec path
   devKitSpecs <- mapM f devKitSpecFiles
-  return $ WorkingCopy spec devKitSpecs
+  return $ WorkingCopy spec specFile devKitSpecs
 
 isDevPackage :: WorkingCopy -> KitSpec -> Bool
 isDevPackage wc spec = any (\s -> packageName spec == packageName s) $ map snd (workingDevPackages wc)

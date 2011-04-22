@@ -3,11 +3,9 @@ module Kit.Commands (
   Command,
   liftKit,
   mySpec,
-  mySpecFile,
   myWorkingCopy,
   myRepository,
   runCommand,
-  defaultLocalRepoPath,
   defaultLocalRepository
 ) where
 
@@ -38,9 +36,6 @@ myWorkingCopy = Command $ fmap fst ask
 myRepository :: Command KitRepository
 myRepository = Command $ fmap snd ask
 
-mySpecFile :: Command FilePath
-mySpecFile = return "KitSpec"
-
 runCommand :: Command a -> IO ()
 runCommand (Command cmd) = run $ do
   spec <- currentWorkingCopy
@@ -53,5 +48,7 @@ defaultLocalRepoPath :: IO FilePath
 defaultLocalRepoPath = (</> ".kit" </> "repository") <$> getHomeDirectory 
 
 defaultLocalRepository :: IO KitRepository
-defaultLocalRepository = KitRepository <$> defaultLocalRepoPath
+defaultLocalRepository = do
+  mkdirP =<< defaultLocalRepoPath
+  KitRepository <$> defaultLocalRepoPath
 
