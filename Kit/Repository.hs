@@ -80,6 +80,9 @@ module Kit.Repository (
           putStrLn $ " -> Using local package: " ++ packageFileName kit
       return ()
 
+  -- TODO: on publish local, need to flush this particular name/version out
+  -- of the packages dir if it exists, so if this is overriding a version, that
+  -- all works.
   publishLocally :: KitRepository -> KitSpec -> FilePath -> FilePath -> IO ()
   publishLocally kr ks specFile packageFile = do
                               let cacheDir = localCacheDir kr
