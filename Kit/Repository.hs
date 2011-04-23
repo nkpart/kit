@@ -1,7 +1,8 @@
 {-# LANGUAGE PackageImports #-}
 module Kit.Repository (
     --
-    KitRepository(KitRepository),
+    KitRepository,
+    makeRepository,
     --
     copyKitPackage,
     explodePackage,
@@ -20,32 +21,40 @@ module Kit.Repository (
   import qualified Data.Traversable as T
   import qualified Data.ByteString as BS
 
-  data KitRepository = KitRepository { repositoryBase :: FilePath } deriving (Eq, Show)
+  data KitRepository = KitRepository { dotKitDir :: FilePath } deriving (Eq, Show)
+
+  localCacheDir kr = dotKitDir kr </> "repository" </> "kits" -- TODO "cache" </> "local"
+
+  makeRepository :: FilePath -> IO KitRepository
+  makeRepository fp = do 
+    let kr = KitRepository fp
+    mkdirP $ localCacheDir kr
+    return kr
 
   explodePackage :: KitRepository -> Kit -> IO ()
   explodePackage kr kit = do
-    let packagesDir = repositoryBase kr </> "kits"
-    let packagePath = repositoryBase kr </> kitPackagePath kit
+    let packagesDir = localCacheDir kr
+    let packagePath = localCacheDir kr </> kitPackagePath kit
     mkdirP packagesDir
     inDirectory packagesDir $ system ("tar zxvf " ++ packagePath)
     return ()
 
   copyKitPackage :: KitRepository -> Kit -> FilePath -> IO ()
-  copyKitPackage repo kit destPath = copyFile (repositoryBase repo </> kitPackagePath kit) destPath
+  copyKitPackage repo kit destPath = copyFile (localCacheDir repo </> kitPackagePath kit) destPath
 
   readKitSpec :: KitRepository -> Kit -> KitIO KitSpec
   readKitSpec repo kit = do
-    mbKitStuff <- liftIO $ doRead repo (kitSpecPath kit)
+    mbKitStuff <- liftIO $ readIfExists (localCacheDir repo </> kitSpecPath kit)
     maybe (throwError $ "Missing " ++ packageFileName kit) f mbKitStuff
     where f contents = maybeToKitIO ("Invalid KitSpec file for " ++ packageFileName kit) $ decodeSpec contents
 
-  doRead :: KitRepository -> String -> IO (Maybe BS.ByteString) 
-  doRead kr fp = let file = (repositoryBase kr </> fp) in do
+  readIfExists :: String -> IO (Maybe BS.ByteString) 
+  readIfExists file = do
     exists <- doesFileExist file
     T.sequenceA $ ifTrue exists $ BS.readFile file
 
   baseKitPath :: Kit -> String
-  baseKitPath k = "kits" </> kitName k </> kitVersion k
+  baseKitPath k = kitName k </> kitVersion k
 
   kitPackagePath :: Kit -> String
   kitPackagePath k = baseKitPath k </> packageFileName k ++ ".tar.gz"
@@ -54,11 +63,11 @@ module Kit.Repository (
   kitSpecPath k = baseKitPath k </> "KitSpec"
 
   packagesDirectory :: KitRepository -> FilePath
-  packagesDirectory kr = (repositoryBase kr </> ".." </> "packages")
+  packagesDirectory kr = (dotKitDir kr </> "packages")
 
   unpackKit :: KitRepository -> Kit -> IO ()
   unpackKit kr kit = do
-      let source = (repositoryBase kr </> kitPackagePath kit)
+      let source = (localCacheDir kr </> kitPackagePath kit)
       let dest = packagesDirectory kr
       d <- doesDirectoryExist $ dest </> packageFileName kit
       if not d then do
@@ -72,8 +81,8 @@ module Kit.Repository (
 
   publishLocally :: KitRepository -> KitSpec -> FilePath -> FilePath -> IO ()
   publishLocally kr ks specFile packageFile = do
-                              let repo = repositoryBase kr
-                              let thisKitDir = repo </> baseKitPath (specKit ks)
+                              let cacheDir = localCacheDir kr
+                              let thisKitDir = cacheDir </> baseKitPath (specKit ks)
                               mkdirP thisKitDir
                               let fname = takeFileName packageFile
                               copyFile packageFile (thisKitDir </> fname)
