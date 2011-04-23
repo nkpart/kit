@@ -23,7 +23,7 @@ module Kit.Repository (
 
   data KitRepository = KitRepository { dotKitDir :: FilePath } deriving (Eq, Show)
 
-  localCacheDir kr = dotKitDir kr </> "repository" </> "kits" -- TODO "cache" </> "local"
+  localCacheDir kr = dotKitDir kr </> "cache" </> "local"
 
   makeRepository :: FilePath -> IO KitRepository
   makeRepository fp = do 
