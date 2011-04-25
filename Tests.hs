@@ -57,13 +57,13 @@ module Tests where
 -- KitContents tests
   kitContentsTest = [
       spec "check for resource contents" $ do
-        createDirectoryIfMissing True "Kits/some-kit-0.1/resources"
+        createDirectoryIfMissing True "some-kit-0.1/resources"
         let spec = defaultSpec "some-kit" "0.1"
-        inDirectory "Kits" $ do
-          kc <- KC.readKitContents spec
-          assertEqual "resource dir found" (Just "resources") (KC.contentResourceDir kc)
-          kc <- KC.readKitContents spec { specResourcesDirectory = "lolburger" }
-          assertEqual "resource dir not found" (Nothing) (KC.contentResourceDir kc)
+        kc <- KC.readKitContents' "." (const "some-kit-0.1") spec
+        expectedResourceDir <- canonicalizePath "some-kit-0.1/resources"
+        assertEqual "resource dir found" (Just expectedResourceDir) (KC.contentResourceDir kc)
+        kc <- KC.readKitContents' "." (const "some-kit-0.1") spec { specResourcesDirectory = "lolburger" }
+        assertEqual "resource dir not found" (Nothing) (KC.contentResourceDir kc)
     ]
 
   main = do

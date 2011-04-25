@@ -1,3 +1,4 @@
+{-# LANGUAGE PackageImports #-}
 module Kit.Contents (
   KitContents(..),
   readKitContents',
@@ -7,7 +8,7 @@ module Kit.Contents (
 import Kit.Spec
 import Kit.Util
 import Kit.Xcode.XCConfig
-import Control.Monad.Trans
+import "mtl" Control.Monad.Trans
 
 import qualified Data.Traversable as T
 
