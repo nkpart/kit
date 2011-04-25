@@ -22,6 +22,8 @@ module Kit.Spec (
   import Kit.Util.IsObject
   import qualified Data.ByteString as BS 
   import qualified Data.Object.Yaml as Y
+  import Data.Maybe (maybeToList)
+  import Control.Arrow ((&&&))
 
   data KitSpec = KitSpec {
     specKit :: Kit,
@@ -63,7 +65,7 @@ module Kit.Spec (
   -- TODO make this and the json reading use the same defaults
   -- I suspect that to do this I'll need update functions for each of
   -- fields in the KitSpec record.
-  -- Look at the 'lenses' package on hackage.
+  -- Look at the 'lenses' package on hackage. (or comonad-transformers)
 
   decodeSpec :: BS.ByteString -> Maybe KitSpec
   decodeSpec s = Y.decode s >>= readObject 
@@ -81,14 +83,20 @@ module Kit.Spec (
     readObject x = fromMapping x >>= \obj -> (Kit <$> obj #> "name" <*> obj #> "version") <|> case obj of
                                                                                                     [(key, Scalar value)] -> Just $ Kit key value
   -- TODO this + ReadObject should be identity
+  -- TODO don't write out default values
   instance ShowObject KitSpec where
-    showObject spec = Mapping [
+    showObject spec = Mapping ([
          "name" ~> (val $ kitName . specKit),
          "version" ~> (val $ kitVersion . specKit),
-         "dependencies" ~> showObject (specDependencies spec),
-         "source-directory" ~> val specSourceDirectory 
-      ] where a ~> b = (a, b)
-              val f = Scalar . f $ spec
+         "dependencies" ~> Mapping (map (kitName &&& (Scalar . kitVersion)) $ specDependencies spec),
+         "source-directory" ~> val specSourceDirectory,
+         "test-directory" ~> val specTestDirectory,
+         "resources-directory" ~> val specResourcesDirectory,
+         "prefix-header" ~> val specPrefixFile,
+         "xcconfig" ~> val specConfigFile
+      ] ++ maybeToList (fmap (("kitdeps-xcode-flags" ~>) . Scalar) (specKitDepsXcodeFlags spec)))
+      where a ~> b = (a, b)
+            val f = Scalar . f $ spec
 
   instance ReadObject KitSpec where
     readObject x = fromMapping x >>= parser
