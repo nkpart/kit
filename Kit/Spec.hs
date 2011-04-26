@@ -88,21 +88,23 @@ module Kit.Spec (
     showObject spec = Mapping ([
          "name" ~> (val $ kitName . specKit),
          "version" ~> (val $ kitVersion . specKit),
-         "dependencies" ~> Mapping (map (kitName &&& (Scalar . kitVersion)) $ specDependencies spec),
+         "dependencies" ~> Sequence (map makeDep (specDependencies spec)),
          "source-directory" ~> val specSourceDirectory,
          "test-directory" ~> val specTestDirectory,
+         "lib-directory" ~> val specLibDirectory,
          "resources-directory" ~> val specResourcesDirectory,
          "prefix-header" ~> val specPrefixFile,
          "xcconfig" ~> val specConfigFile
       ] ++ maybeToList (fmap (("kitdeps-xcode-flags" ~>) . Scalar) (specKitDepsXcodeFlags spec)))
       where a ~> b = (a, b)
             val f = Scalar . f $ spec
+            makeDep dep = Mapping [(kitName dep, Scalar $ kitVersion dep)]
 
   instance ReadObject KitSpec where
     readObject x = fromMapping x >>= parser
         where or' a b = a <|> pure b
               parser obj =  KitSpec <$> readObject x
-                                    <*> (obj #> "dependencies" `or'` [])
+                                    <*> (obj #> "dependencies" `or'` []) -- TODO this should fail if it can't read the format
                                     <*> (obj #> "source-directory" `or'` "src")
                                     <*> (obj #> "test-directory" `or'` "test")
                                     <*> (obj #> "lib-directory" `or'` "lib")

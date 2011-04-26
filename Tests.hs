@@ -14,20 +14,30 @@ module Tests where
   import Kit.Spec
   import Kit.Util.FSAction as FSA
   import Kit.Util
+  import Kit.Util.IsObject
 
-  -- reversing twice a finite list, is the same as identity
-  prop_reversereverse s = (reverse . reverse) s == s where _ = s :: [Int]
-  
-  -- Dropping the "Haq! " string is the same as identity
-  prop_haq s = drop (length "Haq! ") (haqify s) == s where haqify s = "Haq! " ++ s
+  import qualified Data.Object.Yaml as Y
+  import Debug.Trace
+  import Data.Maybe (fromJust)
+  import qualified Data.ByteString.Char8 as BS
 
-  props  = [("reverse.reverse/id", quickCheck prop_reversereverse)
-          ,("drop.haq/id",        quickCheck prop_haq)]
+  strArb = listOf $ elements "abcdef"
+
+  instance Arbitrary Kit where
+    arbitrary = Kit <$> (listOf1 $ elements "abcdef") <*> strArb
+
+  instance Arbitrary KitSpec where
+    arbitrary = KitSpec <$> arbitrary <*> arbitrary <*> strArb <*> strArb <*> strArb <*> strArb <*> strArb <*> strArb <*> (Just <$> strArb)
+
+  prop_showReadIdentity :: KitSpec -> Bool
+  prop_showReadIdentity s = s == (fromJust $ readObject $ showObject s)
+
+  props  = [("kitspec.show+read/id", quickCheck prop_showReadIdentity)]
 
   spec x f = TestLabel x $ TestCase f 
   
 -- Todo
--- * depsonly.xcconfig should specifiy SKIP_INSTALL=YES
+-- * depsonly.xcconfig should specify SKIP_INSTALL=YES
 
 -- FSAction tests
   contents = "loltents"
