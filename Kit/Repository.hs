@@ -41,7 +41,7 @@ module Kit.Repository (
     return ()
 
   copyKitPackage :: KitRepository -> Kit -> FilePath -> IO ()
-  copyKitPackage repo kit destPath = copyFile (localCacheDir repo </> kitPackagePath kit) destPath
+  copyKitPackage repo kit = copyFile (localCacheDir repo </> kitPackagePath kit)
 
   readKitSpec :: KitRepository -> Kit -> KitIO KitSpec
   readKitSpec repo kit = do
@@ -64,7 +64,7 @@ module Kit.Repository (
   kitSpecPath k = baseKitPath k </> "KitSpec"
 
   packagesDirectory :: KitRepository -> FilePath
-  packagesDirectory kr = (dotKitDir kr </> "packages")
+  packagesDirectory kr = dotKitDir kr </> "packages"
 
   unpackKit :: KitRepository -> Kit -> IO ()
   unpackKit kr kit = do

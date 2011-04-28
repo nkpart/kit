@@ -62,7 +62,7 @@ writeKitProject kp = do
     mkdirP kitDir
     liftIO $ inDirectory kitDir $ do
       let resourceDirs = kitProjectResourceDirs kp
-      when (not $ null resourceDirs) $ do
+      unless (null resourceDirs) $ do
         puts $ " -> Linking resources: " ++ stringJoin ", " (map fst resourceDirs)
         mapM_ (\(tgt,name) -> runAction $ Symlink tgt name) resourceDirs
 

@@ -31,7 +31,7 @@ module Kit.Main where
               let spec = workingKitSpec workingCopy
               deps <- liftKit $ totalSpecDependencies repo workingCopy
               let (devPackages, notDevPackages) = partition isDevDep deps
-              liftIO $ mapM_ (unpackKit repo . specKit) $ map depSpec notDevPackages
+              liftIO $ mapM_ ((unpackKit repo . specKit) . depSpec) notDevPackages
               liftIO $ mapM_ (\s -> say Red $ " -> Using dev package: " ++ packageName (depSpec s)) devPackages
               puts " -> Generating Xcode project..."
               devSpecs <- mapM (f2 . depSpec) devPackages
@@ -44,7 +44,7 @@ module Kit.Main where
     repo <- myRepository
     wc <- myWorkingCopy
     tree <- liftKit $ dependencyTree repo wc
-    liftIO $ putStrLn $ drawTree $ fmap (packageFileName . depSpec) $ tree
+    liftIO $ putStrLn $ drawTree $ fmap (packageFileName . depSpec) tree
 
   doPackageKit :: Command ()
   doPackageKit = mySpec >>= liftIO . package 

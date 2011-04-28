@@ -86,8 +86,8 @@ module Kit.Spec (
   -- TODO don't write out default values
   instance ShowObject KitSpec where
     showObject spec = Mapping ([
-         "name" ~> (val $ kitName . specKit),
-         "version" ~> (val $ kitVersion . specKit),
+         "name" ~> val (kitName . specKit),
+         "version" ~> val (kitVersion . specKit),
          "dependencies" ~> Sequence (map makeDep (specDependencies spec)),
          "source-directory" ~> val specSourceDirectory,
          "test-directory" ~> val specTestDirectory,
