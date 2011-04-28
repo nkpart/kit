@@ -91,4 +91,7 @@ module Kit.Repository (
                               let fname = takeFileName packageFile
                               copyFile packageFile (thisKitDir </> fname)
                               copyFile specFile (thisKitDir </> "KitSpec") 
+                              let pkg = packagesDirectory kr </> packageFileName (specKit ks)
+                              d <- doesDirectoryExist pkg
+                              when d $ removeDirectoryRecursive pkg
 
