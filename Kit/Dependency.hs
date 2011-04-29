@@ -17,6 +17,7 @@ import Data.List
 
 data Dependency = Dep KitSpec | Dev KitSpec FilePath deriving (Eq, Show)
 
+depSpec :: Dependency -> KitSpec
 depSpec (Dep k) = k
 depSpec (Dev k _) = k
   

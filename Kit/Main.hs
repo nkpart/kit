@@ -16,12 +16,14 @@ module Kit.Main where
   import Data.List (partition)
   import Kit.Repository (unpackKit, packagesDirectory, publishLocally)
 
+  f2 :: KitSpec -> Command KitContents 
   f2 spec = do 
           base <- liftIO $ canonicalizePath devKitDir
           readKitContents' base packageName spec
 
-  f1 packagesDirectory spec = do
-          base <- liftIO $ canonicalizePath packagesDirectory
+  f1 :: FilePath -> KitSpec -> Command KitContents 
+  f1 pkgDir spec = do
+          base <- liftIO $ canonicalizePath pkgDir
           readKitContents' base packageFileName spec 
 
   doUpdate :: Command ()

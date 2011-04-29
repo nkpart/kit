@@ -23,7 +23,6 @@ module Kit.Spec (
   import qualified Data.ByteString as BS 
   import qualified Data.Object.Yaml as Y
   import Data.Maybe (maybeToList)
-  import Control.Arrow ((&&&))
 
   data KitSpec = KitSpec {
     specKit :: Kit,
@@ -82,6 +81,7 @@ module Kit.Spec (
   instance ReadObject Kit where
     readObject x = fromMapping x >>= \obj -> (Kit <$> obj #> "name" <*> obj #> "version") <|> case obj of
                                                                                                     [(key, Scalar value)] -> Just $ Kit key value
+                                                                                                    _ -> Nothing
   -- TODO this + ReadObject should be identity
   -- TODO don't write out default values
   instance ShowObject KitSpec where
