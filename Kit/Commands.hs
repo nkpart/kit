@@ -19,17 +19,7 @@ import System.Exit (exitFailure)
 import Control.Monad.Error
 import Control.Monad.Reader
 
-newtype Command a = Command { unCommand :: (ReaderT (WorkingCopy, KitRepository) (ErrorT String IO) a) } deriving Monad
-
-instance MonadIO Command where
-  liftIO a = Command $ liftIO a
-
-instance Functor Command where
-  fmap f v = Command $ fmap f (unCommand v)
-
-instance Applicative Command where
-  pure = Command . pure
-  f <*> v = Command $ (unCommand f) <*> (unCommand v)
+newtype Command a = Command { unCommand :: (ReaderT (WorkingCopy, KitRepository) (ErrorT String IO) a) } deriving (Monad, MonadIO, Functor, Applicative)
 
 liftKit :: KitIO a -> Command a
 liftKit = Command . ReaderT . const
