@@ -32,5 +32,5 @@ module Kit.CmdArgs (parseArgs, KitCmdArgs(..)) where
     ]
 
   parseArgs :: IO KitCmdArgs
-  parseArgs = cmdArgs $ parseMode &= program "kit" &= summary ("Kit " ++ appVersion)
+  parseArgs = cmdArgs $ parseMode &= program "kit" &= summary ("Kit " ++ appVersion) &= versionArg [CA.name "v"] &= helpArg [CA.name "h"]
 

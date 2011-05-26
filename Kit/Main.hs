@@ -110,8 +110,7 @@ module Kit.Main where
     let f = runCommand . handleArgs =<< KA.parseArgs
     h <- getHomeDirectory
     fs <- inDirectory h $ glob ".kit/repository/kits/*/*/*.tar.gz"
-    let c = length fs
-    when (c > 0) $ warnOldRepo c
+    when (not $ null fs) $ warnOldRepo (length fs)
     catch f $ \e -> do
         alert $ show e
         exitWith $ ExitFailure 1 
