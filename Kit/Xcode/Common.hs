@@ -53,7 +53,7 @@ fileReferenceItem fr = fileReferenceId fr ~> dict
         "lastKnownFileType" ~> val (fileType fileName),
         "name" ~> val fileName,
         "path" ~> val path,
-        "sourceTree" ~> val (if (isAbsolute path) then "<absolute" else "<group>")
+        "sourceTree" ~> val (if (isAbsolute path) then "<absolute>" else "<group>")
       ]
 
 fileReferenceName :: PBXFileReference -> String
