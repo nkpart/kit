@@ -35,8 +35,12 @@ totalSpecDependencies :: KitRepository -> WorkingCopy -> KitIO [Dependency]
 totalSpecDependencies repo workingCopy = refineDeps <$> dependencyTree repo workingCopy
 
 dependencyTree :: KitRepository -> WorkingCopy -> KitIO (Tree Dependency)
-dependencyTree repo workingCopy = unfoldTreeM (unfoldDeps repo) (workingKitSpec workingCopy)
+dependencyTree repo workingCopy = unfoldTreeM (unfoldDeps repo workingCopy) (workingKitSpec workingCopy)
 
-unfoldDeps :: KitRepository -> KitSpec -> KitIO (Dependency, [KitSpec])
-unfoldDeps kr ks = (Dep ks,) <$> mapM (readKitSpec kr) (specDependencies ks) 
+unfoldDeps :: KitRepository -> WorkingCopy -> KitSpec -> KitIO (Dependency, [KitSpec])
+unfoldDeps kr wc ks = let devPackages = workingDevPackages wc 
+                          thisDev = find ((packageName ks ==) . packageName . fst) devPackages
+                          theDep = maybe (Dep ks) (uncurry Dev) thisDev
+                       in do
+                            (theDep,) <$> mapM (readKitSpec kr) (specDependencies $ depSpec theDep) 
 
