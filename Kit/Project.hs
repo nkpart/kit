@@ -90,7 +90,7 @@ makeKitProject kitsContents depsOnlyConfig packagesDirectory =
           let combinedHeader = stringJoin "\n" headers
           prefixDefault ++ combinedHeader ++ "\n"
         createConfig cs = do
-          let sourceDirs = map ((\spec -> packageFileName spec </> specSourceDirectory spec) . contentSpec) cs >>= (\s -> [s, packagesDirectory </> s])
+          let sourceDirs = map ((\spec -> packagesDirectory </> packageFileName spec </> specSourceDirectory spec) . contentSpec) cs 
           let configs = mapMaybe contentConfig cs
           let parentConfig = XCC "Base" (M.fromList [
                                                     ("HEADER_SEARCH_PATHS", "$(HEADER_SEARCH_PATHS) " ++ stringJoin " " sourceDirs),
