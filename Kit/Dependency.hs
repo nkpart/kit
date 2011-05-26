@@ -1,7 +1,7 @@
 {-# LANGUAGE TupleSections #-}
 module Kit.Dependency (
     totalSpecDependencies,
-    Dependency(..),
+    Dependency,
     depSpec,
     isDevDep,
     dependencyTree,
@@ -15,15 +15,15 @@ import Kit.WorkingCopy
 import Data.Tree
 import Data.List
 
-data Dependency = Dep KitSpec | Dev KitSpec FilePath deriving (Eq, Show)
+data Location = Repo | Dev FilePath deriving (Eq, Show)
+data Dependency = Dependency KitSpec Location deriving (Eq, Show)
 
 depSpec :: Dependency -> KitSpec
-depSpec (Dep k) = k
-depSpec (Dev k _) = k
+depSpec (Dependency k _) = k
   
 isDevDep :: Dependency -> Bool
-isDevDep (Dep _) = False
-isDevDep (Dev _ _) = True
+isDevDep (Dependency _ Repo) = False
+isDevDep (Dependency _ (Dev _)) = True
 
 -- | Return all the (unique) children of this tree (except the top node), in reverse depth order.
 refineDeps :: Eq a => Tree a -> [a]
@@ -40,7 +40,6 @@ dependencyTree repo workingCopy = unfoldTreeM (unfoldDeps repo workingCopy) (wor
 unfoldDeps :: KitRepository -> WorkingCopy -> KitSpec -> KitIO (Dependency, [KitSpec])
 unfoldDeps kr wc ks = let devPackages = workingDevPackages wc 
                           thisDev = find ((packageName ks ==) . packageName . fst) devPackages
-                          theDep = maybe (Dep ks) (uncurry Dev) thisDev
-                       in do
-                            (theDep,) <$> mapM (readKitSpec kr) (specDependencies $ depSpec theDep) 
+                          theDep = maybe (Dependency ks Repo) (\(ks',fp) -> Dependency ks' (Dev fp)) thisDev
+                       in (theDep,) <$> mapM (readKitSpec kr) (specDependencies $ depSpec theDep) 
 
