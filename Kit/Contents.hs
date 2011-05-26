@@ -41,10 +41,9 @@ readKitContents' base f spec =
       resourceDir = liftIO $ do
         let r = base </> kitDir </> specResourcesDirectory spec
         b <- doesDirectoryExist r
-        if b then
-                Just <$> canonicalizePath r
-             else
-                return Nothing
+        if b 
+          then Just <$> canonicalizePath r
+          else return Nothing
   in  KitContents spec <$> headers <*> sources <*> libs <*> config <*> prefix <*> resourceDir
 
 -- TODO report missing file

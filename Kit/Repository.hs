@@ -71,13 +71,13 @@ module Kit.Repository (
       let source = (localCacheDir kr </> kitPackagePath kit)
       let dest = packagesDirectory kr
       d <- doesDirectoryExist $ dest </> packageFileName kit
-      if not d then do
+      if not d 
+        then do
           putStrLn $ " -> Unpacking from cache: " ++ packageFileName kit
           mkdirP dest 
           inDirectory dest $ system ("tar zxf " ++ source)
           return ()
-        else 
-          putStrLn $ " -> Using local package: " ++ packageFileName kit
+        else putStrLn $ " -> Using local package: " ++ packageFileName kit
       return ()
 
   -- TODO: on publish local, need to flush this particular name/version out

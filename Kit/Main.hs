@@ -96,13 +96,7 @@ module Kit.Main where
   handleArgs (KA.CreateSpec name version) = doCreateSpec name version
   handleArgs KA.ShowTree = doShowTree
 
-  kitMain :: IO ()
-  kitMain = do
-    let f = runCommand . handleArgs =<< KA.parseArgs
-    h <- getHomeDirectory
-    fs <- inDirectory h $ glob ".kit/repository/kits/*/*/*.tar.gz"
-    let c = length fs
-    when (c > 0) $ do
+  warnOldRepo c = do
       say Red $ "Warning: Kit now expects packages in '.kit/cache/local' instead of '.kit/repository/kits'. (Found " ++ show c ++ " packages in the old location.)"
       puts ""
       say Red "To fix it, move the old directory into the new path:"
@@ -110,6 +104,14 @@ module Kit.Main where
       say Red "\t$ mv ~/.kit/repository/kits/* ~/.kit/cache/local"
       say Red "\t$ rmdir ~/.kit/repository/kits && rmdir ~/.kit/repository"
       puts ""
+
+  kitMain :: IO ()
+  kitMain = do
+    let f = runCommand . handleArgs =<< KA.parseArgs
+    h <- getHomeDirectory
+    fs <- inDirectory h $ glob ".kit/repository/kits/*/*/*.tar.gz"
+    let c = length fs
+    when (c > 0) $ warnOldRepo c
     catch f $ \e -> do
         alert $ show e
         exitWith $ ExitFailure 1 
