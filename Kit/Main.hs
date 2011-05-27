@@ -14,39 +14,39 @@ module Kit.Main where
   import System.Exit
   import Data.Tree (drawTree)
   import Data.List (partition)
-  import Kit.Repository (unpackKit, packagesDirectory, publishLocally)
+  import Kit.Repository (KitRepository, unpackKit, packagesDirectory, publishLocally)
 
-  f2 :: KitSpec -> Command KitContents 
-  f2 spec = do 
-          base <- liftIO $ canonicalizePath devKitDir
-          readKitContents' base packageName spec
+  loadKitFromBase :: (Applicative m, MonadIO m) => FilePath -> FilePath -> KitSpec -> m KitContents
+  loadKitFromBase base kitDir spec = do
+    absoluteBase <- liftIO $ canonicalizePath base
+    readKitContents' absoluteBase kitDir spec
 
-  f1 :: FilePath -> KitSpec -> Command KitContents 
-  f1 pkgDir spec = do
-          base <- liftIO $ canonicalizePath pkgDir
-          readKitContents' base packageFileName spec 
+  dependencyContents :: (Applicative m, MonadIO m) => KitRepository -> Dependency -> m KitContents
+  dependencyContents repo = dependency inRepo local where
+    inRepo spec = loadKitFromBase (packagesDirectory repo) (packageFileName spec) spec
+    local spec fp = loadKitFromBase devKitDir fp spec
 
   doUpdate :: Command ()
   doUpdate = do
               repo <- myRepository
               workingCopy <- myWorkingCopy
               let spec = workingKitSpec workingCopy
-              deps <- liftKit $ totalSpecDependencies repo workingCopy
-              let (devPackages, notDevPackages) = partition isDevDep deps
-              liftIO $ mapM_ ((unpackKit repo . specKit) . depSpec) notDevPackages
-              liftIO $ mapM_ (\s -> say Red $ " -> Using dev package: " ++ packageName (depSpec s)) devPackages
-              puts " -> Generating Xcode project..."
-              devSpecs <- mapM (f2 . depSpec) devPackages
-              notDevSpecs <- mapM (f1 (packagesDirectory repo) . depSpec) notDevPackages
-              liftKit $ writeKitProjectFromContents (devSpecs ++ notDevSpecs) (specKitDepsXcodeFlags spec) (packagesDirectory repo)
-              say Green "\n\tKit complete. You may need to restart Xcode for it to pick up any changes.\n"
+              liftKit $ do
+                deps <- totalSpecDependencies repo workingCopy
+                let (devPackages, notDevPackages) = partition isDevDep deps
+                mapM_ ((unpackKit repo . specKit) . depSpec) notDevPackages
+                mapM_ (\s -> say Red $ " -> Using dev package: " ++ packageName (depSpec s)) devPackages
+                puts " -> Generating Xcode project..."
+                allContents <- mapM (dependencyContents repo) deps
+                writeKitProjectFromContents allContents (specKitDepsXcodeFlags spec) (packagesDirectory repo)
+                say Green "\n\tKit complete. You may need to restart Xcode for it to pick up any changes.\n"
 
   doShowTree :: Command ()
   doShowTree = do
     repo <- myRepository
     wc <- myWorkingCopy
     tree <- liftKit $ dependencyTree repo wc
-    liftIO $ putStrLn $ drawTree $ fmap (packageFileName . depSpec) tree
+    puts $ drawTree $ fmap (packageFileName . depSpec) tree
 
   doPackageKit :: Command ()
   doPackageKit = mySpec >>= liftIO . package 
@@ -69,16 +69,15 @@ module Kit.Main where
         puts " #> Deploying locally"
         doPublishLocal Nothing -- TODO publish with a verify tag
         puts " #> Building temporary parent project"
-        tmp <- liftIO getTemporaryDirectory
-        inDirectory tmp $ do
+        liftIO $ inDirectory getTemporaryDirectory $ do
           let kitVerifyDir = "kit-verify"
           cleanOrCreate kitVerifyDir
           inDirectory kitVerifyDir $ do
             writeSpec "KitSpec" (defaultSpec "verify-kit" "1.0") { specDependencies = [specKit spec] }
-            liftIO $ runCommand doUpdate  
+            runCommand doUpdate  
             inDirectory "Kits" $ do
-              liftIO $ system "open ."
-              liftIO $ system $ "xcodebuild -sdk " ++ sdk
+              system "open ."
+              system $ "xcodebuild -sdk " ++ sdk
           puts "OK."
         puts "End checks."
 
@@ -108,9 +107,8 @@ module Kit.Main where
   kitMain :: IO ()
   kitMain = do
     let f = runCommand . handleArgs =<< KA.parseArgs
-    h <- getHomeDirectory
-    fs <- inDirectory h $ glob ".kit/repository/kits/*/*/*.tar.gz"
-    when (not $ null fs) $ warnOldRepo (length fs)
+    fs <- inDirectory getHomeDirectory $ glob ".kit/repository/kits/*/*/*.tar.gz"
+    unless (null fs) $ warnOldRepo (length fs)
     catch f $ \e -> do
         alert $ show e
         exitWith $ ExitFailure 1 

@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances, PackageImports #-}
+{-# LANGUAGE FlexibleInstances, TypeSynonymInstances, PackageImports #-}
 
 module Kit.Util(
   module Kit.Util,
@@ -63,9 +63,15 @@ module Kit.Util(
     when exists $ removeDirectoryRecursive directory
     mkdirP directory
 
-  inDirectory :: MonadIO m => FilePath -> m a -> m a
-  inDirectory dir actions = do
+  -- Typeclass so that inDirectory can act on effectful values
+  class FilePathM a where filePathM :: MonadIO m => a -> m FilePath
+  instance FilePathM FilePath where filePathM = return 
+  instance FilePathM (IO FilePath) where filePathM = liftIO . id
+    
+  inDirectory :: (FilePathM p, MonadIO m) => p -> m a -> m a
+  inDirectory fp actions = do
     cwd <- liftIO getCurrentDirectory
+    dir <- filePathM fp
     liftIO $ setCurrentDirectory dir
     v <- actions
     liftIO $ setCurrentDirectory cwd

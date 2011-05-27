@@ -66,18 +66,18 @@ module Kit.Repository (
   packagesDirectory :: KitRepository -> FilePath
   packagesDirectory kr = dotKitDir kr </> "packages"
 
-  unpackKit :: KitRepository -> Kit -> IO ()
+  unpackKit :: MonadIO m => KitRepository -> Kit -> m ()
   unpackKit kr kit = do
       let source = (localCacheDir kr </> kitPackagePath kit)
       let dest = packagesDirectory kr
-      d <- doesDirectoryExist $ dest </> packageFileName kit
+      d <- liftIO $ doesDirectoryExist $ dest </> packageFileName kit
       if not d 
         then do
-          putStrLn $ " -> Unpacking from cache: " ++ packageFileName kit
+          puts $ " -> Unpacking from cache: " ++ packageFileName kit
           mkdirP dest 
-          inDirectory dest $ system ("tar zxf " ++ source)
+          liftIO $ inDirectory dest $ system ("tar zxf " ++ source)
           return ()
-        else putStrLn $ " -> Using local package: " ++ packageFileName kit
+        else puts $ " -> Using local package: " ++ packageFileName kit
       return ()
 
   -- TODO: on publish local, need to flush this particular name/version out

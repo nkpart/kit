@@ -2,6 +2,7 @@
 module Kit.Dependency (
     totalSpecDependencies,
     Dependency,
+    dependency,
     depSpec,
     isDevDep,
     dependencyTree,
@@ -17,6 +18,9 @@ import Data.List
 
 data Location = Repo | Dev FilePath deriving (Eq, Show)
 data Dependency = Dependency KitSpec Location deriving (Eq, Show)
+
+dependency f _ (Dependency spec Repo) = f spec
+dependency _ f (Dependency spec (Dev fp)) = f spec fp
 
 depSpec :: Dependency -> KitSpec
 depSpec (Dependency k _) = k

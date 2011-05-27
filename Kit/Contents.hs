@@ -26,10 +26,9 @@ data KitContents = KitContents {
 namedPrefix :: KitContents -> Maybe String
 namedPrefix kc = fmap (\s -> "//" ++ (packageFileName . contentSpec $ kc) ++ "\n" ++ s) $ contentPrefix kc
 
-readKitContents' :: (Applicative m, MonadIO m) => FilePath -> (KitSpec -> FilePath) -> KitSpec -> m KitContents
-readKitContents' base f spec =
-  let kitDir = f spec
-      find dir tpe = liftIO $ inDirectory base $ do
+readKitContents' :: (Applicative m, MonadIO m) => FilePath -> FilePath -> KitSpec -> m KitContents
+readKitContents' base kitDir spec =
+  let find dir tpe = liftIO $ inDirectory base $ do
         files <- glob ((kitDir </> dir </> "**/*") ++ tpe)
         mapM canonicalizePath files
       findSrc = find $ specSourceDirectory spec
