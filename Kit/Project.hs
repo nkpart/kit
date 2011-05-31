@@ -1,6 +1,8 @@
 {-# LANGUAGE TupleSections #-}
 module Kit.Project (
-  writeKitProjectFromContents
+  makeKitProject,
+  KitProject(..),
+  kitProjectActions
   )
     where
 
@@ -11,7 +13,6 @@ import Kit.Util.FSAction
 import Kit.Xcode.Builder
 import Kit.Xcode.XCConfig
 
-import Control.Monad.Error
 import Data.Maybe
 import qualified Data.Map as M
 
@@ -47,24 +48,17 @@ data KitProject = KitProject {
   kitProjectResourceDirs :: [(FilePath, FilePath)]
 } deriving (Eq, Show)
 
-writeKitProjectFromContents :: [KitContents] -> Maybe String -> KitIO ()
-writeKitProjectFromContents contents depsOnlyConfig = writeKitProject $ makeKitProject contents depsOnlyConfig 
-
-writeKitProject :: KitProject -> KitIO ()
-writeKitProject kp = do
-    liftIO $ mapM_ (runAction . within kitDir) [
-          FileCreate projectFile (kitProjectFile kp),
-          FileCreate prefixFile (kitProjectPrefix kp),
-          FileCreate xcodeConfigFile (kitProjectConfig kp),
-          FileCreate kitUpdateMakeFilePath kitUpdateMakeFile,
-          FileCreate depsConfigFile (kitProjectDepsConfig kp)
-        ]
-    mkdirP kitDir
-    liftIO $ do
-      let resourceDirs = kitProjectResourceDirs kp
-      unless (null resourceDirs) $ do
-        puts $ " -> Linking resources: " ++ stringJoin ", " (map fst resourceDirs)
-        mapM_ (\(tgt,name) -> runAction $ within kitDir $ Symlink tgt name) resourceDirs
+kitProjectActions :: KitProject -> [FSAction]
+kitProjectActions kp = let
+        resourceLinks = map (within kitDir . uncurry Symlink) $ kitProjectResourceDirs kp
+        templatedFiles = map (within kitDir) [
+              FileCreate projectFile (kitProjectFile kp),
+              FileCreate prefixFile (kitProjectPrefix kp),
+              FileCreate xcodeConfigFile (kitProjectConfig kp),
+              FileCreate kitUpdateMakeFilePath kitUpdateMakeFile,
+              FileCreate depsConfigFile (kitProjectDepsConfig kp)
+            ]
+     in templatedFiles ++ resourceLinks
 
 resourceLink :: KitContents -> Maybe (FilePath, FilePath) 
 resourceLink contents = let specResources = contentResourceDir contents

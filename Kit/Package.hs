@@ -1,7 +1,6 @@
 module Kit.Package (package) where
   import Kit.Spec
   import Kit.Util
-  import System.Cmd
   import Control.Monad.Trans
   import Data.List
 
@@ -20,5 +19,5 @@ module Kit.Package (package) where
     where
       distDir = "dist"
       kitPath = packageFileName spec
-      sh c = liftIO $ putStrLn c >> system c
+      sh c = liftIO $ putStrLn c >> shell c
 

@@ -15,8 +15,6 @@ module Kit.Repository (
   import Kit.Spec
   import Kit.Util
 
-  import System.Process (system)
-
   import "mtl" Control.Monad.Error
   import qualified Data.Traversable as T
   import qualified Data.ByteString as BS
@@ -37,7 +35,7 @@ module Kit.Repository (
     let packagesDir = localCacheDir kr
     let packagePath = localCacheDir kr </> kitPackagePath kit
     mkdirP packagesDir
-    inDirectory packagesDir $ system ("tar zxvf " ++ packagePath)
+    inDirectory packagesDir $ shell ("tar zxvf " ++ packagePath)
     return ()
 
   copyKitPackage :: KitRepository -> Kit -> FilePath -> IO ()
@@ -75,7 +73,7 @@ module Kit.Repository (
         then do
           puts $ " -> Unpacking from cache: " ++ packageFileName kit
           mkdirP dest 
-          liftIO $ inDirectory dest $ system ("tar zxf " ++ source)
+          liftIO $ inDirectory dest $ shell ("tar zxf " ++ source)
           return ()
         else puts $ " -> Using local package: " ++ packageFileName kit
       return ()

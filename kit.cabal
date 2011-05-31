@@ -25,4 +25,4 @@ Executable kit
                   Kit.Xcode.Common Kit.Xcode.ProjectFileTemplate Kit.Xcode.XCConfig Text.PList
                   Kit.Contents Kit.Commands Kit.CmdArgs Kit.Util.IsObject Kit.Util.FSAction Kit.WorkingCopy
                   Kit.Dependency
-  Ghc-options:    -Wall -fno-warn-unused-do-bind
+  Ghc-options:    -Wall

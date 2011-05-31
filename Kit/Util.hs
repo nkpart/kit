@@ -24,6 +24,7 @@ module Kit.Util(
   import Control.Applicative
   import Control.Monad
   import "mtl" Control.Monad.Error
+  import System.Cmd
 
   import System.Console.ANSI
 
@@ -34,6 +35,11 @@ module Kit.Util(
     (x:t) <- S.get
     S.put t
     return x
+
+  shell :: String -> IO ()
+  shell c = do
+    _ <- system c
+    return ()
 
   when' :: Monad m => m Bool -> m () -> m ()
   when' a b = a >>= flip when b

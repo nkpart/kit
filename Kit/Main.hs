@@ -10,7 +10,7 @@ module Kit.Main where
   import Kit.Contents
   import Kit.Dependency
   import Kit.WorkingCopy
-  import System.Cmd
+  import Kit.Util.FSAction
   import System.Exit
   import Data.Tree (drawTree)
   import Data.List (partition)
@@ -38,7 +38,10 @@ module Kit.Main where
                 mapM_ (\s -> say Red $ " -> Using dev package: " ++ packageName (depSpec s)) devPackages
                 puts " -> Generating Xcode project..."
                 allContents <- mapM (dependencyContents repo) deps
-                writeKitProjectFromContents allContents (specKitDepsXcodeFlags spec)
+                let project = makeKitProject allContents (specKitDepsXcodeFlags spec)
+                let resourceDirs = kitProjectResourceDirs project
+                unless (null resourceDirs) $ puts $ " -> Linked resources: " ++ stringJoin ", " (map fst resourceDirs)
+                liftIO $ mapM_ runAction $ kitProjectActions project
                 say Green "\n\tKit complete. You may need to restart Xcode for it to pick up any changes.\n"
 
   doShowTree :: Command ()
@@ -76,8 +79,8 @@ module Kit.Main where
             writeSpec "KitSpec" (defaultSpec "verify-kit" "1.0") { specDependencies = [specKit spec] }
             runCommand doUpdate  
             inDirectory "Kits" $ do
-              system "open ."
-              system $ "xcodebuild -sdk " ++ sdk
+              shell "open ."
+              shell $ "xcodebuild -sdk " ++ sdk
           puts "OK."
         puts "End checks."
 
@@ -95,6 +98,7 @@ module Kit.Main where
   handleArgs (KA.CreateSpec name version) = doCreateSpec name version
   handleArgs KA.ShowTree = doShowTree
 
+  warnOldRepo :: MonadIO m => Int -> m ()
   warnOldRepo c = do
       say Red $ "Warning: Kit now expects packages in '.kit/cache/local' instead of '.kit/repository/kits'. (Found " ++ show c ++ " packages in the old location.)"
       puts ""

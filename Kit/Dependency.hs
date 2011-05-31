@@ -19,6 +19,7 @@ import Data.List
 data Location = Repo | Dev FilePath deriving (Eq, Show)
 data Dependency = Dependency KitSpec Location deriving (Eq, Show)
 
+dependency :: (KitSpec -> a) -> (KitSpec -> FilePath -> a) -> Dependency -> a
 dependency f _ (Dependency spec Repo) = f spec
 dependency _ f (Dependency spec (Dev fp)) = f spec fp
 
