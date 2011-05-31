@@ -7,4 +7,8 @@ kit update 2> /dev/null > /dev/null
 
 cat Kits/Kit.xcconfig
 tree Kits
+cd Kits
+xcodebuild 1>/dev/null
+cd ..
+xcodebuild 1>/dev/null
 cd ..
