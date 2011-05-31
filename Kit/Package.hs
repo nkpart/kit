@@ -4,7 +4,6 @@ module Kit.Package (package) where
   import System.Cmd
   import Control.Monad.Trans
   import Data.List
-  import Debug.Trace
 
   fileBelongsInPackage :: KitSpec -> FilePath -> Bool
   fileBelongsInPackage config fp = let
@@ -21,5 +20,5 @@ module Kit.Package (package) where
     where
       distDir = "dist"
       kitPath = packageFileName spec
-      sh c = liftIO . system $ trace c c
+      sh c = liftIO $ putStrLn c >> system c
 

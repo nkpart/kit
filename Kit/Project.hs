@@ -60,11 +60,11 @@ writeKitProject kp = do
           FileCreate depsConfigFile (kitProjectDepsConfig kp)
         ]
     mkdirP kitDir
-    liftIO $ inDirectory kitDir $ do
+    liftIO $ do
       let resourceDirs = kitProjectResourceDirs kp
       unless (null resourceDirs) $ do
         puts $ " -> Linking resources: " ++ stringJoin ", " (map fst resourceDirs)
-        mapM_ (\(tgt,name) -> runAction $ Symlink tgt name) resourceDirs
+        mapM_ (\(tgt,name) -> runAction $ within kitDir $ Symlink tgt name) resourceDirs
 
 resourceLink :: KitContents -> Maybe (FilePath, FilePath) 
 resourceLink contents = let specResources = contentResourceDir contents

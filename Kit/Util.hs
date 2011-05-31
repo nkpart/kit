@@ -7,7 +7,8 @@ module Kit.Util(
   module System.Directory,
   module System.FilePath.Posix,
   module Debug.Trace,
-  Color(..)
+  Color(..),
+  (>>>)
   ) where
   import Debug.Trace
   import System.Directory
@@ -19,6 +20,7 @@ module Kit.Util(
   import Data.Monoid
   import Data.Traversable as T
 
+  import Control.Arrow
   import Control.Applicative
   import Control.Monad
   import "mtl" Control.Monad.Error
