@@ -14,7 +14,8 @@ import qualified Data.Traversable as T
 
 -- | The determined contents of a particular Kit
 data KitContents = KitContents { 
-  contentSpec :: KitSpec,
+  contentSpec :: KitSpec, -- ^ The dependency the contents were created from
+  contentBaseDir :: FilePath, -- ^ Path to where the content was loaded from
   contentHeaders :: [FilePath],     -- ^ Paths to headers
   contentSources :: [FilePath],     -- ^ Paths to source files
   contentLibs :: [FilePath],        -- ^ Paths to static libs
@@ -26,24 +27,24 @@ data KitContents = KitContents {
 namedPrefix :: KitContents -> Maybe String
 namedPrefix kc = fmap (\s -> "//" ++ (packageFileName . contentSpec $ kc) ++ "\n" ++ s) $ contentPrefix kc
 
-readKitContents' :: (Applicative m, MonadIO m) => FilePath -> FilePath -> KitSpec -> m KitContents
-readKitContents' base kitDir spec =
-  let find dir tpe = liftIO $ inDirectory base $ do
-        files <- glob ((kitDir </> dir </> "**/*") ++ tpe)
+readKitContents' :: (Applicative m, MonadIO m) => FilePath -> KitSpec -> m KitContents
+readKitContents' kitDir spec =
+  let find dir tpe = liftIO $ inDirectory kitDir $ do
+        files <- glob ((dir </> "**/*") ++ tpe)
         mapM canonicalizePath files
       findSrc = find $ specSourceDirectory spec
       headers = findSrc ".h"
       sources = findSrc .=<<. [".m", ".mm", ".c"]
       libs = find (specLibDirectory spec) ".a" 
-      config = liftIO $ readConfig (base </> kitDir) spec
-      prefix = liftIO $ readHeader (base </> kitDir) spec
+      config = liftIO $ readConfig kitDir spec
+      prefix = liftIO $ readHeader kitDir spec
       resourceDir = liftIO $ do
-        let r = base </> kitDir </> specResourcesDirectory spec
+        let r = kitDir </> specResourcesDirectory spec
         b <- doesDirectoryExist r
         if b 
           then Just <$> canonicalizePath r
           else return Nothing
-  in  KitContents spec <$> headers <*> sources <*> libs <*> config <*> prefix <*> resourceDir
+  in  KitContents spec kitDir <$> headers <*> sources <*> libs <*> config <*> prefix <*> resourceDir
 
 -- TODO report missing file
 readHeader :: FilePath -> KitSpec -> IO (Maybe String)

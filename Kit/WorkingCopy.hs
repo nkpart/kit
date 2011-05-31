@@ -26,7 +26,7 @@ currentWorkingCopy :: KitIO WorkingCopy
 currentWorkingCopy = do
   let specFile = "KitSpec"
   spec <- readSpec specFile
-  devKitSpecFiles <- liftIO $ glob "dev-packages/*/KitSpec"
+  devKitSpecFiles <- liftIO $ glob $ devKitDir </> "*/KitSpec"
   let f path = (,takeFileName . takeDirectory $ path) <$> readSpec path
   devKitSpecs <- mapM f devKitSpecFiles
   return $ WorkingCopy spec specFile devKitSpecs
