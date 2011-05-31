@@ -1,7 +1,7 @@
 {-# LANGUAGE PackageImports #-}
 module Kit.Contents (
   KitContents(..),
-  readKitContents',
+  readKitContents,
   namedPrefix
   ) where
 
@@ -27,10 +27,10 @@ data KitContents = KitContents {
 namedPrefix :: KitContents -> Maybe String
 namedPrefix kc = fmap (\s -> "//" ++ (packageFileName . contentSpec $ kc) ++ "\n" ++ s) $ contentPrefix kc
 
-readKitContents' :: (Applicative m, MonadIO m) => FilePath -> KitSpec -> m KitContents
-readKitContents' kitDir spec =
+readKitContents :: (Applicative m, MonadIO m) => FilePath -> KitSpec -> m KitContents
+readKitContents kitDir spec =
   let find dir tpe = liftIO $ inDirectory kitDir $ do
-        files <- glob ((dir </> "**/*") ++ tpe)
+        files <- glob (dir </> "**/*" ++ tpe)
         mapM canonicalizePath files
       findSrc = find $ specSourceDirectory spec
       headers = findSrc ".h"

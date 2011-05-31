@@ -19,7 +19,7 @@ module Kit.Main where
   loadKitFromBase :: (Applicative m, MonadIO m) => FilePath -> FilePath -> KitSpec -> m KitContents
   loadKitFromBase base kitDir spec = do
     absoluteBase <- liftIO $ canonicalizePath base
-    readKitContents' (absoluteBase </> kitDir) spec
+    readKitContents (absoluteBase </> kitDir) spec
 
   dependencyContents :: (Applicative m, MonadIO m) => KitRepository -> Dependency -> m KitContents
   dependencyContents repo dep = dependency inRepo local dep where -- TODO look at all these applications of dep
@@ -38,7 +38,7 @@ module Kit.Main where
                 mapM_ (\s -> say Red $ " -> Using dev package: " ++ packageName (depSpec s)) devPackages
                 puts " -> Generating Xcode project..."
                 allContents <- mapM (dependencyContents repo) deps
-                writeKitProjectFromContents allContents (specKitDepsXcodeFlags spec) (packagesDirectory repo)
+                writeKitProjectFromContents allContents (specKitDepsXcodeFlags spec)
                 say Green "\n\tKit complete. You may need to restart Xcode for it to pick up any changes.\n"
 
   doShowTree :: Command ()

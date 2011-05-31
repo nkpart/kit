@@ -47,8 +47,8 @@ data KitProject = KitProject {
   kitProjectResourceDirs :: [(FilePath, FilePath)]
 } deriving (Eq, Show)
 
-writeKitProjectFromContents :: [KitContents] -> Maybe String -> FilePath -> KitIO ()
-writeKitProjectFromContents contents depsOnlyConfig packagesDirectory = writeKitProject $ makeKitProject contents depsOnlyConfig packagesDirectory
+writeKitProjectFromContents :: [KitContents] -> Maybe String -> KitIO ()
+writeKitProjectFromContents contents depsOnlyConfig = writeKitProject $ makeKitProject contents depsOnlyConfig 
 
 writeKitProject :: KitProject -> KitIO ()
 writeKitProject kp = do
@@ -71,8 +71,8 @@ resourceLink contents = let specResources = contentResourceDir contents
                             linkName = kitResourceDir </> packageName (contentSpec contents)
                          in (,linkName) <$> specResources
 
-makeKitProject :: [KitContents] -> Maybe String -> FilePath -> KitProject
-makeKitProject kitsContents depsOnlyConfig packagesDirectory = 
+makeKitProject :: [KitContents] -> Maybe String -> KitProject
+makeKitProject kitsContents depsOnlyConfig = 
   let pf = createProjectFile kitsContents
       header = createHeader kitsContents
       config = createConfig kitsContents
@@ -90,7 +90,7 @@ makeKitProject kitsContents depsOnlyConfig packagesDirectory =
                  combinedHeader = stringJoin "\n" headers
               in prefixDefault ++ combinedHeader ++ "\n"
         createConfig cs = let
-             sourceDirs = map ((\spec -> packagesDirectory </> packageFileName spec </> specSourceDirectory spec) . contentSpec) cs 
+             sourceDirs = map (\kc -> contentBaseDir kc </> specSourceDirectory (contentSpec kc)) cs 
              configs = mapMaybe contentConfig cs
              parentConfig = XCC "Base" (M.fromList [
                                                     ("HEADER_SEARCH_PATHS", "$(HEADER_SEARCH_PATHS) " ++ stringJoin " " sourceDirs),

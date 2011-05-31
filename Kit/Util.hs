@@ -6,8 +6,10 @@ module Kit.Util(
   module Control.Monad,
   module System.Directory,
   module System.FilePath.Posix,
+  module Debug.Trace,
   Color(..)
   ) where
+  import Debug.Trace
   import System.Directory
   import System.FilePath.Posix
   import System.FilePath.Glob
