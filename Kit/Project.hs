@@ -80,23 +80,23 @@ makeKitProject kitsContents depsOnlyConfig packagesDirectory =
       depsConfig = "#include \"" ++ xcodeConfigFile ++ "\"\n\nSKIP_INSTALL=YES\n\n" ++ fromMaybe "" depsOnlyConfig 
       resources = mapMaybe resourceLink kitsContents
    in KitProject pf header config depsConfig resources
-  where createProjectFile cs = do
-          let headers = concatMap contentHeaders cs
-          let sources = concatMap contentSources cs
-          let libs = concatMap contentLibs cs
-          renderXcodeProject headers sources libs "libKitDeps.a"
-        createHeader cs = do
-          let headers = mapMaybe namedPrefix cs
-          let combinedHeader = stringJoin "\n" headers
-          prefixDefault ++ combinedHeader ++ "\n"
-        createConfig cs = do
-          let sourceDirs = map ((\spec -> packagesDirectory </> packageFileName spec </> specSourceDirectory spec) . contentSpec) cs 
-          let configs = mapMaybe contentConfig cs
-          let parentConfig = XCC "Base" (M.fromList [
+  where createProjectFile cs = let
+                 headers = concatMap contentHeaders cs
+                 sources = concatMap contentSources cs
+                 libs = concatMap contentLibs cs
+              in renderXcodeProject headers sources libs "libKitDeps.a"
+        createHeader cs = let
+                 headers = mapMaybe namedPrefix cs
+                 combinedHeader = stringJoin "\n" headers
+              in prefixDefault ++ combinedHeader ++ "\n"
+        createConfig cs = let
+             sourceDirs = map ((\spec -> packagesDirectory </> packageFileName spec </> specSourceDirectory spec) . contentSpec) cs 
+             configs = mapMaybe contentConfig cs
+             parentConfig = XCC "Base" (M.fromList [
                                                     ("HEADER_SEARCH_PATHS", "$(HEADER_SEARCH_PATHS) " ++ stringJoin " " sourceDirs),
                                                     ("GCC_PRECOMPILE_PREFIX_HEADER", "YES"),
                                                     ("GCC_PREFIX_HEADER","$(SRCROOT)/Prefix.pch")
                                                   ]) []
-          let combinedConfig = multiConfig "KitConfig" (parentConfig:configs)
-          configToString combinedConfig ++ "\n"
+             combinedConfig = multiConfig "KitConfig" (parentConfig:configs)
+          in configToString combinedConfig ++ "\n"
 
