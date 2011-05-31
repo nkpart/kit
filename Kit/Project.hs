@@ -49,7 +49,7 @@ data KitProject = KitProject {
 } deriving (Eq, Show)
 
 kitProjectActions :: KitProject -> [FSAction]
-kitProjectActions kp = let
+kitProjectActions kp = templatedFiles ++ resourceLinks where 
         resourceLinks = map (within kitDir . uncurry Symlink) $ kitProjectResourceDirs kp
         templatedFiles = map (within kitDir) [
               FileCreate projectFile (kitProjectFile kp),
@@ -58,19 +58,17 @@ kitProjectActions kp = let
               FileCreate kitUpdateMakeFilePath kitUpdateMakeFile,
               FileCreate depsConfigFile (kitProjectDepsConfig kp)
             ]
-     in templatedFiles ++ resourceLinks
 
 resourceLink :: KitContents -> Maybe (FilePath, FilePath) 
-resourceLink contents = let specResources = contentResourceDir contents
+resourceLink contents =  fmap (,linkName) $ contentResourceDir contents where 
                             linkName = kitResourceDir </> packageName (contentSpec contents)
-                         in (,linkName) <$> specResources
 
 makeKitProject :: [KitContents] -> Maybe String -> KitProject
 makeKitProject kitsContents depsOnlyConfig = 
   let pf = createProjectFile kitsContents
       header = createHeader kitsContents
       config = createConfig kitsContents
-  -- TODO: Make this specify an xcconfig
+      -- TODO: Make this specify an xcconfig data type
       depsConfig = "#include \"" ++ xcodeConfigFile ++ "\"\n\nSKIP_INSTALL=YES\n\n" ++ fromMaybe "" depsOnlyConfig 
       resources = mapMaybe resourceLink kitsContents
    in KitProject pf header config depsConfig resources
@@ -84,8 +82,8 @@ makeKitProject kitsContents depsOnlyConfig =
                  combinedHeader = stringJoin "\n" headers
               in prefixDefault ++ combinedHeader ++ "\n"
         createConfig cs = let
-             sourceDirs = map (\kc -> contentBaseDir kc </> specSourceDirectory (contentSpec kc)) cs 
              configs = mapMaybe contentConfig cs
+             sourceDirs = map (\kc -> contentBaseDir kc </> specSourceDirectory (contentSpec kc)) cs 
              parentConfig = XCC "Base" (M.fromList [
                                                     ("HEADER_SEARCH_PATHS", "$(HEADER_SEARCH_PATHS) " ++ stringJoin " " sourceDirs),
                                                     ("GCC_PRECOMPILE_PREFIX_HEADER", "YES"),
