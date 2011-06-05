@@ -93,7 +93,7 @@ module Kit.Util(
   stringJoin :: Monoid a => a -> [a] -> a
   stringJoin x = mconcat . intersperse x
   
-  -- | Lifting bind into a monad. Often denoted /concatMapM/.
+  -- | Lifting bind into a monad. Often denoted /concatMapM/. From TM
   (.=<<.) ::
     (Monad q, Monad m, Traversable m) =>
     (a -> q (m b))
@@ -102,7 +102,6 @@ module Kit.Util(
   (.=<<.) f =
     liftM join . T.mapM f
     
-  
   say :: MonadIO m => Color -> String -> m ()
   say color msg = do
     liftIO $ setSGR [SetColor Foreground Vivid color]
