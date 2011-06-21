@@ -1,3 +1,12 @@
+0.7.6
+-----
+- Fixes a bug in dependency resolution if a kit existed in dev-packages, but was not in the cache.
+
+0.7.5
+-----
+
+*scene missing*
+
 0.6.3
 -----
 * Resource directories. KitSpec field: resources-directory, default "resources". This 
