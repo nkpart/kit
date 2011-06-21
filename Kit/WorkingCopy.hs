@@ -38,8 +38,7 @@ readSpec :: FilePath -> KitIO KitSpec
 readSpec path = checkExists path >>= liftIO . BS.readFile >>= ErrorT . return . parses
   where checkExists pathToSpec = do
           doesExist <- liftIO $ doesFileExist pathToSpec 
-          if doesExist 
+          if doesExist
             then return pathToSpec 
             else throwError ("Couldn't find the spec at " ++ pathToSpec)
         parses = maybeToRight "Parse error in KitSpec file" . decodeSpec
-

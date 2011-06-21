@@ -42,9 +42,16 @@ totalSpecDependencies repo workingCopy = refineDeps <$> dependencyTree repo work
 dependencyTree :: KitRepository -> WorkingCopy -> KitIO (Tree Dependency)
 dependencyTree repo workingCopy = unfoldTreeM (unfoldDeps repo workingCopy) (workingKitSpec workingCopy)
 
+lookupDependency :: [(KitSpec, FilePath)] -> KitSpec -> Dependency
+lookupDependency devPackages ks = maybe (Dependency ks Repo) (\(ks',fp) -> Dependency ks' (Dev fp)) thisDev
+    where thisDev = find ((packageName ks ==) . packageName . fst) devPackages
+
+findKitSpec :: [(KitSpec, FilePath)] -> Kit -> Maybe KitSpec
+findKitSpec devPackages kit = fmap fst $ find (\(spec, _) -> packageName spec == packageName kit) devPackages
+
 unfoldDeps :: KitRepository -> WorkingCopy -> KitSpec -> KitIO (Dependency, [KitSpec])
-unfoldDeps kr wc ks = let devPackages = workingDevPackages wc 
-                          thisDev = find ((packageName ks ==) . packageName . fst) devPackages
-                          theDep = maybe (Dependency ks Repo) (\(ks',fp) -> Dependency ks' (Dev fp)) thisDev
-                       in (theDep,) <$> mapM (readKitSpec kr) (specDependencies $ depSpec theDep) 
+unfoldDeps kr wc ks = let devPackages = workingDevPackages wc
+                          theDep = lookupDependency devPackages ks
+                          readKitSpec' kit = maybe (readKitSpec kr kit) return (findKitSpec devPackages kit)
+                       in (theDep,) <$> mapM readKitSpec' (specDependencies $ depSpec theDep) 
 
