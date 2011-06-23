@@ -5,3 +5,5 @@ build
 *.swp
 *.swo
 *.perspectivev3
+test-output
+cabal-dev
