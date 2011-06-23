@@ -15,7 +15,7 @@ Executable kit
   main-is:        Main.hs
   buildable:      True
   build-depends:  process -any, network -any, mtl >= 2.0 && < 3, 
-                  filepath -any, directory -any, containers -any, cmdargs >=0.3,
+                  filepath -any, directory -any, containers -any, cmdargs >= 0.6.2,
                   bytestring -any, base >=3 && <5,
                   HTTP >=4000.0.9, Glob >= 0.5.1 && < 6, data-object -any, data-object-yaml -any,
                   unix >= 2.4 && < 2.5, ansi-terminal >= 0.5.5
