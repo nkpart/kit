@@ -1,6 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Kit.Commands (
-  Command,
+  Command(),
   liftKit,
   mySpec,
   myWorkingCopy,
@@ -19,7 +19,9 @@ import System.Exit (exitFailure)
 import Control.Monad.Error
 import Control.Monad.Reader
 
-newtype Command a = Command { unCommand :: (ReaderT (WorkingCopy, KitRepository) (ErrorT String IO) a) } deriving (Monad, MonadIO, Functor, Applicative)
+newtype Command a = Command { 
+  unCommand :: (ReaderT (WorkingCopy, KitRepository) (ErrorT String IO) a) 
+} deriving (Monad, MonadIO, Functor, Applicative)
 
 liftKit :: KitIO a -> Command a
 liftKit = Command . ReaderT . const

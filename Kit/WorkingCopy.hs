@@ -2,7 +2,6 @@
 module Kit.WorkingCopy (
     WorkingCopy(..),
     currentWorkingCopy,
-    isDevPackage,
     devKitDir
     ) where
 
@@ -30,9 +29,6 @@ currentWorkingCopy = do
   let f path = (,takeFileName . takeDirectory $ path) <$> readSpec path
   devKitSpecs <- mapM f devKitSpecFiles
   return $ WorkingCopy spec specFile devKitSpecs
-
-isDevPackage :: WorkingCopy -> KitSpec -> Bool
-isDevPackage wc spec = any (\s -> packageName spec == packageName s) $ map fst (workingDevPackages wc)
 
 readSpec :: FilePath -> KitIO KitSpec
 readSpec path = checkExists path >>= liftIO . BS.readFile >>= ErrorT . return . parses
