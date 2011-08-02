@@ -65,6 +65,11 @@ module Kit.Main where
       publishLocally repo updatedSpec specFile $ "dist" </> packageFileName updatedSpec ++ ".tar.gz"
     return ()
 
+  doInfo :: Command()
+  doInfo = do
+      spec <- mySpec
+      puts $ packageFileName spec
+      
   doVerify :: String -> Command ()
   doVerify sdk = do
         spec <- mySpec
@@ -93,6 +98,7 @@ module Kit.Main where
   handleArgs :: KA.KitCmdArgs -> Command ()
   handleArgs KA.Update = doUpdate
   handleArgs KA.Package = doPackageKit
+  handleArgs KA.Info = doInfo
   handleArgs (KA.PublishLocal versionTag) = doPublishLocal versionTag 
   handleArgs (KA.Verify sdkName) = doVerify sdkName
   handleArgs (KA.CreateSpec name version) = doCreateSpec name version
