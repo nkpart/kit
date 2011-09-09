@@ -8,6 +8,7 @@ module Kit.CmdArgs (parseArgs, KitCmdArgs(..)) where
 
   data KitCmdArgs = Update
                   | Package
+                  | Info
                   | PublishLocal { tag :: Maybe String } 
                   | Verify { sdk :: String }
                   | CreateSpec { name :: String, version :: String } 
@@ -22,6 +23,7 @@ module Kit.CmdArgs (parseArgs, KitCmdArgs(..)) where
                             explicit &=
                             CA.name "create-spec" &=
                             help "Write out a KitSpec file using the given name and version."
+      , Info &= help "Show name and version of this kit"
       , Package &=
                     help "Create a tar.gz wrapping this kit"
       , PublishLocal { tag = Nothing } &= explicit &= CA.name "publish-local" &=
