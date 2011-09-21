@@ -9,7 +9,10 @@ module Kit.Repository (
     readKitSpec,
     unpackKit,
     packagesDirectory,
-    publishLocally
+    publishLocally,
+
+    -- Exposed for resolve, split this stuff out into a separate module
+    kitPackagePath
   ) where
 
   import Kit.Spec
@@ -44,10 +47,10 @@ module Kit.Repository (
   readKitSpec :: KitRepository -> Kit -> KitIO KitSpec
   readKitSpec repo kit = do
     mbKitStuff <- liftIO $ readIfExists (localCacheDir repo </> kitSpecPath kit)
-    maybe (throwError $ "Missing " ++ packageFileName kit) f mbKitStuff
-    where f contents = maybeToKitIO ("Invalid KitSpec file for " ++ packageFileName kit) $ decodeSpec contents
+    contents <- maybeToKitIO ("Missing " ++ packageFileName kit) mbKitStuff
+    maybeToKitIO ("Invalid KitSpec file for " ++ packageFileName kit) $ decodeSpec contents
 
-  readIfExists :: String -> IO (Maybe BS.ByteString) 
+  readIfExists :: String -> IO (Maybe BS.ByteString)
   readIfExists file = do
     exists <- doesFileExist file
     T.sequenceA $ ifTrue exists $ BS.readFile file

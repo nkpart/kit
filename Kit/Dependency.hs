@@ -40,18 +40,27 @@ totalSpecDependencies :: KitRepository -> WorkingCopy -> KitIO [Dependency]
 totalSpecDependencies repo workingCopy = refineDeps <$> dependencyTree repo workingCopy
 
 dependencyTree :: KitRepository -> WorkingCopy -> KitIO (Tree Dependency)
-dependencyTree repo workingCopy = unfoldTreeM (unfoldDeps repo workingCopy) (workingKitSpec workingCopy)
+dependencyTree repo workingCopy = unfoldTreeM (unfoldDeps repo devPackages) baseSpec
+  where devPackages = workingDevPackages workingCopy
+        baseSpec = workingKitSpec workingCopy
 
-lookupDependency :: [(KitSpec, FilePath)] -> KitSpec -> Dependency
+lookupDependency :: DevPackages -> KitSpec -> Dependency
 lookupDependency devPackages ks = maybe (Dependency ks Repo) (\(ks',fp) -> Dependency ks' (Dev fp)) thisDev
-    where thisDev = find ((packageName ks ==) . packageName . fst) devPackages
+    where thisDev = findDevPackage devPackages ks
 
-findKitSpec :: [(KitSpec, FilePath)] -> Kit -> Maybe KitSpec
-findKitSpec devPackages kit = fmap fst $ find (\(spec, _) -> packageName spec == packageName kit) devPackages
+findKitSpec :: DevPackages -> Kit -> Maybe KitSpec
+findKitSpec devPackages kit = fmap fst $ findDevPackage devPackages kit
 
-unfoldDeps :: KitRepository -> WorkingCopy -> KitSpec -> KitIO (Dependency, [KitSpec])
-unfoldDeps kr wc ks = let devPackages = workingDevPackages wc
-                          theDep = lookupDependency devPackages ks
-                          readKitSpec' kit = maybe (readKitSpec kr kit) return (findKitSpec devPackages kit)
-                       in (theDep,) <$> mapM readKitSpec' (specDependencies $ depSpec theDep) 
+class KitSpecContainer a where
+  lookupKit :: a -> Kit -> KitIO KitSpec
+
+instance KitSpecContainer KitRepository where lookupKit = readKitSpec
+instance KitSpecContainer DevPackages where lookupKit dp = maybeToKitIO "Not a dev package" . findKitSpec dp
+
+unfoldDeps :: KitRepository -> DevPackages -> KitSpec -> KitIO (Dependency, [KitSpec])
+unfoldDeps kr devPackages spec = let rootDep = lookupDependency devPackages spec
+                                     lookup' kit = lookupKit devPackages kit <|> lookupKit kr kit
+                                  in do
+                                      children <- mapM lookup' . specDependencies . epSpec $ rootDep
+                                      return (rootDep, children)
 
