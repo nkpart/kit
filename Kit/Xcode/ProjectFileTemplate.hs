@@ -10,7 +10,7 @@ import qualified Data.List as L
 projectFile objects rootId = PListFile "!$*UTF8*$!" $ obj [
       "archiveVersion" ~> val "1",
       "classes" ~> obj [],
-      "objectVersion" ~> val "45",
+      "objectVersion" ~> val "46",
       "objects" ~> obj objects, 
       "rootObject" ~> val rootId 
   ]
@@ -56,7 +56,7 @@ targets = ("D2AAC07D0554694100DB518D" ~> obj [
           ]) : kitUpdateTarget ++ ["0867D690FE84028FC02AAC07" ~> obj [
             "isa" ~> val "PBXProject",
             "buildConfigurationList" ~> val "1DEB922208733DC00010E9CD",
-            "compatibilityVersion" ~> val "Xcode 3.1",
+            "compatibilityVersion" ~> val "Xcode 3.2",
             "hasScannedForEncodings" ~> val "1",
             "mainGroup" ~> val mainGroupUUID ,
             "productRefGroup" ~> val groupProductsUUID,
@@ -75,7 +75,6 @@ buildConfigurations libDirs = let libSearch = librarySearchPaths libDirs in ["1D
               "COPY_PHASE_STRIP" ~> val "NO",
               "DSTROOT" ~> val "/tmp/KitDeps.dst",
               "GCC_DYNAMIC_NO_PIC" ~> val "NO",
-              "GCC_ENABLE_FIX_AND_CONTINUE" ~> val "YES",
               "GCC_MODEL_TUNING" ~> val "G5",
               "GCC_OPTIMIZATION_LEVEL" ~> val "0",
               "GCC_PRECOMPILE_PREFIX_HEADER" ~> val "YES",
@@ -111,7 +110,6 @@ buildConfigurations libDirs = let libSearch = librarySearchPaths libDirs in ["1D
               "GCC_WARN_ABOUT_RETURN_TYPE" ~> val "YES",
               "GCC_WARN_UNUSED_VARIABLE" ~> val "YES",
               "OTHER_LDFLAGS" ~> val "-ObjC",
-              "PREBINDING" ~> val "NO",
               "SDKROOT" ~> val "iphoneos",
               libSearch
             ],
@@ -126,7 +124,6 @@ buildConfigurations libDirs = let libSearch = librarySearchPaths libDirs in ["1D
               "GCC_WARN_ABOUT_RETURN_TYPE" ~> val "YES",
               "GCC_WARN_UNUSED_VARIABLE" ~> val "YES",
               "OTHER_LDFLAGS" ~> val "-ObjC",
-              "PREBINDING" ~> val "NO",
               "SDKROOT" ~> val "iphoneos",
               libSearch
             ],
