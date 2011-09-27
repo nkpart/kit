@@ -18,7 +18,8 @@ within = InDir
 runAction :: FSAction -> IO ()
 runAction (FileCreate atPath contents) = do
   mkdirP $ dropFileName atPath 
-  writeFile atPath contents
+  writeFile (atPath ++ "_") contents
+  renameFile (atPath ++ "_") atPath
 runAction (Symlink target name) = do
   catch (removeLink name) (\_ -> return ())
   -- When a `name` has parent directories, symbolic link target needs to be made relative to that file
