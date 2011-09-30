@@ -7,3 +7,4 @@ build
 *.perspectivev3
 test-output
 cabal-dev
+dstroot
