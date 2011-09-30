@@ -1,3 +1,9 @@
+0.7.7
+-----
+* No longer crashes Xcode when a new kit project is generated.
+* Removes old build settings that were causing build warnings.
+* Bumps things to Xcode 4.2
+
 0.7.6
 -----
 - Fixes a bug in dependency resolution if a kit existed in dev-packages, but was not in the cache.
