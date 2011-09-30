@@ -61,6 +61,6 @@ unfoldDeps :: KitRepository -> DevPackages -> KitSpec -> KitIO (Dependency, [Kit
 unfoldDeps kr devPackages spec = let rootDep = lookupDependency devPackages spec
                                      lookup' kit = lookupKit devPackages kit <|> lookupKit kr kit
                                   in do
-                                      children <- mapM lookup' . specDependencies . epSpec $ rootDep
+                                      children <- mapM lookup' . specDependencies . depSpec $ rootDep
                                       return (rootDep, children)
 
