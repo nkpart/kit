@@ -1,5 +1,5 @@
 name:           kit
-version:        0.7.7
+version:        0.7.8
 cabal-version:  >=1.6
 build-type:     Simple
 license:        BSD3
@@ -14,11 +14,23 @@ author:         Nick Partridge
 Executable kit
   main-is:        Main.hs
   buildable:      True
-  build-depends:  process -any, network -any, mtl >= 2.0 && < 3, 
-                  filepath -any, directory -any, containers -any, cmdargs >= 0.6.2,
-                  bytestring -any, base >=3 && <5,
-                  HTTP >=4000.0.9, Glob >= 0.5.1 && < 6, data-object -any, data-object-yaml -any,
-                  unix >= 2.4 && < 2.5, ansi-terminal >= 0.5.5
+  build-depends:  base >=3 && <5,
+                  Glob >= 0.5.1 && < 6, 
+                  HTTP >=4000.0.9, 
+                  ansi-terminal >= 0.5.5,
+                  bytestring -any, 
+                  cabal-file-th >= 0.1,
+                  cmdargs >= 0.6.2,
+                  containers -any, 
+                  data-object -any, 
+                  data-object-yaml -any,
+                  directory -any, 
+                  filepath -any, 
+                  mtl >= 2.0 && < 3, 
+                  network -any, 
+                  process -any,
+                  template-haskell,
+                  unix >= 2.4 && < 2.5
 
   hs-source-dirs: .
   other-modules:  Kit.Spec Kit.Main Kit.Package Kit.Project Kit.Repository Kit.Util Kit.Xcode.Builder

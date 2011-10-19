@@ -1,10 +1,11 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 module Kit.CmdArgs (parseArgs, KitCmdArgs(..)) where
-
   import System.Console.CmdArgs as CA
+  import Distribution.PackageDescription.TH
 
   appVersion :: String
-  appVersion = "0.7.7" -- TODO how to keep this up to date with kit.cabal?
+  appVersion = $(packageVariable (pkgVersion . package))
 
   data KitCmdArgs = Update
                   | Package
