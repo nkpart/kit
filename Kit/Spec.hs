@@ -60,7 +60,7 @@ module Kit.Spec (
     packageVersion = kitVersion . specKit
 
   defaultSpec :: String -> String -> KitSpec
-  defaultSpec name version = KitSpec (Kit name version) [] "src" "test" "lib" "resources" "Prefix.pch" "Config.xcconfig" Nothing
+  defaultSpec name version = KitSpec (Kit name version) [] "src" "test" "lib" "resources" "Prefix.pch" "Config.xcconfig" Nothing 
   -- TODO make this and the json reading use the same defaults
   -- I suspect that to do this I'll need update functions for each of
   -- fields in the KitSpec record.

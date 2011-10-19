@@ -28,7 +28,9 @@ module Tests where
   spec x f = TestLabel x $ TestCase f 
   prop s = quickCheck . label s
 
-  isId f v = v == f v 
+  isId f v = 
+    let r = v == f v 
+     in if r then r else traceShow (v, f v) r
 
   -- My little DSL for writing props and unit tests
   specify l m = do
