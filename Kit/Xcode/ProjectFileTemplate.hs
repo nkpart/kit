@@ -1,5 +1,14 @@
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
-module Kit.Xcode.ProjectFileTemplate where
+module Kit.Xcode.ProjectFileTemplate (
+      makeProjectPList
+    , kitConfigRefUUID 
+    , productRefUUID
+    , headersBuildPhaseUUID
+    , frameworksBuildPhaseUUID
+    , classesGroupUUID
+    , frameworksGroupUUID
+    , sourcesBuildPhaseUUID
+    ) where
 
 import Kit.Xcode.Common
 import Text.PList
@@ -8,8 +17,11 @@ import Data.Maybe (maybeToList)
 
 import qualified Data.List as L
 
-val_arr = arr . map val
+makeProjectPList :: [PListObjectItem] -> [FilePath] -> PListFile 
+makeProjectPList objects libDirs = projectFile objs projectRootUUID where
+    objs = objects ++ groups ++ targets ++ buildConfigurations libDirs
 
+projectFile :: [PListObjectItem] -> String -> PListFile
 projectFile objects rootId = PListFile "!$*UTF8*$!" $ obj [
       "archiveVersion" ~> val "1",
       "classes" ~> obj [],
@@ -38,9 +50,7 @@ frameworksBuildPhaseUUID = "D2AAC07C0554694100DB518D"
 projectBuildConfigurationsUUID = "1DEB922208733DC00010E9CD"
 staticLibBuildConfigurationsUUID = "1DEB921E08733DC00010E9CD"
 
-makeProjectPList :: [PListObjectItem] -> [FilePath] -> PListFile 
-makeProjectPList objects libDirs = projectFile objs projectRootUUID where
-    objs = objects ++ groups ++ targets ++ buildConfigurations libDirs
+val_arr = arr . map val
 
 groups = [ groupProductsUUID ~> group "Products" [ val productRefUUID ],
           mainGroupUUID ~> group "KitDeps" [
@@ -87,7 +97,8 @@ projectDebugConfigurationUUID = "1DEB922308733DC00010E9CD"
 
 buildConfiguration name baseConfig settings = obj $ [
     "isa" ~> val "XCBuildConfiguration",
-    "buildSettings" ~> obj settings, "name" ~> val name
+    "buildSettings" ~> obj settings, 
+    "name" ~> val name
   ] ++ (maybeToList baseConfig >>= (\c -> ["baseConfigurationReference" ~> val c]))
 
 buildConfigurations libDirs = let libSearch = librarySearchPaths libDirs in [
