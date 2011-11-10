@@ -7,31 +7,29 @@ module Kit.CmdArgs (parseArgs, KitCmdArgs(..)) where
   appVersion :: String
   appVersion = $(packageVariable (pkgVersion . package))
 
-  data KitCmdArgs = Update
-                  | Package
-                  | Info
-                  | PublishLocal { tag :: Maybe String } 
-                  | Verify { sdk :: String }
-                  | CreateSpec { name :: String, version :: String } 
-                  | ShowTree
+  data KitCmdArgs = Update { repositoryDir :: Maybe String }
+                  | Package { repositoryDir :: Maybe String }
+                  | PublishLocal { tag :: Maybe String, repositoryDir :: Maybe String }
+                  | Verify { sdk :: String, repositoryDir :: Maybe String}
+                  | CreateSpec { name :: String, version :: String, repositoryDir :: Maybe String } 
+                  | ShowTree { repositoryDir :: Maybe String }
                   deriving (Show, Data, Typeable)
 
   parseMode :: KitCmdArgs
   parseMode = modes [
-        Update &= help "Create an Xcode project to wrap the dependencies defined in `KitSpec`"
+        Update def &= help "Create an Xcode project to wrap the dependencies defined in `KitSpec`"
                &= auto -- The default mode to run. This is most common usage.
-      , CreateSpec { Kit.CmdArgs.name = (def &= typ "NAME") &= argPos 0, version = (def &= typ "VERSION") &= argPos 1 } &=
+      , CreateSpec { repositoryDir = def, Kit.CmdArgs.name = (def &= typ "NAME") &= argPos 0, version = (def &= typ "VERSION") &= argPos 1 } &=
                             explicit &=
                             CA.name "create-spec" &=
                             help "Write out a KitSpec file using the given name and version."
-      , Info &= help "Show name and version of this kit"
-      , Package &=
+      , Package def &=
                     help "Create a tar.gz wrapping this kit"
-      , PublishLocal { tag = Nothing } &= explicit &= CA.name "publish-local" &=
+      , PublishLocal { repositoryDir = def, tag = Nothing } &= explicit &= CA.name "publish-local" &=
                     help "Package this kit, then deploy it to the local repository (~/.kit/repository)"
-      , Verify { sdk = "iphonesimulator4.0" &= typ "SDK" &= help "iphoneos, iphonesimulator4.0, etc."} &=
+      , Verify { repositoryDir = def, sdk = "iphonesimulator4.0" &= typ "SDK" &= help "iphoneos, iphonesimulator4.0, etc."} &=
                     help "Package this kit, then attempt to use it as a dependency in an empty project. This will assert that the kit and all its dependencies can be compiled together."
-      , ShowTree &= help "Print out the dependency tree for this spec"
+      , ShowTree def &= help "Print out the dependency tree for this spec"
     ]
 
   parseArgs :: IO KitCmdArgs

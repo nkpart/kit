@@ -65,11 +65,6 @@ module Kit.Main where
       publishLocally repo updatedSpec specFile $ "dist" </> packageFileName updatedSpec ++ ".tar.gz"
     return ()
 
-  doInfo :: Command()
-  doInfo = do
-      spec <- mySpec
-      puts $ packageFileName spec
-      
   doVerify :: String -> Command ()
   doVerify sdk = do
         spec <- mySpec
@@ -82,7 +77,7 @@ module Kit.Main where
           cleanOrCreate kitVerifyDir
           inDirectory kitVerifyDir $ do
             writeSpec "KitSpec" (defaultSpec "verify-kit" "1.0") { specDependencies = [specKit spec] }
-            runCommand doUpdate  
+            runCommand Nothing doUpdate 
             inDirectory "Kits" $ do
               shell "open ."
               shell $ "xcodebuild -sdk " ++ sdk
@@ -96,13 +91,12 @@ module Kit.Main where
     puts $ "Created KitSpec for " ++ packageFileName spec
 
   handleArgs :: KA.KitCmdArgs -> Command ()
-  handleArgs KA.Update = doUpdate
-  handleArgs KA.Package = doPackageKit
-  handleArgs KA.Info = doInfo
-  handleArgs (KA.PublishLocal versionTag) = doPublishLocal versionTag 
-  handleArgs (KA.Verify sdkName) = doVerify sdkName
-  handleArgs (KA.CreateSpec name version) = doCreateSpec name version
-  handleArgs KA.ShowTree = doShowTree
+  handleArgs (KA.Update _) = doUpdate
+  handleArgs (KA.Package _) = doPackageKit
+  handleArgs (KA.PublishLocal _ versionTag) = doPublishLocal versionTag 
+  handleArgs (KA.Verify sdkName _) = doVerify sdkName
+  handleArgs (KA.CreateSpec name version _) = doCreateSpec name version
+  handleArgs (KA.ShowTree _) = doShowTree
 
   warnOldRepo :: MonadIO m => Int -> m ()
   warnOldRepo c = do
@@ -116,7 +110,9 @@ module Kit.Main where
 
   kitMain :: IO ()
   kitMain = do
-    let f = runCommand . handleArgs =<< KA.parseArgs
+    as <- KA.parseArgs
+    let repo = KA.repositoryDir as
+    let f = runCommand repo . handleArgs $ as
     fs <- inDirectory getHomeDirectory $ glob ".kit/repository/kits/*/*/*.tar.gz"
     unless (null fs) $ warnOldRepo (length fs)
     catch f $ \e -> do
