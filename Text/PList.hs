@@ -6,6 +6,7 @@ module Text.PList (
     val, 
     arr, 
     obj, 
+    tobj,
     plist,
     (~>)) where
 
@@ -31,6 +32,9 @@ arr = PListArray
 
 obj :: [PListObjectItem] -> PListType
 obj = PListObject True
+
+tobj :: [PListObjectItem] -> PListType
+tobj = PListObject False
 
 infixl 1 ~> 
 (~>) :: String -> PListType -> PListObjectItem

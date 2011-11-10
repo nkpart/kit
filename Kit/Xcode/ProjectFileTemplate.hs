@@ -154,7 +154,15 @@ kitUpdateTarget = [
       kitUpdateTargetUUID ~> obj [ 
         "isa" ~> val "PBXLegacyTarget",
         "buildArgumentsString" ~> val "",
-        "buildConfigurationList" ~> val "470E2D721287731E0084AE6F",
+        "buildConfigurationList" ~> tobj [
+          "isa" ~> val "XCConfigurationList",
+          "buildConfigurations" ~> arr [ 
+            buildConfiguration "Debug" Nothing [ "PRODUCT_NAME" ~> val "KitUpdate" ], 
+            buildConfiguration "Release" Nothing ["PRODUCT_NAME" ~> val "KitUpdate" ]
+            ],
+          "defaultConfigurationIsVisible" ~> val "0",
+          "defaultConfigurationName" ~> val "Debug"
+          ],
         "buildPhases" ~> arr [],
         "buildToolPath" ~> val "/usr/bin/make",
         "buildWorkingDirectory" ~> val "",
@@ -162,15 +170,6 @@ kitUpdateTarget = [
         "name" ~> val "KitUpdate",
         "passBuildSettingsInEnvironment" ~> val "1",
         "productName" ~> val "KitUpdate"
-        ],
-      "470E2D721287731E0084AE6F" ~> obj [
-        "isa" ~> val "XCConfigurationList",
-        "buildConfigurations" ~> arr [ 
-          buildConfiguration "Debug" Nothing [ "PRODUCT_NAME" ~> val "KitUpdate" ], 
-          buildConfiguration "Release" Nothing ["PRODUCT_NAME" ~> val "KitUpdate" ]
-          ],
-        "defaultConfigurationIsVisible" ~> val "0",
-        "defaultConfigurationName" ~> val "Debug"
         ]
       ]
 
