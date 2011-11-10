@@ -34,7 +34,7 @@ Executable kit
 
   hs-source-dirs: .
   other-modules:  Kit.Spec Kit.Main Kit.Package Kit.Project Kit.Repository Kit.Util Kit.Xcode.Builder
-                  Kit.Xcode.Common Kit.Xcode.ProjectFileTemplate Kit.Xcode.XCConfig Text.PList
+                  Kit.Xcode.Common Kit.Xcode.ProjectFileTemplate Kit.Xcode.XCConfig Text.PList Text.PList.PrettyPrint
                   Kit.Contents Kit.Commands Kit.CmdArgs Kit.Util.IsObject Kit.Util.FSAction Kit.WorkingCopy
                   Kit.Dependency
   Ghc-options:    -Wall
