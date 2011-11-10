@@ -10,7 +10,7 @@ module Text.PList (
     (~>)) where
 
 -------------------------------------------------------------------------------
-data PListFile = PListFile String [PListObjectItem] -- Charset and the object to serialize
+data PListFile = PListFile String String [PListObjectItem] -- Charset, root uuid, and the object to serialize
 
 -- | A Key/Value pair in a PList Object
 data PListObjectItem = PListObjectItem String PListType deriving Eq 
@@ -20,8 +20,8 @@ data PListType = PListValue String
                | PListObject Bool [PListObjectItem]
                deriving Eq
 
-plist :: String -> [PListObjectItem] -> PListFile
-plist a b = PListFile a b
+plist :: String -> String -> [PListObjectItem] -> PListFile
+plist a b c = PListFile a b c
 
 val :: String -> PListType
 val = PListValue

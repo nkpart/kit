@@ -5,11 +5,13 @@ import Data.List (intersperse, isInfixOf, isPrefixOf)
 import Control.Monad (join, (>=>))
 import Text.PList
 
+import Kit.Xcode.Common
+
 import Control.Monad.Writer (Writer, runWriter, tell)
 import Control.Monad.State (StateT, get, put, runStateT)
 
 pp :: PListFile -> String
-pp (PListFile charset value) = "// " ++ charset ++ "\n" ++ printValue (obj value) ++ "\n"
+pp (PListFile charset root value) = "// " ++ charset ++ "\n" ++ printValue (obj value) ++ "\n"
 
 printItem :: PListObjectItem -> [Char]
 printItem (PListObjectItem k v) = k ++ " = " ++ printValue v ++ ";\n"
@@ -27,10 +29,19 @@ quotable "" = True
 quotable s = any (\x -> x `isInfixOf` s && not ("sourcecode" `isPrefixOf` s)) quote_triggers
               where quote_triggers = ["-", "<", ">", " ", ".m", ".h", "_", "$"]
 
-
 -----
+
 ppFlat :: PListFile -> String
-ppFlat (PListFile charset value) = "// " ++ charset ++ "\n" ++ printFlat (flatten value (map show [1..])) ++ "\n"
+ppFlat (PListFile charset root objects) = "// " ++ charset ++ "\n" ++ printFlat doc ++ "\n"
+  where doc = [ ("archiveVersion", FlatStr "1"),
+                ("classes", FlatObj []),
+                ("objectVersion", FlatStr "46"),
+                 -- All Nested objects must end up within "objects", so that is where the flattening happens
+                ("objects" , FlatObj (flatten objects seedKeys)), 
+                ("rootObject", FlatStr root)
+              ]
+
+seedKeys = map uuid [50000..]
 
 printFlat :: FlatDocument -> String
 printFlat = printFlatItem . FlatObj

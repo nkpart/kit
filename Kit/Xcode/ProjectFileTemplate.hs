@@ -22,13 +22,7 @@ makeProjectPList objects libDirs = projectFile objs projectRootUUID where
     objs = objects ++ groups ++ targets ++ buildConfigurations libDirs
 
 projectFile :: [PListObjectItem] -> String -> PListFile
-projectFile objects rootId = plist "!$*UTF8*$!" [
-      "archiveVersion" ~> val "1",
-      "classes" ~> obj [],
-      "objectVersion" ~> val "46",
-      "objects" ~> obj objects, 
-      "rootObject" ~> val rootId 
-  ]
+projectFile objects rootId = plist "!$*UTF8*$!" rootId objects
 
 projectRootUUID = "0867D690FE84028FC02AAC07" 
 kitUpdateTargetUUID = "470E2D641287730A0084AE6F"
@@ -171,12 +165,13 @@ kitUpdateTarget = [
         ],
       "470E2D721287731E0084AE6F" ~> obj [
         "isa" ~> val "XCConfigurationList",
-        "buildConfigurations" ~> val_arr [ "470E2D651287730B0084AE6F", "470E2D661287730B0084AE6F" ],
+        "buildConfigurations" ~> arr [ 
+          buildConfiguration "Debug" Nothing [ "PRODUCT_NAME" ~> val "KitUpdate" ], 
+          buildConfiguration "Release" Nothing ["PRODUCT_NAME" ~> val "KitUpdate" ]
+          ],
         "defaultConfigurationIsVisible" ~> val "0",
         "defaultConfigurationName" ~> val "Debug"
-        ],
-      "470E2D651287730B0084AE6F" ~> buildConfiguration "Debug" Nothing [ "PRODUCT_NAME" ~> val "KitUpdate" ],
-      "470E2D661287730B0084AE6F" ~> buildConfiguration "Release" Nothing ["PRODUCT_NAME" ~> val "KitUpdate" ]
+        ]
       ]
 
 
