@@ -19,14 +19,12 @@ import qualified Data.List as L
 
 makeProjectPList :: [PListObjectItem] -> [FilePath] -> PListFile 
 makeProjectPList objects libDirs = projectFile objs projectRootUUID where
-    objs = objects ++ groups ++ targets ++ buildConfigurations libDirs
+    objs = objects ++ groups ++ projectRoot ++ buildConfigurations libDirs
 
 projectFile :: [PListObjectItem] -> String -> PListFile
 projectFile objects rootId = plist "!$*UTF8*$!" rootId objects
 
 projectRootUUID = "0867D690FE84028FC02AAC07" 
-kitUpdateTargetUUID = "470E2D641287730A0084AE6F"
-staticLibTargetUUID = "D2AAC07D0554694100DB518D"
 
 groupProductsUUID = "034768DFFF38A50411DB9C8B"
 mainGroupUUID = "0867D691FE84028FC02AAC07"
@@ -66,10 +64,10 @@ projectRoot = [projectRootUUID ~> obj [
             "productRefGroup" ~> val groupProductsUUID,
             "projectDirPath" ~> val "",
             "projectRoot" ~> val "",
-            "targets" ~> val_arr [ staticLibTargetUUID, kitUpdateTargetUUID ] 
+            "targets" ~> arr [ staticLibTarget, kitUpdateTarget ] 
         ]]
       
-targets = (staticLibTargetUUID ~> obj [
+staticLibTarget = tobj [
             "isa" ~> val "PBXNativeTarget",
             "buildConfigurationList" ~> val staticLibBuildConfigurationsUUID,
             "buildPhases" ~> val_arr [ headersBuildPhaseUUID, sourcesBuildPhaseUUID, frameworksBuildPhaseUUID ],
@@ -79,17 +77,11 @@ targets = (staticLibTargetUUID ~> obj [
             "productName" ~> val "KitDeps",
             "productReference" ~> val productRefUUID,
             "productType" ~> val "com.apple.product-type.library.static"
-          ]) : kitUpdateTarget ++ projectRoot
+          ]
 
 librarySearchPaths libDirs = "LIBRARY_SEARCH_PATHS" ~> val ("$(inherited) " ++ join (L.intersperse " " libDirs))
 
-staticLibDebugConfigurationUUID = "1DEB921F08733DC00010E9CD"
-staticLibReleaseConfigurationUUID = "1DEB922008733DC00010E9CD"
-
-projectReleaseConfigurationUUID = "1DEB922408733DC00010E9CD"
-projectDebugConfigurationUUID = "1DEB922308733DC00010E9CD" 
-
-buildConfiguration name baseConfig settings = obj $ [
+buildConfiguration name baseConfig settings = tobj $ [
     "isa" ~> val "XCBuildConfiguration",
     "buildSettings" ~> obj settings, 
     "name" ~> val name
@@ -98,60 +90,55 @@ buildConfiguration name baseConfig settings = obj $ [
 buildConfigurations libDirs = let libSearch = librarySearchPaths libDirs in [
           projectBuildConfigurationsUUID ~> obj [
               "isa" ~> val "XCConfigurationList",
-              "buildConfigurations" ~> val_arr [projectDebugConfigurationUUID, projectReleaseConfigurationUUID],
+              "buildConfigurations" ~> arr [buildConfiguration "Debug" (Just kitConfigRefUUID) [
+                                                    "GCC_C_LANGUAGE_STANDARD" ~> val "c99",
+                                                    "GCC_OPTIMIZATION_LEVEL" ~> val "0",
+                                                    "GCC_WARN_ABOUT_RETURN_TYPE" ~> val "YES",
+                                                    "GCC_WARN_UNUSED_VARIABLE" ~> val "YES",
+                                                    "OTHER_LDFLAGS" ~> val "-ObjC",
+                                                    "SDKROOT" ~> val "iphoneos",
+                                                    libSearch ]
+                                            , buildConfiguration "Release" (Just kitConfigRefUUID) [
+                                                    "GCC_C_LANGUAGE_STANDARD" ~> val "c99",
+                                                    "GCC_WARN_ABOUT_RETURN_TYPE" ~> val "YES",
+                                                    "GCC_WARN_UNUSED_VARIABLE" ~> val "YES",
+                                                    "OTHER_LDFLAGS" ~> val "-ObjC",
+                                                    "SDKROOT" ~> val "iphoneos",
+                                                    libSearch
+                                                  ]],
               "defaultConfigurationIsVisible" ~> val "0",
               "defaultConfigurationName" ~> val "Release"
             ],
           staticLibBuildConfigurationsUUID ~> obj [
               "isa" ~> val "XCConfigurationList",
-              "buildConfigurations" ~> val_arr [staticLibDebugConfigurationUUID, staticLibReleaseConfigurationUUID],
+              "buildConfigurations" ~> arr [buildConfiguration "Debug" Nothing [
+                  "ALWAYS_SEARCH_USER_PATHS" ~> val "NO",
+                  "COPY_PHASE_STRIP" ~> val "NO",
+                  "DSTROOT" ~> val "/tmp/KitDeps.dst",
+                  "GCC_DYNAMIC_NO_PIC" ~> val "NO",
+                  "GCC_MODEL_TUNING" ~> val "G5",
+                  "GCC_OPTIMIZATION_LEVEL" ~> val "0",
+                  "GCC_PRECOMPILE_PREFIX_HEADER" ~> val "YES",
+                  "GCC_PREFIX_HEADER" ~> val "Prefix.pch",
+                  "INSTALL_PATH" ~> val "/usr/local/lib",
+                  "PRODUCT_NAME" ~> val "KitDeps",
+                  libSearch 
+                ], buildConfiguration "Release" Nothing [
+                  "ALWAYS_SEARCH_USER_PATHS" ~> val "NO",
+                  "DSTROOT" ~> val "/tmp/KitDeps.dst",
+                  "GCC_MODEL_TUNING" ~> val "G5",
+                  "GCC_PRECOMPILE_PREFIX_HEADER" ~> val "YES",
+                  "GCC_PREFIX_HEADER" ~> val "Prefix.pch",
+                  "INSTALL_PATH" ~> val "/usr/local/lib",
+                  "PRODUCT_NAME" ~> val "KitDeps",
+                  libSearch
+                ]],
               "defaultConfigurationIsVisible" ~> val "0",
               "defaultConfigurationName" ~> val "Release"
-            ],
-          projectDebugConfigurationUUID ~> buildConfiguration "Debug" (Just kitConfigRefUUID) [
-              "GCC_C_LANGUAGE_STANDARD" ~> val "c99",
-              "GCC_OPTIMIZATION_LEVEL" ~> val "0",
-              "GCC_WARN_ABOUT_RETURN_TYPE" ~> val "YES",
-              "GCC_WARN_UNUSED_VARIABLE" ~> val "YES",
-              "OTHER_LDFLAGS" ~> val "-ObjC",
-              "SDKROOT" ~> val "iphoneos",
-              libSearch
-            ],
-          projectReleaseConfigurationUUID ~> buildConfiguration "Release" (Just kitConfigRefUUID) [
-              "GCC_C_LANGUAGE_STANDARD" ~> val "c99",
-              "GCC_WARN_ABOUT_RETURN_TYPE" ~> val "YES",
-              "GCC_WARN_UNUSED_VARIABLE" ~> val "YES",
-              "OTHER_LDFLAGS" ~> val "-ObjC",
-              "SDKROOT" ~> val "iphoneos",
-              libSearch
-            ],
-          staticLibDebugConfigurationUUID ~> buildConfiguration "Debug" Nothing [
-              "ALWAYS_SEARCH_USER_PATHS" ~> val "NO",
-              "COPY_PHASE_STRIP" ~> val "NO",
-              "DSTROOT" ~> val "/tmp/KitDeps.dst",
-              "GCC_DYNAMIC_NO_PIC" ~> val "NO",
-              "GCC_MODEL_TUNING" ~> val "G5",
-              "GCC_OPTIMIZATION_LEVEL" ~> val "0",
-              "GCC_PRECOMPILE_PREFIX_HEADER" ~> val "YES",
-              "GCC_PREFIX_HEADER" ~> val "Prefix.pch",
-              "INSTALL_PATH" ~> val "/usr/local/lib",
-              "PRODUCT_NAME" ~> val "KitDeps",
-              libSearch 
-            ],
-          staticLibReleaseConfigurationUUID ~> buildConfiguration "Release" Nothing [
-              "ALWAYS_SEARCH_USER_PATHS" ~> val "NO",
-              "DSTROOT" ~> val "/tmp/KitDeps.dst",
-              "GCC_MODEL_TUNING" ~> val "G5",
-              "GCC_PRECOMPILE_PREFIX_HEADER" ~> val "YES",
-              "GCC_PREFIX_HEADER" ~> val "Prefix.pch",
-              "INSTALL_PATH" ~> val "/usr/local/lib",
-              "PRODUCT_NAME" ~> val "KitDeps",
-              libSearch
             ]
         ]
 
-kitUpdateTarget = [
-      kitUpdateTargetUUID ~> obj [ 
+kitUpdateTarget = tobj [
         "isa" ~> val "PBXLegacyTarget",
         "buildArgumentsString" ~> val "",
         "buildConfigurationList" ~> tobj [
@@ -171,6 +158,5 @@ kitUpdateTarget = [
         "passBuildSettingsInEnvironment" ~> val "1",
         "productName" ~> val "KitUpdate"
         ]
-      ]
 
 
