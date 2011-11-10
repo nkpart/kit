@@ -2,7 +2,7 @@ module Kit.Xcode.Builder (renderXcodeProject) where
   import Kit.Xcode.Common
   import Kit.Xcode.ProjectFileTemplate
   import Text.PList
-  import qualified Text.PList.PrettyPrint as PList (pp)
+  import qualified Text.PList.PrettyPrint as PList (pp, ppFlat)
   import Kit.Util
   import Data.List (nub)
   import Control.Monad.State
@@ -39,7 +39,7 @@ module Kit.Xcode.Builder (renderXcodeProject) where
           frameworksPhase = frameworksBuildPhase libBuildFiles
           -- UUID indices
           libDirs = nub $ map dropFileName libs 
-      return . PList.pp $ makeProjectPList (bfs ++ frs ++ [classes, headersPhase, srcsPhase, frameworksPhase, fg]) libDirs
+      return . PList.ppFlat $ makeProjectPList (bfs ++ frs ++ [classes, headersPhase, srcsPhase, frameworksPhase, fg]) libDirs
 
   buildFileSection :: [PBXBuildFile] -> [PListObjectItem]
   buildFileSection bfs = map buildFileItem bfs ++ [

@@ -22,7 +22,7 @@ makeProjectPList objects libDirs = projectFile objs projectRootUUID where
     objs = objects ++ groups ++ targets ++ buildConfigurations libDirs
 
 projectFile :: [PListObjectItem] -> String -> PListFile
-projectFile objects rootId = plist "!$*UTF8*$!" $ obj [
+projectFile objects rootId = plist "!$*UTF8*$!" [
       "archiveVersion" ~> val "1",
       "classes" ~> obj [],
       "objectVersion" ~> val "46",
