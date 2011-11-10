@@ -1,28 +1,37 @@
 {-# LANGUAGE TypeSynonymInstances #-}
-module Text.PList where
+module Text.PList (
+    PListType, 
+    PListObjectItem,
+    PListFile,
+    val, 
+    arr, 
+    obj, 
+    plist,
+    (~>)) where
 
 import Data.List (isInfixOf, isPrefixOf, intersperse)
 import Control.Monad
 
 -------------------------------------------------------------------------------
 -- | A Key/Value pair in a PList Object
-data PListObjectItem = PListObjectItem {
-    itemKey :: String, -- The key in the object
-    itemValue :: PListType -- The value in the object
-  } deriving Eq 
+data PListObjectItem = PListObjectItem String PListType deriving Eq 
 
 data PListType = PListValue String
                | PListArray [PListType]
-               | PListObject [PListObjectItem]
+               | PListObject Bool [PListObjectItem]
                deriving Eq
 
-val :: String -> PListType
-arr :: [PListType] -> PListType
-obj :: [PListObjectItem] -> PListType
+plist :: String -> PListType -> PListFile
+plist = PListFile
 
+val :: String -> PListType
 val = PListValue
+
+arr :: [PListType] -> PListType
 arr = PListArray
-obj = PListObject
+
+obj :: [PListObjectItem] -> PListType
+obj = PListObject True
 
 infixl 1 ~> 
 (~>) :: String -> PListType -> PListObjectItem
@@ -42,9 +51,9 @@ instance Show PListObjectItem where
 instance Show PListType where
   show (PListValue a) = if quotable a then quote a else a 
   show (PListArray xs) = "(" ++ join (intersperse ", " $ map show xs) ++ ")"
-  show (PListObject kvs) = "{\n" ++ (kvs >>= (\x -> "  " ++ show x)) ++ "}\n"
+  show (PListObject _ kvs) = "{\n" ++ (kvs >>= (\x -> "  " ++ show x)) ++ "}\n"
 
-data PListFile = PListFile { pListFileCharset :: String, pListFileValue :: PListType }
+data PListFile = PListFile String PListType -- Charset and the object to serialize
 
 instance Show PListFile where
   show (PListFile charset value) = "// " ++ charset ++ "\n" ++ show value ++ "\n"

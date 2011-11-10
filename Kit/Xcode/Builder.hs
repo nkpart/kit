@@ -1,4 +1,3 @@
-
 module Kit.Xcode.Builder (renderXcodeProject) where
   import Kit.Xcode.Common
   import Kit.Xcode.ProjectFileTemplate
@@ -26,7 +25,7 @@ module Kit.Xcode.Builder (renderXcodeProject) where
       headerBuildFiles <- mapM buildFileFromState headers
       sourceBuildFiles <- mapM buildFileFromState sources
       libBuildFiles <- mapM buildFileFromState libs -- Build File Items
-      let allBuildFiles = (sourceBuildFiles ++ headerBuildFiles ++ libBuildFiles)
+      let allBuildFiles = sourceBuildFiles ++ headerBuildFiles ++ libBuildFiles
           -- Build And FileRef sections
           bfs = buildFileSection allBuildFiles
           frs = fileReferenceSection (map buildFileReference allBuildFiles) outputLibName 
@@ -109,5 +108,4 @@ module Kit.Xcode.Builder (renderXcodeProject) where
     "files" ~>  arr (map (val . buildFileId) bfs),
     "runOnlyForDeploymentPostprocessing" ~> val "0"
     ]
-
 
