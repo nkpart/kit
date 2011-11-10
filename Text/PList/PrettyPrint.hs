@@ -2,7 +2,7 @@
 module Text.PList.PrettyPrint (pp, ppFlat) where
 
 import Data.List (intersperse, isInfixOf, isPrefixOf)
-import Control.Monad (join, (>=>))
+import Control.Monad (join, (>=>), forM)
 import Text.PList
 
 import Kit.Xcode.Common
@@ -37,7 +37,7 @@ ppFlat (PListFile charset root objects) = "// " ++ charset ++ "\n" ++ printFlat 
                 ("classes", FlatObj []),
                 ("objectVersion", FlatStr "46"),
                  -- All Nested objects must end up within "objects", so that is where the flattening happens
-                ("objects" , FlatObj (flatten objects seedKeys)), 
+                ("objects" , FlatObj (flatten' objects seedKeys)), 
                 ("rootObject", FlatStr root)
               ]
 
@@ -61,11 +61,14 @@ type Document = [PListObjectItem]
 type FlatDocument = [(String, FlatItem)]
 data FlatItem = FlatStr String | FlatArr [String] | FlatObj [(String, FlatItem)] deriving (Eq, Show)
 
-flatten :: Document -> [String] -> FlatDocument
-flatten doc refs = do
-  (PListObjectItem key item) <- doc
-  let (flat, more) = runWriter $ fmap fst $ runStateT (expand item) refs
-  (key, flat) : more
+flatten' :: Document -> [String] -> FlatDocument
+flatten' doc refs = let (a,b) = runWriter $ fmap fst $ runStateT (expandDoc doc) refs
+                     in a ++ b
+
+expandDoc :: Document -> ObjectWriter [(String, FlatItem)]
+expandDoc doc = forM doc $ \(PListObjectItem key item) -> do
+                                            flat <- expand item
+                                            return (key, flat)                
 
 type ObjectWriter a = StateT [String] (Writer [(String, FlatItem)]) a
 
