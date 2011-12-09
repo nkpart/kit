@@ -55,19 +55,19 @@ module Kit.Repository (
     exists <- doesFileExist file
     T.sequenceA $ ifTrue exists $ BS.readFile file
 
-  baseKitPath :: Kit -> String
-  baseKitPath k = kitName k </> kitVersion k
+  baseKitPath :: Packageable a => a -> String
+  baseKitPath k = packageName k </> packageVersion k
 
-  kitPackagePath :: Kit -> String
+  kitPackagePath :: Packageable a => a -> String
   kitPackagePath k = baseKitPath k </> packageFileName k ++ ".tar.gz"
 
-  kitSpecPath :: Kit -> String
+  kitSpecPath :: Packageable a => a -> String
   kitSpecPath k = baseKitPath k </> "KitSpec"
 
   packagesDirectory :: KitRepository -> FilePath
   packagesDirectory kr = dotKitDir kr </> "packages"
 
-  unpackKit :: MonadIO m => KitRepository -> Kit -> m ()
+  unpackKit :: (Packageable a, MonadIO m) => KitRepository -> a -> m ()
   unpackKit kr kit = do
       let source = (localCacheDir kr </> kitPackagePath kit)
       let dest = packagesDirectory kr

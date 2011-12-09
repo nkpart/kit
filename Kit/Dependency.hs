@@ -13,22 +13,23 @@ import Kit.Util
 import Kit.Spec
 import Kit.Repository
 import Kit.WorkingCopy
-import Data.Tree
-import Data.List
+import Data.Tree (Tree, levels, unfoldTreeM)
+import Data.List (nub)
+import Data.Maybe (isJust)
 
-data Location = Repo | Dev FilePath deriving (Eq, Show)
-data Dependency = Dependency KitSpec Location deriving (Eq, Show)
+data Dependency = Dependency { depSpec :: KitSpec, mbKitPath :: (Maybe FilePath) } deriving (Eq, Show)
 
+-- Fold over a dependency
 dependency :: (KitSpec -> a) -> (KitSpec -> FilePath -> a) -> Dependency -> a
-dependency f _ (Dependency spec Repo) = f spec
-dependency _ f (Dependency spec (Dev fp)) = f spec fp
+dependency repoDepF _ (Dependency spec Nothing) = repoDepF spec
+dependency _ f (Dependency spec (Just fp)) = f spec fp
 
-depSpec :: Dependency -> KitSpec
-depSpec (Dependency k _) = k
+instance Packageable Dependency where 
+  packageName = packageName . depSpec
+  packageVersion = packageVersion . depSpec
   
 isDevDep :: Dependency -> Bool
-isDevDep (Dependency _ Repo) = False
-isDevDep (Dependency _ (Dev _)) = True
+isDevDep = isJust . mbKitPath
 
 -- | Return all the (unique) children of this tree (except the top node), in reverse depth order.
 refineDeps :: Eq a => Tree a -> [a]
@@ -45,7 +46,7 @@ dependencyTree repo workingCopy = unfoldTreeM (unfoldDeps repo devPackages) base
         baseSpec = workingKitSpec workingCopy
 
 lookupDependency :: DevPackages -> KitSpec -> Dependency
-lookupDependency devPackages ks = maybe (Dependency ks Repo) (\(ks',fp) -> Dependency ks' (Dev fp)) thisDev
+lookupDependency devPackages ks = maybe (Dependency ks Nothing) (\(ks',fp) -> Dependency ks' (Just fp)) thisDev
     where thisDev = findDevPackage devPackages ks
 
 findKitSpec :: DevPackages -> Kit -> Maybe KitSpec

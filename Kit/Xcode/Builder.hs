@@ -1,3 +1,4 @@
+{-# LANGUAGE PackageImports #-}
 module Kit.Xcode.Builder (renderXcodeProject) where
   import Kit.Xcode.Common
   import Kit.Xcode.ProjectFileTemplate
@@ -5,7 +6,7 @@ module Kit.Xcode.Builder (renderXcodeProject) where
   import qualified Text.PList.PrettyPrint as PList (pp, ppFlat)
   import Kit.Util
   import Data.List (nub)
-  import Control.Monad.State
+  import "mtl" Control.Monad.State
 
   createBuildFile :: Integer -> FilePath -> PBXBuildFile
   createBuildFile i path = PBXBuildFile uuid1 $ PBXFileReference uuid2 path

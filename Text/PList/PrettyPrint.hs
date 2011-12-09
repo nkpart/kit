@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TupleSections, PackageImports #-}
 module Text.PList.PrettyPrint (pp, ppFlat) where
 
 import Data.List (intersperse, isInfixOf, isPrefixOf)
@@ -7,8 +7,8 @@ import Text.PList
 
 import Kit.Xcode.Common
 
-import Control.Monad.Writer (Writer, runWriter, tell)
-import Control.Monad.State (StateT, get, put, runStateT)
+import "mtl" Control.Monad.Writer (Writer, runWriter, tell)
+import "mtl" Control.Monad.State (StateT, get, put, runStateT)
 
 pp :: PListFile -> String
 pp (PListFile charset root value) = "// " ++ charset ++ "\n" ++ printValue (obj value) ++ "\n"

@@ -1,6 +1,7 @@
+{-# LANGUAGE PackageImports #-}
 module Kit.Main where
 
-  import Control.Monad.Trans
+  import "mtl" Control.Monad.Trans
   import qualified Kit.CmdArgs as KA 
   import Kit.Commands
   import Kit.Spec
@@ -33,9 +34,9 @@ module Kit.Main where
               let spec = workingKitSpec workingCopy
               liftKit $ do
                 deps <- totalSpecDependencies repo workingCopy
-                let (devPackages, notDevPackages) = partition isDevDep deps
-                mapM_ ((unpackKit repo . specKit) . depSpec) notDevPackages
-                mapM_ (\s -> say Red $ " -> Using dev package: " ++ packageName (depSpec s)) devPackages
+                let (devPackages, repoPackages) = partition isDevDep deps
+                mapM_ (unpackKit repo) repoPackages
+                mapM_ (say Red . (" -> Using dev package: " ++) . packageName) devPackages
                 puts " -> Generating Xcode project..."
                 allContents <- mapM (dependencyContents repo) deps
                 let project = makeKitProject allContents (specKitDepsXcodeFlags spec)
@@ -49,7 +50,7 @@ module Kit.Main where
     repo <- myRepository
     wc <- myWorkingCopy
     tree <- liftKit $ dependencyTree repo wc
-    puts $ drawTree $ fmap (packageFileName . depSpec) tree
+    puts $ drawTree $ fmap packageFileName tree
 
   doPackageKit :: Command ()
   doPackageKit = mySpec >>= liftIO . package 

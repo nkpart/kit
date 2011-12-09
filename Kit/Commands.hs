@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, PackageImports #-}
 module Kit.Commands (
   Command(),
   liftKit,
@@ -16,8 +16,8 @@ import Kit.WorkingCopy
 
 import System.Exit (exitFailure)
 
-import Control.Monad.Error
-import Control.Monad.Reader
+import "mtl" Control.Monad.Error
+import "mtl" Control.Monad.Reader
 
 newtype Command a = Command { 
   unCommand :: (ReaderT (WorkingCopy, KitRepository) (ErrorT String IO) a) 
