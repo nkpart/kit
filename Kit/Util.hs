@@ -13,7 +13,9 @@ module Kit.Util(
   import Debug.Trace
   import System.Directory
   import System.FilePath.Posix
-  import System.FilePath.Glob
+  import System.FilePath.Glob (globDir1, compile)
+
+  import System.Posix.Env (getEnv)
 
   import Data.List
   import Data.Maybe
@@ -101,12 +103,20 @@ module Kit.Util(
     -> q (m b)
   (.=<<.) f =
     liftM join . T.mapM f
+
+  isSet :: String -> IO Bool
+  isSet = fmap isJust . getEnv 
     
   say :: MonadIO m => Color -> String -> m ()
   say color msg = do
-    liftIO $ setSGR [SetColor Foreground Vivid color]
-    puts msg
-    liftIO $ setSGR []
+    colorize <- liftIO $ isSet "PS1"
+    if colorize
+      then do
+        liftIO $ setSGR [SetColor Foreground Vivid color]
+        puts msg
+        liftIO $ setSGR []
+      else
+        puts msg
 
   alert :: MonadIO m => String -> m ()
   alert = say Red

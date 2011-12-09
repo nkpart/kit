@@ -64,7 +64,7 @@ module Kit.Spec (
   -- TODO make this and the json reading use the same defaults
   -- I suspect that to do this I'll need update functions for each of
   -- fields in the KitSpec record.
-  -- Look at the 'lenses' package on hackage. (or comonad-transformers)
+  -- Look at the 'data-lens' package on hackage. (or comonad-transformers)
 
   decodeSpec :: BS.ByteString -> Maybe KitSpec
   decodeSpec s = Y.decode s >>= readObject 
