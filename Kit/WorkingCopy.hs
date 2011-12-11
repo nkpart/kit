@@ -11,7 +11,6 @@ import Kit.Util
 import Kit.Spec
 import qualified Data.List as L
 
-import "mtl" Control.Monad.Trans
 import "mtl" Control.Monad.Error
 import qualified Data.ByteString as BS
 

@@ -8,7 +8,6 @@ module Kit.Contents (
 import Kit.Spec
 import Kit.Util
 import Kit.Xcode.XCConfig
-import "mtl" Control.Monad.Trans
 
 import qualified Data.Traversable as T
 
@@ -24,8 +23,12 @@ data KitContents = KitContents {
   contentResourceDir :: Maybe FilePath
 }
 
+instance Packageable KitContents where
+  packageName = packageName . contentSpec
+  packageVersion = packageVersion . contentSpec
+
 namedPrefix :: KitContents -> Maybe String
-namedPrefix kc = fmap (\s -> "//" ++ (packageFileName . contentSpec $ kc) ++ "\n" ++ s) $ contentPrefix kc
+namedPrefix kc = fmap (\s -> "//" ++ (packageFileName kc) ++ "\n" ++ s) $ contentPrefix kc
 
 readKitContents :: (Applicative m, MonadIO m) => FilePath -> KitSpec -> m KitContents
 readKitContents kitDir spec =

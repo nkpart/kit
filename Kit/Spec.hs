@@ -15,8 +15,7 @@ module Kit.Spec (
   writeSpec
   ) where
 
-  import Control.Applicative
-  import "mtl" Control.Monad.Trans
+  import Kit.Util
  
   import Data.Object
   import Kit.Util.IsObject

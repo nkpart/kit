@@ -74,11 +74,11 @@ module Kit.Repository (
       d <- liftIO $ doesDirectoryExist $ dest </> packageFileName kit
       if not d 
         then do
-          puts $ " -> Unpacking from cache: " ++ packageFileName kit
+          puts $ "Unpacking: " ++ packageFileName kit
           mkdirP dest 
           liftIO $ inDirectory dest $ shell ("tar zxf " ++ source)
           return ()
-        else puts $ " -> Using local package: " ++ packageFileName kit
+        else puts $ "Using: " ++ packageFileName kit
       return ()
 
   -- TODO: on publish local, need to flush this particular name/version out

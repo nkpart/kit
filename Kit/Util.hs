@@ -7,6 +7,7 @@ module Kit.Util(
   module System.Directory,
   module System.FilePath.Posix,
   module Debug.Trace,
+  module Control.Monad.Trans,
   Color(..),
   (>>>)
   ) where
@@ -26,6 +27,7 @@ module Kit.Util(
   import Control.Applicative
   import Control.Monad
   import "mtl" Control.Monad.Error
+  import "mtl" Control.Monad.Trans
   import System.Cmd
 
   import System.Console.ANSI

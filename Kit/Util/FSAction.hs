@@ -34,3 +34,6 @@ runAction (InDir dir action) = do
   mkdirP dir
   inDirectory dir $ runAction action
 
+runActions :: [FSAction] -> IO ()
+runActions = mapM_ runAction
+

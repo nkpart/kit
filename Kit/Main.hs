@@ -1,7 +1,6 @@
 {-# LANGUAGE PackageImports #-}
 module Kit.Main where
 
-  import "mtl" Control.Monad.Trans
   import qualified Kit.CmdArgs as KA 
   import Kit.Commands
   import Kit.Spec
@@ -17,40 +16,54 @@ module Kit.Main where
   import Data.List (partition)
   import Kit.Repository (KitRepository, unpackKit, packagesDirectory, publishLocally)
 
-  loadKitFromBase :: (Applicative m, MonadIO m) => FilePath -> FilePath -> KitSpec -> m KitContents
-  loadKitFromBase base kitDir spec = do
-    absoluteBase <- liftIO $ canonicalizePath base
-    readKitContents (absoluteBase </> kitDir) spec
+  kitMain :: IO ()
+  kitMain = do
+    as <- KA.parseArgs
+    let repo = KA.repositoryDir as
+    fs <- inDirectory getHomeDirectory $ glob ".kit/repository/kits/*/*/*.tar.gz"
+    unless (null fs) $ warnOldRepo (length fs)
+    let action = runCommand repo . handleArgs $ as
+    catch action $ \e -> do
+        alert $ show e
+        exitWith $ ExitFailure 1 
+
+  handleArgs :: KA.KitCmdArgs -> Command ()
+  handleArgs (KA.Update _) = doUpdate
+  handleArgs (KA.Package _) = doPackageKit
+  handleArgs (KA.PublishLocal _ versionTag) = doPublishLocal versionTag 
+  handleArgs (KA.Verify sdkName _) = doVerify sdkName
+  handleArgs (KA.CreateSpec name version _) = doCreateSpec name version
+  handleArgs (KA.ShowTree _) = doShowTree
+
+  doUpdate :: Command ()
+  doUpdate = do
+              repo <- myRepository
+              workingCopy <- myWorkingCopy
+              liftKit $ do
+                deps <- totalSpecDependencies repo workingCopy
+                let (devPackages, repoPackages) = partition isDevDep deps
+                mapM_ (unpackKit repo) repoPackages
+                mapM_ (say Red . ("Using dev-package: " ++) . packageName) devPackages
+                project <- buildProject repo workingCopy deps
+                reportResources project
+                writeProject project
+                say Green "Kit complete. You may need to restart Xcode for it to pick up any changes."
+      where buildProject repo workingCopy deps = do
+                allContents <- mapM (dependencyContents repo) deps
+                return $ makeKitProject allContents (specKitDepsXcodeFlags (workingKitSpec workingCopy))
+            reportResources project = let resourceDirs = kitProjectResourceDirs project
+                                       in unless (null resourceDirs) $ puts $ "Resources: " ++ stringJoin ", " (map fst resourceDirs)
+            writeProject = liftIO . runActions . kitProjectActions
 
   dependencyContents :: (Applicative m, MonadIO m) => KitRepository -> Dependency -> m KitContents
   dependencyContents repo dep = dependency inRepo local dep where -- TODO look at all these applications of dep
     inRepo spec = loadKitFromBase (packagesDirectory repo) (packageFileName spec) spec
     local spec fp = loadKitFromBase devKitDir fp spec
 
-  doUpdate :: Command ()
-  doUpdate = do
-              repo <- myRepository
-              workingCopy <- myWorkingCopy
-              let spec = workingKitSpec workingCopy
-              liftKit $ do
-                deps <- totalSpecDependencies repo workingCopy
-                let (devPackages, repoPackages) = partition isDevDep deps
-                mapM_ (unpackKit repo) repoPackages
-                mapM_ (say Red . (" -> Using dev package: " ++) . packageName) devPackages
-                puts " -> Generating Xcode project..."
-                allContents <- mapM (dependencyContents repo) deps
-                let project = makeKitProject allContents (specKitDepsXcodeFlags spec)
-                let resourceDirs = kitProjectResourceDirs project
-                unless (null resourceDirs) $ puts $ " -> Linked resources: " ++ stringJoin ", " (map fst resourceDirs)
-                liftIO $ mapM_ runAction $ kitProjectActions project
-                say Green "\n\tKit complete. You may need to restart Xcode for it to pick up any changes.\n"
-
-  doShowTree :: Command ()
-  doShowTree = do
-    repo <- myRepository
-    wc <- myWorkingCopy
-    tree <- liftKit $ dependencyTree repo wc
-    puts $ drawTree $ fmap packageFileName tree
+  loadKitFromBase :: (Applicative m, MonadIO m) => FilePath -> FilePath -> KitSpec -> m KitContents
+  loadKitFromBase base kitDir spec = do
+    absoluteBase <- liftIO $ canonicalizePath base
+    readKitContents (absoluteBase </> kitDir) spec
 
   doPackageKit :: Command ()
   doPackageKit = mySpec >>= liftIO . package 
@@ -65,6 +78,13 @@ module Kit.Main where
       package updatedSpec 
       publishLocally repo updatedSpec specFile $ "dist" </> packageFileName updatedSpec ++ ".tar.gz"
     return ()
+
+  doShowTree :: Command ()
+  doShowTree = do
+    repo <- myRepository
+    wc <- myWorkingCopy
+    tree <- liftKit $ dependencyTree repo wc
+    puts $ drawTree $ fmap packageFileName tree
 
   doVerify :: String -> Command ()
   doVerify sdk = do
@@ -91,14 +111,6 @@ module Kit.Main where
     writeSpec "KitSpec" spec
     puts $ "Created KitSpec for " ++ packageFileName spec
 
-  handleArgs :: KA.KitCmdArgs -> Command ()
-  handleArgs (KA.Update _) = doUpdate
-  handleArgs (KA.Package _) = doPackageKit
-  handleArgs (KA.PublishLocal _ versionTag) = doPublishLocal versionTag 
-  handleArgs (KA.Verify sdkName _) = doVerify sdkName
-  handleArgs (KA.CreateSpec name version _) = doCreateSpec name version
-  handleArgs (KA.ShowTree _) = doShowTree
-
   warnOldRepo :: MonadIO m => Int -> m ()
   warnOldRepo c = do
       say Red $ "Warning: Kit now expects packages in '.kit/cache/local' instead of '.kit/repository/kits'. (Found " ++ show c ++ " packages in the old location.)"
@@ -108,15 +120,4 @@ module Kit.Main where
       say Red "\t$ mv ~/.kit/repository/kits/* ~/.kit/cache/local"
       say Red "\t$ rmdir ~/.kit/repository/kits && rmdir ~/.kit/repository"
       puts ""
-
-  kitMain :: IO ()
-  kitMain = do
-    as <- KA.parseArgs
-    let repo = KA.repositoryDir as
-    let f = runCommand repo . handleArgs $ as
-    fs <- inDirectory getHomeDirectory $ glob ".kit/repository/kits/*/*/*.tar.gz"
-    unless (null fs) $ warnOldRepo (length fs)
-    catch f $ \e -> do
-        alert $ show e
-        exitWith $ ExitFailure 1 
 

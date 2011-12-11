@@ -61,7 +61,7 @@ kitProjectActions kp = templatedFiles ++ resourceLinks where
 
 resourceLink :: KitContents -> Maybe (FilePath, FilePath) 
 resourceLink contents =  fmap (,linkName) $ contentResourceDir contents where 
-                            linkName = kitResourceDir </> packageName (contentSpec contents)
+                            linkName = kitResourceDir </> packageName contents
 
 makeKitProject :: [KitContents] -> Maybe String -> KitProject
 makeKitProject kitsContents depsOnlyConfig = 

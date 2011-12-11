@@ -2,7 +2,6 @@
 module Kit.Package (package) where
   import Kit.Spec
   import Kit.Util
-  import "mtl" Control.Monad.Trans
   import Data.List
 
   fileBelongsInPackage :: KitSpec -> FilePath -> Bool
