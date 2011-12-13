@@ -56,14 +56,8 @@ module Kit.Main where
             writeProject = liftIO . runActions . kitProjectActions
 
   dependencyContents :: (Applicative m, MonadIO m) => KitRepository -> Dependency -> m KitContents
-  dependencyContents repo dep = dependency inRepo local dep where -- TODO look at all these applications of dep
-    inRepo spec = loadKitFromBase (packagesDirectory repo) (packageFileName spec) spec
-    local spec fp = loadKitFromBase devKitDir fp spec
-
-  loadKitFromBase :: (Applicative m, MonadIO m) => FilePath -> FilePath -> KitSpec -> m KitContents
-  loadKitFromBase base kitDir spec = do
-    absoluteBase <- liftIO $ canonicalizePath base
-    readKitContents (absoluteBase </> kitDir) spec
+  dependencyContents repo dep = readKitContents baseDir (depSpec dep) where
+    baseDir = dependency ((packagesDirectory repo </>) . packageFileName) (\fp spec -> devKitDir </> fp) dep
 
   doPackageKit :: Command ()
   doPackageKit = mySpec >>= liftIO . package 

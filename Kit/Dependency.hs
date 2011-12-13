@@ -20,9 +20,9 @@ import Data.Maybe (isJust)
 data Dependency = Dependency { depSpec :: KitSpec, mbKitPath :: (Maybe FilePath) } deriving (Eq, Show)
 
 -- Fold over a dependency
-dependency :: (KitSpec -> a) -> (KitSpec -> FilePath -> a) -> Dependency -> a
+dependency :: (KitSpec -> a) -> (FilePath -> KitSpec -> a) -> Dependency -> a
 dependency repoDepF _ (Dependency spec Nothing) = repoDepF spec
-dependency _ f (Dependency spec (Just fp)) = f spec fp
+dependency _ f (Dependency spec (Just fp)) = f fp spec
 
 instance Packageable Dependency where 
   packageName = packageName . depSpec
@@ -52,15 +52,9 @@ lookupDependency devPackages ks = maybe (Dependency ks Nothing) (\(ks',fp) -> De
 findKitSpec :: DevPackages -> Kit -> Maybe KitSpec
 findKitSpec devPackages kit = fmap fst $ findDevPackage devPackages kit
 
-class KitSpecContainer a where
-  lookupKit :: a -> Kit -> KitIO KitSpec
-
-instance KitSpecContainer KitRepository where lookupKit = readKitSpec
-instance KitSpecContainer DevPackages where lookupKit dp = maybeToKitIO "Not a dev package" . findKitSpec dp
-
 unfoldDeps :: KitRepository -> DevPackages -> KitSpec -> KitIO (Dependency, [KitSpec])
 unfoldDeps kr devPackages spec = let rootDep = lookupDependency devPackages spec
-                                     lookup' kit = lookupKit devPackages kit <|> lookupKit kr kit
+                                     lookup' kit = maybe (readKitSpec kr kit) return $ findKitSpec devPackages kit 
                                   in do
                                       children <- mapM lookup' . specDependencies . depSpec $ rootDep
                                       return (rootDep, children)

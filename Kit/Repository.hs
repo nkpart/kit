@@ -9,10 +9,7 @@ module Kit.Repository (
     readKitSpec,
     unpackKit,
     packagesDirectory,
-    publishLocally,
-
-    -- Exposed for resolve, split this stuff out into a separate module
-    kitPackagePath
+    publishLocally
   ) where
 
   import Kit.Spec
