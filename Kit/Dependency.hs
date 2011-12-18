@@ -35,7 +35,6 @@ isDevDep = isJust . mbKitPath
 refineDeps :: Eq a => Tree a -> [a]
 refineDeps = nub . concat . reverse . drop 1 . levels
 
--- todo: check for conflicts
 -- todo: check for version ranges :)
 totalSpecDependencies :: KitRepository -> WorkingCopy -> KitIO [Dependency]
 totalSpecDependencies repo workingCopy = refineDeps <$> dependencyTree repo workingCopy

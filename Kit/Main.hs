@@ -13,8 +13,11 @@ module Kit.Main where
   import Kit.Util.FSAction
   import System.Exit
   import Data.Tree (drawTree)
-  import Data.List (partition)
+  import Data.List (partition, groupBy, sortBy, maximumBy, nub, intercalate)
+  import Data.Function (on)
   import Kit.Repository (KitRepository, unpackKit, packagesDirectory, publishLocally)
+  import Debug.Trace
+  import "mtl" Control.Monad.State
 
   kitMain :: IO ()
   kitMain = do
@@ -40,20 +43,38 @@ module Kit.Main where
               repo <- myRepository
               workingCopy <- myWorkingCopy
               liftKit $ do
-                deps <- totalSpecDependencies repo workingCopy
+                rawDeps <- totalSpecDependencies repo workingCopy
+                (deps, didResolveConflict) <- unconflict rawDeps
                 let (devPackages, repoPackages) = partition isDevDep deps
                 mapM_ (unpackKit repo) repoPackages
                 mapM_ (say Red . ("Using dev-package: " ++) . packageName) devPackages
                 project <- buildProject repo workingCopy deps
                 reportResources project
                 writeProject project
-                say Green "Kit complete. You may need to restart Xcode for it to pick up any changes."
+                say (if didResolveConflict then Yellow else Green) "Kit complete. You may need to restart Xcode for it to pick up any changes."
+                liftIO . when didResolveConflict . exitWith . ExitFailure $ 1
       where buildProject repo workingCopy deps = do
                 allContents <- mapM (dependencyContents repo) deps
                 return $ makeKitProject allContents (specKitDepsXcodeFlags (workingKitSpec workingCopy))
             reportResources project = let resourceDirs = kitProjectResourceDirs project
                                        in unless (null resourceDirs) $ puts $ "Resources: " ++ stringJoin ", " (map fst resourceDirs)
             writeProject = liftIO . runActions . kitProjectActions
+
+  unconflict :: (Packageable b, MonadIO m) => [b] -> m ([b], Bool)
+  unconflict deps = let byName = groupBy ((==) `on` packageName) . sortBy (compare `on` packageName) $ deps
+                        exactlyOne [x] = True
+                        exactlyOne _ = False
+                in flip runStateT False $ forM byName $ \all@(x:_) -> do
+                    let versions = nub $ map packageVersion all
+                    if (not $ exactlyOne versions)
+                      then do
+                        let maxVersion = maximumBy (compare `on` packageVersion) all
+                        say Yellow $ "Dependency conflict: " ++ packageName x ++ " => " ++ intercalate ", " versions
+                        say Yellow $ "Selected maximum version: " ++ packageVersion maxVersion
+                        put True
+                        return maxVersion
+                      else
+                        return x
 
   dependencyContents :: (Applicative m, MonadIO m) => KitRepository -> Dependency -> m KitContents
   dependencyContents repo dep = readKitContents baseDir (depSpec dep) where
