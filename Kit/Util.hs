@@ -120,6 +120,9 @@ module Kit.Util(
       else
         puts msg
 
-  alert :: MonadIO m => String -> m ()
-  alert = say Red
+  sayError :: MonadIO m => String -> m ()
+  sayError = say Red
+
+  sayWarn :: MonadIO m => String -> m ()
+  sayWarn = say Yellow
 

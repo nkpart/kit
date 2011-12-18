@@ -21,13 +21,10 @@ module Kit.Main where
 
   kitMain :: IO ()
   kitMain = do
-    as <- KA.parseArgs
-    let repo = KA.repositoryDir as
-    fs <- inDirectory getHomeDirectory $ glob ".kit/repository/kits/*/*/*.tar.gz"
-    unless (null fs) $ warnOldRepo (length fs)
-    let action = runCommand repo . handleArgs $ as
+    args <- KA.parseArgs
+    let action = runCommand (KA.repositoryDir args) . handleArgs $ args
     catch action $ \e -> do
-        alert $ show e
+        sayError $ show e
         exitWith $ ExitFailure 1 
 
   handleArgs :: KA.KitCmdArgs -> Command ()
@@ -47,11 +44,11 @@ module Kit.Main where
                 (deps, didResolveConflict) <- unconflict rawDeps
                 let (devPackages, repoPackages) = partition isDevDep deps
                 mapM_ (unpackKit repo) repoPackages
-                mapM_ (say Red . ("Using dev-package: " ++) . packageName) devPackages
+                mapM_ (sayError . ("Using dev-package: " ++) . packageName) devPackages
                 project <- buildProject repo workingCopy deps
                 reportResources project
                 writeProject project
-                say (if didResolveConflict then Yellow else Green) "Kit complete. You may need to restart Xcode for it to pick up any changes."
+                (if didResolveConflict then sayWarn else say Green) "Kit complete. You may need to restart Xcode for it to pick up any changes."
                 liftIO . when didResolveConflict . exitWith . ExitFailure $ 1
       where buildProject repo workingCopy deps = do
                 allContents <- mapM (dependencyContents repo) deps
@@ -69,8 +66,8 @@ module Kit.Main where
                     if (not $ exactlyOne versions)
                       then do
                         let maxVersion = maximumBy (compare `on` packageVersion) all
-                        say Yellow $ "Dependency conflict: " ++ packageName x ++ " => " ++ intercalate ", " versions
-                        say Yellow $ "Selected maximum version: " ++ packageVersion maxVersion
+                        sayWarn $ "Dependency conflict: " ++ packageName x ++ " => " ++ intercalate ", " versions
+                        sayWarn $ "Selected maximum version: " ++ packageVersion maxVersion
                         put True
                         return maxVersion
                       else
@@ -125,14 +122,4 @@ module Kit.Main where
     let spec = defaultSpec name version 
     writeSpec "KitSpec" spec
     puts $ "Created KitSpec for " ++ packageFileName spec
-
-  warnOldRepo :: MonadIO m => Int -> m ()
-  warnOldRepo c = do
-      say Red $ "Warning: Kit now expects packages in '.kit/cache/local' instead of '.kit/repository/kits'. (Found " ++ show c ++ " packages in the old location.)"
-      puts ""
-      say Red "To fix it, move the old directory into the new path:"
-      say Red "\t$ mkdir -p ~/.kit/cache/local"
-      say Red "\t$ mv ~/.kit/repository/kits/* ~/.kit/cache/local"
-      say Red "\t$ rmdir ~/.kit/repository/kits && rmdir ~/.kit/repository"
-      puts ""
 

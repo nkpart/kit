@@ -15,7 +15,6 @@ module Kit.Repository (
   import Kit.Spec
   import Kit.Util
 
-  import "mtl" Control.Monad.Error
   import qualified Data.Traversable as T
   import qualified Data.ByteString as BS
 
@@ -25,10 +24,9 @@ module Kit.Repository (
   localCacheDir kr = dotKitDir kr </> "cache" </> "local"
 
   makeRepository :: FilePath -> IO KitRepository
-  makeRepository fp = do 
-    let kr = KitRepository fp
-    mkdirP $ localCacheDir kr
-    return kr
+  makeRepository fp = let repo = KitRepository fp in do 
+    mkdirP $ localCacheDir repo
+    return repo
 
   explodePackage :: KitRepository -> Kit -> IO ()
   explodePackage kr kit = do
@@ -78,9 +76,6 @@ module Kit.Repository (
         else puts $ "Using: " ++ packageFileName kit
       return ()
 
-  -- TODO: on publish local, need to flush this particular name/version out
-  -- of the packages dir if it exists, so if this is overriding a version, that
-  -- all works.
   publishLocally :: KitRepository -> KitSpec -> FilePath -> FilePath -> IO ()
   publishLocally kr ks specFile packageFile = do
                               let cacheDir = localCacheDir kr
@@ -88,7 +83,7 @@ module Kit.Repository (
                               mkdirP thisKitDir
                               let fname = takeFileName packageFile
                               copyFile packageFile (thisKitDir </> fname)
-                              copyFile specFile (thisKitDir </> "KitSpec") 
+                              copyFile specFile (thisKitDir </> "KitSpec")
                               let pkg = packagesDirectory kr </> packageFileName (specKit ks)
                               d <- doesDirectoryExist pkg
                               when d $ removeDirectoryRecursive pkg
