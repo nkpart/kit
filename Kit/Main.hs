@@ -57,21 +57,24 @@ module Kit.Main where
                                        in unless (null resourceDirs) $ puts $ "Resources: " ++ stringJoin ", " (map fst resourceDirs)
             writeProject = liftIO . runActions . kitProjectActions
 
+
+  snd `andThen` packageName
+  packageName . snd
+  \x -> packageName (snd x)
+
   unconflict :: (Packageable b, MonadIO m) => [b] -> m ([b], Bool)
-  unconflict deps = let byName = groupBy ((==) `on` packageName) . sortBy (compare `on` packageName) $ deps
-                        exactlyOne [x] = True
-                        exactlyOne _ = False
-                in flip runStateT False $ forM byName $ \all@(x:_) -> do
-                    let versions = nub $ map packageVersion all
-                    if (not $ exactlyOne versions)
-                      then do
-                        let maxVersion = maximumBy (compare `on` packageVersion) all
-                        sayWarn $ "Dependency conflict: " ++ packageName x ++ " => " ++ intercalate ", " versions
-                        sayWarn $ "Selected maximum version: " ++ packageVersion maxVersion
+  unconflict deps = let byName = groupBy ((==) `on` (packageName . snd)) . sortBy (compare `on` (packageName . snd)) $ zip [1..] deps
+                        stripIndex (xs, hadConflict) = (map snd . sortBy (compare `on` fst) $ xs, hadConflict)
+                in liftM stripIndex $ flip runStateT False $ forM byName $ \all@(b:bs) -> do
+                    if (null bs)
+                      then return b
+                      else do
+                        let versions = nub $ map (packageVersion . snd) all
+                        let maxVersion = maximumBy (compare `on` (packageVersion . snd)) all
+                        sayWarn $ "Dependency conflict: " ++ packageName (snd b) ++ " => " ++ intercalate ", " versions
+                        sayWarn $ "Selected maximum version: " ++ (packageVersion . snd $ maxVersion)
                         put True
                         return maxVersion
-                      else
-                        return x
 
   dependencyContents :: (Applicative m, MonadIO m) => KitRepository -> Dependency -> m KitContents
   dependencyContents repo dep = readKitContents baseDir (depSpec dep) where
