@@ -57,11 +57,6 @@ module Kit.Main where
                                        in unless (null resourceDirs) $ puts $ "Resources: " ++ stringJoin ", " (map fst resourceDirs)
             writeProject = liftIO . runActions . kitProjectActions
 
-
-  snd `andThen` packageName
-  packageName . snd
-  \x -> packageName (snd x)
-
   unconflict :: (Packageable b, MonadIO m) => [b] -> m ([b], Bool)
   unconflict deps = let byName = groupBy ((==) `on` (packageName . snd)) . sortBy (compare `on` (packageName . snd)) $ zip [1..] deps
                         stripIndex (xs, hadConflict) = (map snd . sortBy (compare `on` fst) $ xs, hadConflict)
