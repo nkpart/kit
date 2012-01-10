@@ -13,10 +13,11 @@ module Kit.Package (package) where
   package spec = do
       contents <- filter (fileBelongsInPackage spec) <$> getDirectoryContents "."
       mkdirP distDir
-      sh $ "tar -czf " ++ (distDir </> (kitPath ++ ".tar.gz")) ++ " -s ,^," ++ kitPath ++ "/, " ++ join (intersperse " " contents)
+      sh $ envDontCopy ++ " tar -czf " ++ (distDir </> (kitPath ++ ".tar.gz")) ++ " -s ,^," ++ kitPath ++ "/, " ++ join (intersperse " " contents)
       return ()
     where
       distDir = "dist"
       kitPath = packageFileName spec
+      envDontCopy = "COPYFILE_DISABLE=true "
       sh c = liftIO $ putStrLn c >> shell c
 
