@@ -27,7 +27,7 @@ module Kit.CmdArgs (parseArgs, KitCmdArgs(..)) where
                     help "Create a tar.gz wrapping this kit"
       , PublishLocal { repositoryDir = def, tag = Nothing } &= explicit &= CA.name "publish-local" &=
                     help "Package this kit, then deploy it to the local repository (~/.kit/repository)"
-      , Verify { repositoryDir = def, sdk = "iphonesimulator4.0" &= typ "SDK" &= help "iphoneos, iphonesimulator4.0, etc."} &=
+      , Verify { repositoryDir = def, sdk = "iphonesimulator" &= typ "SDK" &= help "iphoneos, iphonesimulator, etc."} &=
                     help "Package this kit, then attempt to use it as a dependency in an empty project. This will assert that the kit and all its dependencies can be compiled together."
       , ShowTree def &= help "Print out the dependency tree for this spec"
     ]
