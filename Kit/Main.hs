@@ -16,8 +16,7 @@ module Kit.Main where
   import Data.List (partition, groupBy, sortBy, maximumBy, nub, intercalate)
   import Data.Function (on)
   import Kit.Repository (KitRepository, unpackKit, packagesDirectory, publishLocally)
-  import Debug.Trace
-  import "mtl" Control.Monad.State
+  import Control.Monad.State
 
   kitMain :: IO ()
   kitMain = do
@@ -60,8 +59,8 @@ module Kit.Main where
   unconflict :: (Packageable b, MonadIO m) => [b] -> m ([b], Bool)
   unconflict deps = let byName = groupBy ((==) `on` (packageName . snd)) . sortBy (compare `on` (packageName . snd)) $ zip [1..] deps
                         stripIndex (xs, hadConflict) = (map snd . sortBy (compare `on` fst) $ xs, hadConflict)
-                in liftM stripIndex $ flip runStateT False $ forM byName $ \all@(b:bs) -> do
-                    if (null bs)
+                in liftM stripIndex $ flip runStateT False $ forM byName $ \all@(b:bs) ->
+                    if null bs
                       then return b
                       else do
                         let versions = nub $ map (packageVersion . snd) all
@@ -72,8 +71,11 @@ module Kit.Main where
                         return maxVersion
 
   dependencyContents :: (Applicative m, MonadIO m) => KitRepository -> Dependency -> m KitContents
-  dependencyContents repo dep = readKitContents baseDir (depSpec dep) where
+  dependencyContents repo dep = readKitContents' baseDir (depSpec dep) where
     baseDir = dependency ((packagesDirectory repo </>) . packageFileName) (\fp spec -> devKitDir </> fp) dep
+    readKitContents' base spec = do
+      absoluteBase <- liftIO $ canonicalizePath base
+      readKitContents base spec
 
   doPackageKit :: Command ()
   doPackageKit = mySpec >>= liftIO . package 

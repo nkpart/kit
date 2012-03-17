@@ -1,4 +1,3 @@
-{-# LANGUAGE PackageImports #-}
 module Kit.Spec (
   -- | The Core Kit types
   KitSpec(..),
