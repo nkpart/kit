@@ -19,7 +19,7 @@ Executable kit
                   HTTP >=4000.0.9, 
                   ansi-terminal >= 0.5.5,
                   bytestring -any, 
-                  cabal-file-th >= 0.1,
+                  cabal-file-th >= 0.2.2,
                   cmdargs >= 0.6.2,
                   containers -any, 
                   data-object -any, 
