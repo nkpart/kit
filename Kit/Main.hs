@@ -75,7 +75,7 @@ module Kit.Main where
     baseDir = dependency ((packagesDirectory repo </>) . packageFileName) (\fp spec -> devKitDir </> fp) dep
     readKitContents' base spec = do
       absoluteBase <- liftIO $ canonicalizePath base
-      readKitContents base spec
+      readKitContents absoluteBase spec
 
   doPackageKit :: Command ()
   doPackageKit = mySpec >>= liftIO . package 
