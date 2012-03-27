@@ -17,6 +17,7 @@ module Kit.Main where
   import Data.Function (on)
   import Kit.Repository (KitRepository, unpackKit, packagesDirectory, publishLocally)
   import Control.Monad.State
+  import Kit.FilePath
 
   kitMain :: IO ()
   kitMain = do
@@ -74,7 +75,7 @@ module Kit.Main where
   dependencyContents repo dep = readKitContents' baseDir (depSpec dep) where
     baseDir = dependency ((packagesDirectory repo </>) . packageFileName) (\fp spec -> devKitDir </> fp) dep
     readKitContents' base spec = do
-      absoluteBase <- liftIO $ canonicalizePath base
+      absoluteBase <- liftIO $ absolutePath base
       readKitContents absoluteBase spec
 
   doPackageKit :: Command ()

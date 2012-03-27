@@ -8,6 +8,7 @@ module Kit.Contents (
 import Kit.Spec
 import Kit.Util
 import Kit.Xcode.XCConfig
+import Kit.FilePath
 
 import qualified Data.Traversable as T
 
@@ -30,9 +31,10 @@ instance Packageable KitContents where
 namedPrefix :: KitContents -> Maybe String
 namedPrefix kc = fmap (\s -> "//" ++ (packageFileName kc) ++ "\n" ++ s) $ contentPrefix kc
 
-readKitContents :: (Applicative m, MonadIO m) => FilePath -> KitSpec -> m KitContents
-readKitContents kitDir spec =
-  let find dir tpe = liftIO $ inDirectory kitDir $ do
+readKitContents :: (Applicative m, MonadIO m) => AbsolutePath -> KitSpec -> m KitContents
+readKitContents absKitDir spec =
+  let kitDir = filePath absKitDir 
+      find dir tpe = liftIO $ inDirectory kitDir $ do
         files <- glob (dir </> "**/*" ++ tpe)
         mapM canonicalizePath files
       findSrc = find $ specSourceDirectory spec
