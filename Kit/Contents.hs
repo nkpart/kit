@@ -1,4 +1,3 @@
-{-# LANGUAGE PackageImports #-}
 module Kit.Contents (
   KitContents(..),
   readKitContents,
@@ -29,7 +28,7 @@ instance Packageable KitContents where
   packageVersion = packageVersion . contentSpec
 
 namedPrefix :: KitContents -> Maybe String
-namedPrefix kc = fmap (\s -> "//" ++ (packageFileName kc) ++ "\n" ++ s) $ contentPrefix kc
+namedPrefix kc = fmap (\s -> "//" ++ packageFileName kc ++ "\n" ++ s) $ contentPrefix kc
 
 readKitContents :: (Applicative m, MonadIO m) => AbsolutePath -> KitSpec -> m KitContents
 readKitContents absKitDir spec =

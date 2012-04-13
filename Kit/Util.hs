@@ -6,12 +6,11 @@ module Kit.Util(
   module Control.Monad,
   module System.Directory,
   module System.FilePath.Posix,
-  module Debug.Trace,
   module Control.Monad.Trans,
   Color(..),
   (>>>)
   ) where
-  import Debug.Trace
+
   import System.Directory
   import System.FilePath.Posix
   import System.FilePath.Glob (globDir1, compile)
@@ -26,8 +25,8 @@ module Kit.Util(
   import Control.Arrow
   import Control.Applicative
   import Control.Monad
-  import "mtl" Control.Monad.Error
-  import "mtl" Control.Monad.Trans
+  import Control.Monad.Error
+  import Control.Monad.Trans
   import System.Cmd
 
   import System.Console.ANSI

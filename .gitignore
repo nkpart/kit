@@ -8,3 +8,5 @@ build
 test-output
 cabal-dev
 dstroot
+tags
+/.hsenv/
