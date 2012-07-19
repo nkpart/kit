@@ -1,11 +1,7 @@
 {-# LANGUAGE PackageImports, ScopedTypeVariables #-}
 module Tests where
-
-  import Data.Char
-  import Data.List
   import Test.QuickCheck
   import Test.HUnit
-  import Text.Printf
 
   import Control.Applicative 
   import System.Directory
@@ -15,14 +11,12 @@ module Tests where
   import qualified Kit.Contents as KC
   import Kit.Spec
   import Kit.Util.FSAction as FSA
-  import Kit.Util
-  import Kit.Util.IsObject
+  import Kit.FilePath
 
-  import qualified Data.Object.Yaml as Y
+  import qualified Data.Yaml as Y
   import Debug.Trace
   import Data.Maybe (fromJust)
   import Data.Either (lefts, rights)
-  import qualified Data.ByteString.Char8 as BS
 
   -- Test/Prop helpers
   spec x f = TestLabel x $ TestCase f 
@@ -84,15 +78,16 @@ module Tests where
           runAction $ FSA.within basedir $ Symlink fileA linkname
           assertEqual "rebased link" contents =<< readFile (basedir </> linkname)
 
-      specify "KitSpec" $ satisfy "yaml show/read == id" (isId (fromJust . readObject . showObject) :: KitSpec -> Bool)
+      specify "KitSpec" $ satisfy "yaml show/read == id" (isId (fromJust . Y.decode . Y.encode) :: KitSpec -> Bool)
 
       specify "KitContents" $ test' "check for resource contents" $ do
         createDirectoryIfMissing True "some-kit-0.1/resources"
         let spec = defaultSpec "some-kit" "0.1"
-        kc <- KC.readKitContents "some-kit-0.1" spec
+        kitPath <- absolutePath "some-kit-0.1"
+        kc <- KC.readKitContents kitPath spec
         expectedResourceDir <- canonicalizePath "some-kit-0.1/resources"
         assertEqual "resource dir found" (Just expectedResourceDir) (KC.contentResourceDir kc)
-        kc <- KC.readKitContents "some-kit-0.1" spec { specResourcesDirectory = "lolburger" }
+        kc <- KC.readKitContents kitPath spec { specResourcesDirectory = "lolburger" }
         assertEqual "resource dir not found" Nothing (KC.contentResourceDir kc)
 
       return ()

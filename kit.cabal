@@ -16,21 +16,22 @@ Executable kit
   buildable:      True
   build-depends:  base >=3 && <5,
                   Glob >= 0.5.1 && < 6, 
-                  HTTP >=4000.0.9, 
+                  HTTP,
                   ansi-terminal >= 0.5.5,
                   bytestring -any, 
                   cabal-file-th >= 0.2.2,
                   cmdargs >= 0.6.2,
                   containers -any, 
-                  data-object -any, 
-                  data-object-yaml -any,
+                  yaml,
                   directory -any, 
                   filepath -any, 
-                  mtl >= 2.0 && < 3, 
+                  mtl -any,
                   network -any, 
                   process -any,
                   template-haskell,
-                  unix >= 2.4 && < 2.5
+                  unordered-containers,
+                  text,
+                  unix 
 
   hs-source-dirs: .
   other-modules:  Kit.Spec Kit.Main Kit.Package Kit.Project Kit.Repository Kit.Util Kit.Xcode.Builder

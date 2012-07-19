@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Kit.Spec (
   -- | The Core Kit types
   KitSpec(..),
@@ -16,10 +17,10 @@ module Kit.Spec (
 
   import Kit.Util
  
-  import Data.Object
-  import Kit.Util.IsObject
+  import Data.Yaml
+  import Data.HashMap.Strict as HM (toList) 
+  import Data.Text as T (unpack, pack)
   import qualified Data.ByteString as BS 
-  import qualified Data.Object.Yaml as Y
   import Data.Maybe (maybeToList)
 
   data KitSpec = KitSpec {
@@ -65,49 +66,46 @@ module Kit.Spec (
   -- Look at the 'data-lens' package on hackage. (or comonad-transformers)
 
   decodeSpec :: BS.ByteString -> Maybe KitSpec
-  decodeSpec s = Y.decode s >>= readObject 
+  decodeSpec = decode
 
   encodeSpec :: KitSpec -> BS.ByteString
-  encodeSpec = Y.encode . showObject
+  encodeSpec = encode
 
   writeSpec :: MonadIO m => FilePath -> KitSpec -> m ()
   writeSpec fp spec = liftIO $ BS.writeFile fp $ encodeSpec spec
 
-  instance ShowObject Kit where
-    showObject kit = Mapping [("name", w kitName), ("version", w kitVersion)] where w f = showObject . f $ kit
+  instance ToJSON Kit where
+    toJSON kit = object ["name" .= kitName kit, "version" .= kitVersion kit]
 
-  instance ReadObject Kit where
-    readObject x = fromMapping x >>= \obj -> (Kit <$> obj #> "name" <*> obj #> "version") <|> case obj of
-                                                                                                    [(key, Scalar value)] -> Just $ Kit key value
-                                                                                                    _ -> Nothing
-  -- TODO this + ReadObject should be identity
+  instance FromJSON Kit where
+    parseJSON (Object obj) = (Kit <$> obj .: "name" <*> obj .: "version") <|> case HM.toList obj of
+                                                                                                    [(key, String value)] -> pure $ Kit (T.unpack key) (T.unpack value)
+                                                                                                    _ -> error "Not a compatible object"
+    parseJSON x = error $ "NOT A OBJ" ++ show x
+                                                                                                    
   -- TODO don't write out default values
-  instance ShowObject KitSpec where
-    showObject spec = Mapping ([
-         "name" ~> val (kitName . specKit),
-         "version" ~> val (kitVersion . specKit),
-         "dependencies" ~> Sequence (map makeDep (specDependencies spec)),
-         "source-directory" ~> val specSourceDirectory,
-         "test-directory" ~> val specTestDirectory,
-         "lib-directory" ~> val specLibDirectory,
-         "resources-directory" ~> val specResourcesDirectory,
-         "prefix-header" ~> val specPrefixFile,
-         "xcconfig" ~> val specConfigFile
-      ] ++ maybeToList (fmap (("kitdeps-xcode-flags" ~>) . Scalar) (specKitDepsXcodeFlags spec)))
-      where a ~> b = (a, b)
-            val f = Scalar . f $ spec
-            makeDep dep = Mapping [(kitName dep, Scalar $ kitVersion dep)]
+  instance ToJSON KitSpec where
+    toJSON spec = object ([
+         "name" .= (kitName . specKit) spec,
+         "version" .= (kitVersion . specKit) spec,
+         "dependencies" .= (map makeDep (specDependencies spec)),
+         "source-directory" .= specSourceDirectory spec,
+         "test-directory" .= specTestDirectory spec,
+         "lib-directory" .= specLibDirectory spec,
+         "resources-directory" .= specResourcesDirectory spec,
+         "prefix-header" .= specPrefixFile spec,
+         "xcconfig" .= specConfigFile spec
+      ] ++ maybeToList (fmap (("kitdeps-xcode-flags" .=)) (specKitDepsXcodeFlags spec)))
+      where makeDep dep = object [(T.pack $ kitName dep, String . T.pack $ kitVersion dep)]
 
-  instance ReadObject KitSpec where
-    readObject x = fromMapping x >>= parser
-        where or' a b = a <|> pure b
-              parser obj =  KitSpec <$> readObject x
-                                    <*> (obj #> "dependencies" `or'` []) -- TODO this should fail if it can't read the format
-                                    <*> (obj #> "source-directory" `or'` "src")
-                                    <*> (obj #> "test-directory" `or'` "test")
-                                    <*> (obj #> "lib-directory" `or'` "lib")
-                                    <*> (obj #> "resources-directory" `or'` "resources")
-                                    <*> (obj #> "prefix-header" `or'` "Prefix.pch")
-                                    <*> (obj #> "xcconfig" `or'` "Config.xcconfig")
-                                    <*> (Just <$> obj #> "kitdeps-xcode-flags") `or'` Nothing
+  instance FromJSON KitSpec where
+    parseJSON (Object obj) = KitSpec <$> parseJSON (Object obj)
+                                    <*> (obj .:? "dependencies" .!= []) -- TODO this should fail if it can't read the format
+                                    <*> (obj .:? "source-directory" .!= "src")
+                                    <*> (obj .:? "test-directory" .!= "test")
+                                    <*> (obj .:? "lib-directory" .!= "lib")
+                                    <*> (obj .:? "resources-directory" .!= "resources")
+                                    <*> (obj .:? "prefix-header" .!= "Prefix.pch")
+                                    <*> (obj .:? "xcconfig" .!= "Config.xcconfig")
+                                    <*> (Just <$> obj .:? "kitdeps-xcode-flags") .!= Nothing
 
