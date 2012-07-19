@@ -16,6 +16,7 @@ Executable kit
   buildable:      True
   build-depends:  base >=3 && <5,
                   Glob >= 0.5.1 && < 6, 
+                  attoparsec,
                   HTTP,
                   ansi-terminal >= 0.5.5,
                   bytestring -any, 

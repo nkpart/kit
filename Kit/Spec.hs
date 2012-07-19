@@ -22,6 +22,7 @@ module Kit.Spec (
   import Data.Text as T (unpack, pack)
   import qualified Data.ByteString as BS 
   import Data.Maybe (maybeToList)
+  import Data.Attoparsec.Number
 
   data KitSpec = KitSpec {
     specKit :: Kit,
@@ -77,10 +78,14 @@ module Kit.Spec (
   instance ToJSON Kit where
     toJSON kit = object ["name" .= kitName kit, "version" .= kitVersion kit]
 
+  showNum :: Number -> String
+  showNum l = show l
+
   instance FromJSON Kit where
-    parseJSON (Object obj) = (Kit <$> obj .: "name" <*> obj .: "version") <|> case HM.toList obj of
+    parseJSON (Object obj) = (Kit <$> obj .: "name" <*> (obj .: "version" <|> (showNum <$> obj .: "version"))) <|> case HM.toList obj of
                                                                                                     [(key, String value)] -> pure $ Kit (T.unpack key) (T.unpack value)
-                                                                                                    _ -> error "Not a compatible object"
+                                                                                                    [(key, Number value)] -> pure $ Kit (T.unpack key) (show value)
+                                                                                                    x -> error $ "Not a compatible object" ++ show x
     parseJSON x = error $ "NOT A OBJ" ++ show x
                                                                                                     
   -- TODO don't write out default values

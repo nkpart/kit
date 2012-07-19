@@ -42,8 +42,16 @@ module Tests where
   strArb = listOf $ elements "abcdef"
 
   instance Arbitrary Kit where
-    arbitrary = Kit <$> listOf1 (elements "abcdef") <*> strArb
+    arbitrary = Kit <$> listOf1 (elements "abcdef") <*> (unVersion <$> arbitrary)
 
+  newtype Version = Version  { unVersion :: String }
+
+  instance Arbitrary Version where
+    arbitrary = do 
+                   a <- listOf $ elements "0"
+                   b <- listOf $ elements "1"
+                   return $ Version $ a ++ "." ++ b
+    
   instance Arbitrary KitSpec where
     arbitrary = KitSpec <$> arbitrary <*> arbitrary <*> strArb <*> strArb <*> strArb <*> strArb <*> strArb <*> strArb <*> (Just <$> strArb)
 
@@ -78,7 +86,8 @@ module Tests where
           runAction $ FSA.within basedir $ Symlink fileA linkname
           assertEqual "rebased link" contents =<< readFile (basedir </> linkname)
 
-      specify "KitSpec" $ satisfy "yaml show/read == id" (isId (fromJust . Y.decode . Y.encode) :: KitSpec -> Bool)
+      specify "KitSpec" $ do
+        satisfy "yaml show/read == id" (isId (fromJust . Y.decode . Y.encode) :: KitSpec -> Bool)
 
       specify "KitContents" $ test' "check for resource contents" $ do
         createDirectoryIfMissing True "some-kit-0.1/resources"
