@@ -64,10 +64,12 @@ projectRoot = [projectRootUUID ~> obj [
             "productRefGroup" ~> val groupProductsUUID,
             "projectDirPath" ~> val "",
             "projectRoot" ~> val "",
-            "targets" ~> arr [ staticLibTarget, kitUpdateTarget ] 
-        ]]
-      
-staticLibTarget = tobj [
+            "targets" ~> arr [ val staticLibTargetUUID, kitUpdateTarget ] 
+        ], staticLibTarget]
+
+staticLibTargetUUID = "D2AAC07D0554694100DB518D"
+
+staticLibTarget = staticLibTargetUUID ~> obj [
             "isa" ~> val "PBXNativeTarget",
             "buildConfigurationList" ~> val staticLibBuildConfigurationsUUID,
             "buildPhases" ~> val_arr [ headersBuildPhaseUUID, sourcesBuildPhaseUUID, frameworksBuildPhaseUUID ],
