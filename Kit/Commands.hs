@@ -1,12 +1,11 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, PackageImports #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Kit.Commands (
   Command(),
   liftKit,
   mySpec,
   myWorkingCopy,
   myRepository,
-  runCommand,
-  defaultLocalRepository
+  runCommand
 ) where
 
 import Kit.Util
@@ -16,8 +15,8 @@ import Kit.WorkingCopy
 
 import System.Exit (exitFailure)
 
-import "mtl" Control.Monad.Error
-import "mtl" Control.Monad.Reader
+import Control.Monad.Error
+import Control.Monad.Reader
 
 newtype Command a = Command { 
   unCommand :: (ReaderT (WorkingCopy, KitRepository) (ErrorT String IO) a) 

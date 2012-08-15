@@ -4,7 +4,6 @@ module Kit.Repository (
     KitRepository,
     makeRepository,
     --
-    copyKitPackage,
     readKitSpec,
     unpackKit,
     packagesDirectory,
@@ -24,9 +23,6 @@ module Kit.Repository (
   makeRepository fp = let repo = KitRepository fp in do 
     mkdirP $ localCacheDir repo
     return repo
-
-  copyKitPackage :: KitRepository -> Kit -> FilePath -> IO ()
-  copyKitPackage repo kit = copyFile (localCacheDir repo </> kitPackagePath kit)
 
   readKitSpec :: KitRepository -> Kit -> KitIO KitSpec
   readKitSpec repo kit = do

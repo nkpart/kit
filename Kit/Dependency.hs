@@ -5,8 +5,7 @@ module Kit.Dependency (
     dependency,
     depSpec,
     isDevDep,
-    dependencyTree,
-    devKitDir -- TODO, cleanup main, might not need to export
+    dependencyTree
   ) where
 
 import Kit.Util

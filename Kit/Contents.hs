@@ -46,7 +46,7 @@ readKitContents absKitDir spec =
         if b 
           then Just <$> canonicalizePath r
           else return Nothing
-  in  KitContents spec kitDir <$> headers <*> sources <*> libs <*> config <*> prefix <*> resourceDir
+   in KitContents spec kitDir <$> headers <*> sources <*> libs <*> config <*> prefix <*> resourceDir
 
 -- TODO report missing file
 readHeader :: FilePath -> KitSpec -> IO (Maybe String)
