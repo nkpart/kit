@@ -8,9 +8,7 @@ module Kit.Spec (
   Packageable(..),
   packageFileName,
   -- | Utils
-  defaultSpec,
-  -- | Serialisation
-  writeSpec
+  defaultSpec
   ) where
 
   import Kit.Util
@@ -62,9 +60,6 @@ module Kit.Spec (
   -- fields in the KitSpec record.
   -- Look at the 'data-lens' package on hackage. (or comonad-transformers)
 
-  writeSpec :: MonadIO m => FilePath -> KitSpec -> m ()
-  writeSpec a b = liftIO $ encodeFile a b
-
   instance ToJSON Kit where
     toJSON kit = object ["name" .= kitName kit, "version" .= kitVersion kit]
 
@@ -104,4 +99,3 @@ module Kit.Spec (
                                     <*> (obj .:? "xcconfig" .!= "Config.xcconfig")
                                     <*> (Just <$> obj .:? "kitdeps-xcode-flags") .!= Nothing
     parseJSON _ = fail "Couldn't parse KitSpec"
-
