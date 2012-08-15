@@ -10,17 +10,13 @@ module Kit.Spec (
   -- | Utils
   defaultSpec,
   -- | Serialisation
-  decodeSpec,
-  encodeSpec,
   writeSpec
   ) where
 
   import Kit.Util
- 
   import Data.Yaml
   import Data.HashMap.Strict as HM (toList) 
   import Data.Text as T (unpack, pack)
-  import qualified Data.ByteString as BS 
   import Data.Maybe (maybeToList)
   import Data.Attoparsec.Number
 
@@ -66,14 +62,8 @@ module Kit.Spec (
   -- fields in the KitSpec record.
   -- Look at the 'data-lens' package on hackage. (or comonad-transformers)
 
-  decodeSpec :: BS.ByteString -> Maybe KitSpec
-  decodeSpec = decode
-
-  encodeSpec :: KitSpec -> BS.ByteString
-  encodeSpec = encode
-
   writeSpec :: MonadIO m => FilePath -> KitSpec -> m ()
-  writeSpec fp spec = liftIO $ BS.writeFile fp $ encodeSpec spec
+  writeSpec a b = liftIO $ encodeFile a b
 
   instance ToJSON Kit where
     toJSON kit = object ["name" .= kitName kit, "version" .= kitVersion kit]
@@ -113,4 +103,5 @@ module Kit.Spec (
                                     <*> (obj .:? "prefix-header" .!= "Prefix.pch")
                                     <*> (obj .:? "xcconfig" .!= "Config.xcconfig")
                                     <*> (Just <$> obj .:? "kitdeps-xcode-flags") .!= Nothing
+    parseJSON _ = fail "Couldn't parse KitSpec"
 

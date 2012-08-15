@@ -3,10 +3,11 @@ module Kit.Xcode.Builder (renderXcodeProject) where
   import Kit.Xcode.Common
   import Kit.Xcode.ProjectFileTemplate
   import Text.PList
-  import qualified Text.PList.PrettyPrint as PList (pp, ppFlat)
+  import qualified Text.PList.PrettyPrint as PList (ppFlat)
   import Kit.Util
   import Data.List (nub)
   import "mtl" Control.Monad.State
+  import System.FilePath
 
   createBuildFile :: Integer -> FilePath -> PBXBuildFile
   createBuildFile i path = PBXBuildFile uuid1 $ PBXFileReference uuid2 path

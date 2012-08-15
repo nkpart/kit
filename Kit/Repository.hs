@@ -5,7 +5,6 @@ module Kit.Repository (
     makeRepository,
     --
     copyKitPackage,
-    explodePackage,
     readKitSpec,
     unpackKit,
     packagesDirectory,
@@ -14,9 +13,7 @@ module Kit.Repository (
 
   import Kit.Spec
   import Kit.Util
-
-  import qualified Data.Traversable as T
-  import qualified Data.ByteString as BS
+  import Data.Yaml (decodeFile)
 
   data KitRepository = KitRepository { dotKitDir :: FilePath } deriving (Eq, Show)
 
@@ -28,27 +25,13 @@ module Kit.Repository (
     mkdirP $ localCacheDir repo
     return repo
 
-  explodePackage :: KitRepository -> Kit -> IO ()
-  explodePackage kr kit = do
-    let packagesDir = localCacheDir kr
-    let packagePath = localCacheDir kr </> kitPackagePath kit
-    mkdirP packagesDir
-    inDirectory packagesDir $ shell ("tar zxvf " ++ packagePath)
-    return ()
-
   copyKitPackage :: KitRepository -> Kit -> FilePath -> IO ()
   copyKitPackage repo kit = copyFile (localCacheDir repo </> kitPackagePath kit)
 
   readKitSpec :: KitRepository -> Kit -> KitIO KitSpec
   readKitSpec repo kit = do
-    mbKitStuff <- liftIO $ readIfExists (localCacheDir repo </> kitSpecPath kit)
-    contents <- maybeToKitIO ("Missing " ++ packageFileName kit) mbKitStuff
-    maybeToKitIO ("Invalid KitSpec file for " ++ packageFileName kit) $ decodeSpec contents
-
-  readIfExists :: String -> IO (Maybe BS.ByteString)
-  readIfExists file = do
-    exists <- doesFileExist file
-    T.sequenceA $ ifTrue exists $ BS.readFile file
+    mbLoaded <- liftIO $ decodeFile (localCacheDir repo </> kitSpecPath kit)
+    maybeToKitIO ("Invalid KitSpec file for " ++ packageFileName kit) mbLoaded
 
   baseKitPath :: Packageable a => a -> String
   baseKitPath k = packageName k </> packageVersion k

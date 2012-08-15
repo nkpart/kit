@@ -10,6 +10,7 @@ module Kit.Main where
   import Kit.Contents
   import Kit.Dependency
   import Kit.WorkingCopy
+  import Data.Yaml (encodeFile)
   import Kit.Util.FSAction
   import System.Exit
   import Data.Tree (drawTree)
@@ -23,7 +24,7 @@ module Kit.Main where
   kitMain = do
     args <- KA.parseArgs
     let action = runCommand (KA.repositoryDir args) . handleArgs $ args
-    catch action $ \e -> do
+    catchSome action $ \e -> do
         sayError $ show e
         exitWith $ ExitFailure 1 
 
@@ -58,14 +59,14 @@ module Kit.Main where
             writeProject = liftIO . runActions . kitProjectActions
 
   unconflict :: (Packageable b, MonadIO m) => [b] -> m ([b], Bool)
-  unconflict deps = let byName = groupBy ((==) `on` (packageName . snd)) . sortBy (compare `on` (packageName . snd)) $ zip [1..] deps
+  unconflict deps = let byName = groupBy ((==) `on` (packageName . snd)) . sortBy (compare `on` (packageName . snd)) $ zip [(1::Int)..] deps
                         stripIndex (xs, hadConflict) = (map snd . sortBy (compare `on` fst) $ xs, hadConflict)
-                in liftM stripIndex $ flip runStateT False $ forM byName $ \all@(b:bs) ->
+                in liftM stripIndex $ flip runStateT False $ forM byName $ \allDeps@(b:bs) ->
                     if null bs
                       then return b
                       else do
-                        let versions = nub $ map (packageVersion . snd) all
-                        let maxVersion = maximumBy (compare `on` (packageVersion . snd)) all
+                        let versions = nub $ map (packageVersion . snd) allDeps
+                        let maxVersion = maximumBy (compare `on` (packageVersion . snd)) allDeps
                         sayWarn $ "Dependency conflict: " ++ packageName (snd b) ++ " => " ++ intercalate ", " versions
                         sayWarn $ "Selected maximum version: " ++ (packageVersion . snd $ maxVersion)
                         put True
@@ -73,7 +74,7 @@ module Kit.Main where
 
   dependencyContents :: (Applicative m, MonadIO m) => KitRepository -> Dependency -> m KitContents
   dependencyContents repo dep = readKitContents' baseDir (depSpec dep) where
-    baseDir = dependency ((packagesDirectory repo </>) . packageFileName) (\fp spec -> devKitDir </> fp) dep
+    baseDir = dependency ((packagesDirectory repo </>) . packageFileName) (\fp _ -> devKitDir </> fp) dep
     readKitContents' base spec = do
       absoluteBase <- liftIO $ absolutePath base
       readKitContents absoluteBase spec
@@ -110,7 +111,7 @@ module Kit.Main where
           let kitVerifyDir = "kit-verify"
           cleanOrCreate kitVerifyDir
           inDirectory kitVerifyDir $ do
-            writeSpec "KitSpec" (defaultSpec "verify-kit" "1.0") { specDependencies = [specKit spec] }
+            encodeFile "KitSpec" (defaultSpec "verify-kit" "1.0") { specDependencies = [specKit spec] }
             runCommand Nothing doUpdate 
             inDirectory "Kits" $ do
               shell "open ."
@@ -121,6 +122,6 @@ module Kit.Main where
   doCreateSpec :: String -> String -> Command ()
   doCreateSpec name version = do
     let spec = defaultSpec name version 
-    writeSpec "KitSpec" spec
+    liftIO $ encodeFile "KitSpec" spec
     puts $ "Created KitSpec for " ++ packageFileName spec
 

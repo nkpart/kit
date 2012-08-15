@@ -8,11 +8,9 @@ module Kit.WorkingCopy (
     ) where
 
 import Kit.Util
+import Data.Yaml (decodeFile)
 import Kit.Spec
 import qualified Data.List as L
-
-import "mtl" Control.Monad.Error
-import qualified Data.ByteString as BS
 
 devKitDir :: String
 devKitDir = "dev-packages"
@@ -38,10 +36,6 @@ currentWorkingCopy = do
   return $ WorkingCopy spec specFile $ DevPackages devKitSpecs
 
 readSpec :: FilePath -> KitIO KitSpec
-readSpec path = checkExists path >>= liftIO . BS.readFile >>= ErrorT . return . parses
-  where checkExists pathToSpec = do
-          doesExist <- liftIO $ doesFileExist pathToSpec 
-          if doesExist
-            then return pathToSpec 
-            else throwError ("Couldn't find the spec at " ++ pathToSpec)
-        parses = maybeToRight "Parse error in KitSpec file" . decodeSpec
+readSpec path = do
+    mbKitSpec <- liftIO $ decodeFile path
+    maybeToKitIO ("Error loading spec file " ++ path) mbKitSpec

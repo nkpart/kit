@@ -22,12 +22,12 @@ runAction (FileCreate atPath contents) = do
     renameFile tempPath atPath
   where tempPath = atPath ++ "_"
 runAction (Symlink target name) = do
-  catch (removeLink name) (\_ -> return ())
+  catchSome (removeLink name) (\_ -> return ())
   -- When a `name` has parent directories, symbolic link target needs to be made relative to that file
   -- need to consider "./name"
   let relFix = join $ intersperse "/" $ map (const "..") (init $ splitDirectories name)
   mkdirP $ dropFileName name
-  catch (when' (fileExist target) $ createSymbolicLink (relFix </> target) name) $ \e -> do
+  catchSome (when' (fileExist target) $ createSymbolicLink (relFix </> target) name) $ \e -> do
     error $ "An error occured when creating a symlink to " ++ target ++ " called " ++ name ++ ": " ++ show e
 
 runAction (InDir dir action) = do

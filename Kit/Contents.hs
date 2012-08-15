@@ -9,8 +9,6 @@ import Kit.Util
 import Kit.Xcode.XCConfig
 import Kit.FilePath
 
-import qualified Data.Traversable as T
-
 -- | The determined contents of a particular Kit
 data KitContents = KitContents { 
   contentSpec :: KitSpec, -- ^ The dependency the contents were created from
@@ -52,16 +50,11 @@ readKitContents absKitDir spec =
 
 -- TODO report missing file
 readHeader :: FilePath -> KitSpec -> IO (Maybe String)
-readHeader kitDir spec = do
-  let fp = kitDir </> specPrefixFile spec
-  exists <- doesFileExist fp
-  T.sequence (fmap readFile $ ifTrue exists fp)
+readHeader kitDir spec = readFile' $ kitDir </> specPrefixFile spec
 
 -- TODO report missing file
 readConfig :: FilePath -> KitSpec -> IO (Maybe XCConfig)
 readConfig kitDir spec = do
-  let fp = kitDir </> specConfigFile spec
-  exists <- doesFileExist fp
-  contents <- T.sequence (fmap readFile $ ifTrue exists fp)
+  contents <- readFile' $ kitDir </> specConfigFile spec
   return $ fmap (fileContentsToXCC $ packageName spec) contents
 

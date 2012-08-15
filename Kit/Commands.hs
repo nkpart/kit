@@ -38,8 +38,8 @@ myRepository = Command $ fmap snd ask
 runCommand :: Maybe FilePath -> Command a -> IO ()
 runCommand repository (Command cmd) = run $ do
   spec <- currentWorkingCopy
-  repository <- liftIO $ maybe defaultLocalRepository makeRepository repository
-  runReaderT cmd (spec, repository)
+  rep <- liftIO $ maybe defaultLocalRepository makeRepository repository
+  runReaderT cmd (spec, rep)
   where run = (handleFails =<<) . runErrorT
         handleFails = either (\msg -> putStrLn ("kit error: " ++ msg) >> exitFailure) (const $ return ())
 

@@ -15,24 +15,20 @@ Executable kit
   main-is:        Main.hs
   buildable:      True
   build-depends:  base >=3 && <5,
-                  Glob >= 0.5.1 && < 6, 
+                  Glob >= 0.7.1, 
                   attoparsec,
-                  HTTP,
                   ansi-terminal >= 0.5.5,
-                  bytestring -any, 
                   cabal-file-th >= 0.2.2,
-                  cmdargs >= 0.6.2,
+                  cmdargs >= 0.9.6,
                   containers -any, 
                   yaml,
                   directory -any, 
                   filepath -any, 
                   mtl -any,
-                  network -any, 
                   process -any,
-                  template-haskell,
                   unordered-containers,
                   text,
-                  unix 
+                  unix
 
   hs-source-dirs: .
   other-modules:  Kit.Spec Kit.Main Kit.Package Kit.Project Kit.Repository Kit.Util Kit.Xcode.Builder

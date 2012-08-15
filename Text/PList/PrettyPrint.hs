@@ -7,11 +7,11 @@ import Text.PList
 
 import Kit.Xcode.Common
 
-import "mtl" Control.Monad.Writer (Writer, runWriter, tell)
+import "mtl" Control.Monad.Writer (MonadWriter, Writer, runWriter, tell)
 import "mtl" Control.Monad.State (StateT, get, put, runStateT)
 
 pp :: PListFile -> String
-pp (PListFile charset root value) = "// " ++ charset ++ "\n" ++ printValue (obj value) ++ "\n"
+pp (PListFile charset _ value) = "// " ++ charset ++ "\n" ++ printValue (obj value) ++ "\n"
 
 printItem :: PListObjectItem -> [Char]
 printItem (PListObjectItem k v) = k ++ " = " ++ printValue v ++ ";\n"
@@ -41,15 +41,19 @@ ppFlat (PListFile charset root objects) = "// " ++ charset ++ "\n" ++ printFlat 
                 ("rootObject", FlatStr root)
               ]
 
+seedKeys :: [UUID]
 seedKeys = map uuid [50000..]
 
 printFlat :: FlatDocument -> String
 printFlat = printFlatItem . FlatObj
 
+quoteIf :: String -> String
 quoteIf a = if quotable a then quote a else a
 
+xxx :: ([Char], FlatItem) -> [Char]
 xxx (k,v) = k ++ " = " ++ printFlatItem v ++ ";\n"
 
+printFlatItem :: FlatItem -> String
 printFlatItem (FlatStr a) = quoteIf a
 printFlatItem (FlatArr xs) = "(" ++ join (intersperse ", " $ map quoteIf xs) ++ ")"
 printFlatItem (FlatObj kvs) = "{\n" ++ (kvs >>= (\x -> "  " ++ xxx x)) ++ "}\n"
@@ -93,10 +97,9 @@ readRef = do
   put xs
   return x
 
-writeToRef ref obj = tell [(ref, obj)]
-
+writeObj :: FlatItem -> StateT [String] (Writer [(String, FlatItem)]) String
 writeObj o = do
   r <- readRef
-  writeToRef r o
+  tell [(r,o)]
   return r
 
