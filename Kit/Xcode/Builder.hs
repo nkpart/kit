@@ -5,9 +5,10 @@ module Kit.Xcode.Builder (renderXcodeProject) where
   import Text.PList
   import qualified Text.PList.PrettyPrint as PList (ppFlat)
   import Kit.Util
-  import Data.List (nub)
+  import Data.List (nub, sortBy)
   import "mtl" Control.Monad.State
   import System.FilePath
+  import Data.Function (on)
 
   createBuildFile :: Integer -> FilePath -> PBXBuildFile
   createBuildFile i path = PBXBuildFile uuid1 $ PBXFileReference uuid2 path
@@ -33,7 +34,7 @@ module Kit.Xcode.Builder (renderXcodeProject) where
           bfs = buildFileSection allBuildFiles
           frs = fileReferenceSection (map buildFileReference allBuildFiles) outputLibName 
           -- Groups
-          classes = classesGroup $ map buildFileReference (sourceBuildFiles ++ headerBuildFiles)
+          classes = classesGroup $ sortBy (compare `on` (takeFileName . fileReferencePath)) $ map buildFileReference (sourceBuildFiles ++ headerBuildFiles)
           fg = frameworksGroup $ map buildFileReference libBuildFiles
           -- Phases
           headersPhase = headersBuildPhase headerBuildFiles
