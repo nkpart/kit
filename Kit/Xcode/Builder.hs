@@ -11,9 +11,10 @@ module Kit.Xcode.Builder (renderXcodeProject) where
   import Data.Function (on)
 
   createBuildFile :: Integer -> FilePath -> PBXBuildFile
-  createBuildFile i path = PBXBuildFile uuid1 $ PBXFileReference uuid2 path
+  createBuildFile i path = PBXBuildFile uuid1 (PBXFileReference uuid2 path) compileFlags
     where uuid1 = uuid i
           uuid2 = uuid $ i + 10000000
+          compileFlags = "-fno-objc-arc"
 
   buildFileFromState :: FilePath -> State [Integer] PBXBuildFile
   buildFileFromState filePath = flip createBuildFile filePath <$> popS 
@@ -46,9 +47,9 @@ module Kit.Xcode.Builder (renderXcodeProject) where
 
   buildFileSection :: [PBXBuildFile] -> [PListObjectItem]
   buildFileSection bfs = map buildFileItem bfs ++ [
-      "4728C530117C02B10027D7D1" ~> buildFile kitConfigRefUUID,
-      "AA747D9F0F9514B9006C5449" ~> buildFile "AA747D9E0F9514B9006C5449",
-      "AACBBE4A0F95108600F1A2B1" ~> buildFile "AACBBE490F95108600F1A2B1"
+      "4728C530117C02B10027D7D1" ~> buildFile kitConfigRefUUID "",
+      "AA747D9F0F9514B9006C5449" ~> buildFile "AA747D9E0F9514B9006C5449" "",
+      "AACBBE4A0F95108600F1A2B1" ~> buildFile "AACBBE490F95108600F1A2B1" ""
     ]
 
   fileReferenceSection :: [PBXFileReference] -> String -> [PListObjectItem]
