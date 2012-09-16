@@ -27,6 +27,7 @@ module Kit.Spec (
     specResourcesDirectory :: FilePath,
     specPrefixFile :: FilePath,
     specConfigFile :: FilePath,
+    specWithARC :: Bool,
     specKitDepsXcodeFlags :: Maybe String
   } deriving (Show, Read, Eq)
 
@@ -54,7 +55,7 @@ module Kit.Spec (
     packageVersion = kitVersion . specKit
 
   defaultSpec :: String -> String -> KitSpec
-  defaultSpec name version = KitSpec (Kit name version) [] "src" "test" "lib" "resources" "Prefix.pch" "Config.xcconfig" Nothing 
+  defaultSpec name version = KitSpec (Kit name version) [] "src" "test" "lib" "resources" "Prefix.pch" "Config.xcconfig" False Nothing 
   -- TODO make this and the json reading use the same defaults
   -- I suspect that to do this I'll need update functions for each of
   -- fields in the KitSpec record.
@@ -84,6 +85,7 @@ module Kit.Spec (
          "lib-directory" .= specLibDirectory spec,
          "resources-directory" .= specResourcesDirectory spec,
          "prefix-header" .= specPrefixFile spec,
+         "with-arc" .= specWithARC spec,
          "xcconfig" .= specConfigFile spec
       ] ++ maybeToList (fmap (("kitdeps-xcode-flags" .=)) (specKitDepsXcodeFlags spec)))
       where makeDep dep = object [(T.pack $ kitName dep, String . T.pack $ kitVersion dep)]
@@ -97,5 +99,6 @@ module Kit.Spec (
                                     <*> (obj .:? "resources-directory" .!= "resources")
                                     <*> (obj .:? "prefix-header" .!= "Prefix.pch")
                                     <*> (obj .:? "xcconfig" .!= "Config.xcconfig")
+                                    <*> (obj .:? "with-arc" .!= False)
                                     <*> (Just <$> obj .:? "kitdeps-xcode-flags") .!= Nothing
     parseJSON _ = fail "Couldn't parse KitSpec"

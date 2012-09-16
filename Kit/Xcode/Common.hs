@@ -20,7 +20,8 @@ fileType _ = "sourcecode.unknown"
 
 data PBXBuildFile = PBXBuildFile {
   buildFileId :: UUID,
-  buildFileReference :: PBXFileReference
+  buildFileReference :: PBXFileReference,
+  buildFileFlags :: String
 } deriving (Eq, Show)
   
 data PBXFileReference = PBXFileReference {
@@ -36,11 +37,11 @@ group name children = obj [
     "children" ~> arr children
   ]
 
-buildFile :: String -> PListType
-buildFile refUUID = obj [ "isa" ~> val "PBXBuildFile", "fileRef" ~> val refUUID ]
+buildFile :: String -> String -> PListType
+buildFile refUUID flags = obj [ "isa" ~> val "PBXBuildFile", "fileRef" ~> val refUUID, "settings" ~> obj ["COMPILER_FLAGS" ~> val flags ]]
 
 buildFileItem :: PBXBuildFile -> PListObjectItem 
-buildFileItem bf = buildFileId bf ~> buildFile (fileReferenceId . buildFileReference $ bf) 
+buildFileItem bf = buildFileId bf ~> (buildFile (fileReferenceId . buildFileReference $ bf) (buildFileFlags bf))
 
 fileReferenceItem :: PBXFileReference -> PListObjectItem
 fileReferenceItem fr = fileReferenceId fr ~> dict

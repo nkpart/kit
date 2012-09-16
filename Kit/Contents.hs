@@ -8,14 +8,15 @@ import Kit.Spec
 import Kit.Util
 import Kit.Xcode.XCConfig
 import Kit.FilePath
+import Kit.FlaggedFilePath
 
 -- | The determined contents of a particular Kit
 data KitContents = KitContents { 
   contentSpec :: KitSpec, -- ^ The dependency the contents were created from
   contentBaseDir :: FilePath, -- ^ Path to where the content was loaded from
-  contentHeaders :: [FilePath],     -- ^ Paths to headers
-  contentSources :: [FilePath],     -- ^ Paths to source files
-  contentLibs :: [FilePath],        -- ^ Paths to static libs
+  contentHeaders :: [FlaggedFilePath],     -- ^ Paths to headers
+  contentSources :: [FlaggedFilePath],     -- ^ Paths to source files
+  contentLibs :: [FlaggedFilePath],        -- ^ Paths to static libs
   contentConfig :: Maybe XCConfig,  -- ^ Contents of the xcconfig base file
   contentPrefix :: Maybe String,     -- ^ Contents of the prefix header
   contentResourceDir :: Maybe FilePath
@@ -31,11 +32,13 @@ namedPrefix kc = fmap (\s -> "//" ++ packageFileName kc ++ "\n" ++ s) $ contentP
 readKitContents :: (Applicative m, MonadIO m) => AbsolutePath -> KitSpec -> m KitContents
 readKitContents absKitDir spec =
   let kitDir = filePath absKitDir 
+      flags = (if (specWithARC spec) then "-fobjc-arc" else "-fno-objc-arc")
+      flgFilePath f = flaggedFilePath f flags 
       find dir tpe = liftIO $ inDirectory kitDir $ do
         files <- glob (dir </> "**/*" ++ tpe)
-        mapM canonicalizePath files
+        mapM (flgFilePath) files
       findSrc = find $ specSourceDirectory spec
-      headers = findSrc ".h"
+      headers = findSrc ".h" 
       sources = findSrc .=<<. [".m", ".mm", ".c"]
       libs = find (specLibDirectory spec) ".a" 
       config = liftIO $ readConfig kitDir spec
