@@ -1,23 +1,19 @@
 module Kit.FlaggedFilePath (
-    FlaggedFilePath(..),
-    takeFlaggedFilePath,
-    takeFlags,
+    FlaggedFile,
+    flaggedFile,
     flaggedFilePath,
-    ffp
+    flaggedFileFlags
     ) where
 
-import System.Directory (canonicalizePath)
+import Kit.FilePath as AF
 
-data FlaggedFilePath = FlaggedFilePath FilePath String deriving (Show)
+data FlaggedFile = FlaggedFile {
+                     flaggedFileAbsolutePath :: AbsolutePath,
+                     flaggedFileFlags :: String 
+                     } deriving (Show)
 
-ffp :: FilePath -> String -> FlaggedFilePath
-ffp f cf = FlaggedFilePath f cf 
+flaggedFile :: AbsolutePath -> String -> FlaggedFile
+flaggedFile = FlaggedFile
 
-takeFlaggedFilePath :: FlaggedFilePath -> FilePath
-takeFlaggedFilePath (FlaggedFilePath fp _) = fp
-
-takeFlags :: FlaggedFilePath -> String
-takeFlags (FlaggedFilePath _ flags) = flags
-
-flaggedFilePath :: FilePath -> String -> IO FlaggedFilePath
-flaggedFilePath path flags = fmap (\x -> FlaggedFilePath x flags) $ canonicalizePath path 
+flaggedFilePath :: FlaggedFile -> FilePath
+flaggedFilePath = AF.filePath . flaggedFileAbsolutePath

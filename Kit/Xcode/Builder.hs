@@ -11,21 +11,21 @@ module Kit.Xcode.Builder (renderXcodeProject) where
   import System.FilePath
   import Data.Function (on)
 
-  createBuildFile :: Integer -> FlaggedFilePath -> PBXBuildFile
+  createBuildFile :: Integer -> FlaggedFile -> PBXBuildFile
   createBuildFile i ffpath = PBXBuildFile uuid1 (PBXFileReference uuid2 path) compileFlags
     where uuid1 = uuid i
           uuid2 = uuid $ i + 10000000
-          path = takeFlaggedFilePath ffpath
-          compileFlags = takeFlags ffpath
+          path = flaggedFilePath ffpath
+          compileFlags = flaggedFileFlags ffpath
 
-  buildFileFromState :: FlaggedFilePath -> State [Integer] PBXBuildFile
+  buildFileFromState :: FlaggedFile -> State [Integer] PBXBuildFile
   buildFileFromState filePath = flip createBuildFile filePath <$> popS 
 
   -- | Render an Xcode project!
   renderXcodeProject :: 
-    [FlaggedFilePath]    -- ^ Headers  
-    -> [FlaggedFilePath] -- ^ Sources
-    -> [FlaggedFilePath] -- ^ Static Libs
+    [FlaggedFile]    -- ^ Headers  
+    -> [FlaggedFile] -- ^ Sources
+    -> [FlaggedFile] -- ^ Static Libs
     -> String     -- ^ Output lib name
     -> String     
   renderXcodeProject headers sources libs outputLibName = fst . flip runState [1..] $ do
@@ -44,7 +44,7 @@ module Kit.Xcode.Builder (renderXcodeProject) where
           srcsPhase = sourcesBuildPhase sourceBuildFiles
           frameworksPhase = frameworksBuildPhase libBuildFiles
           -- UUID indices
-          libDirs = nub $ map dropFileName $ map takeFlaggedFilePath libs 
+          libDirs = nub $ map dropFileName $ map flaggedFilePath libs 
       return . PList.ppFlat $ makeProjectPList (bfs ++ frs ++ [classes, headersPhase, srcsPhase, frameworksPhase, fg]) libDirs
 
   buildFileSection :: [PBXBuildFile] -> [PListObjectItem]
