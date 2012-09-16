@@ -12,6 +12,7 @@ import Kit.Util
 import Kit.Util.FSAction
 import Kit.Xcode.Builder
 import Kit.Xcode.XCConfig
+import Kit.FlaggedFilePath
 import Data.List
 import Data.Function
 import Data.Maybe
@@ -74,8 +75,8 @@ makeKitProject kitsContents depsOnlyConfig =
       resources = mapMaybe resourceLink kitsContents
    in KitProject pf header config depsConfig resources
   where createProjectFile cs = let
-                 headers = sortBy (compare `on` takeFileName) (concatMap contentHeaders cs)
-                 sources = sortBy (compare `on` takeFileName) (concatMap contentSources cs)
+                 headers = concatMap contentHeaders cs
+                 sources = concatMap contentSources cs
                  libs = concatMap contentLibs cs
               in renderXcodeProject headers sources libs "libKitDeps.a"
         createHeader cs = let

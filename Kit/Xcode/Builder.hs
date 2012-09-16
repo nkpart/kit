@@ -2,6 +2,7 @@
 module Kit.Xcode.Builder (renderXcodeProject) where
   import Kit.Xcode.Common
   import Kit.Xcode.ProjectFileTemplate
+  import Kit.FlaggedFilePath
   import Text.PList
   import qualified Text.PList.PrettyPrint as PList (ppFlat)
   import Kit.Util
@@ -10,20 +11,21 @@ module Kit.Xcode.Builder (renderXcodeProject) where
   import System.FilePath
   import Data.Function (on)
 
-  createBuildFile :: Integer -> FilePath -> PBXBuildFile
-  createBuildFile i path = PBXBuildFile uuid1 (PBXFileReference uuid2 path) compileFlags
+  createBuildFile :: Integer -> FlaggedFilePath -> PBXBuildFile
+  createBuildFile i ffpath = PBXBuildFile uuid1 (PBXFileReference uuid2 path) compileFlags
     where uuid1 = uuid i
           uuid2 = uuid $ i + 10000000
-          compileFlags = "-fno-objc-arc"
+          path = takeFlaggedFilePath ffpath
+          compileFlags = takeFlags ffpath
 
-  buildFileFromState :: FilePath -> State [Integer] PBXBuildFile
+  buildFileFromState :: FlaggedFilePath -> State [Integer] PBXBuildFile
   buildFileFromState filePath = flip createBuildFile filePath <$> popS 
 
   -- | Render an Xcode project!
   renderXcodeProject :: 
-    [FilePath]    -- ^ Headers  
-    -> [FilePath] -- ^ Sources
-    -> [FilePath] -- ^ Static Libs
+    [FlaggedFilePath]    -- ^ Headers  
+    -> [FlaggedFilePath] -- ^ Sources
+    -> [FlaggedFilePath] -- ^ Static Libs
     -> String     -- ^ Output lib name
     -> String     
   renderXcodeProject headers sources libs outputLibName = fst . flip runState [1..] $ do
@@ -42,7 +44,7 @@ module Kit.Xcode.Builder (renderXcodeProject) where
           srcsPhase = sourcesBuildPhase sourceBuildFiles
           frameworksPhase = frameworksBuildPhase libBuildFiles
           -- UUID indices
-          libDirs = nub $ map dropFileName libs 
+          libDirs = nub $ map dropFileName $ map takeFlaggedFilePath libs 
       return . PList.ppFlat $ makeProjectPList (bfs ++ frs ++ [classes, headersPhase, srcsPhase, frameworksPhase, fg]) libDirs
 
   buildFileSection :: [PBXBuildFile] -> [PListObjectItem]
