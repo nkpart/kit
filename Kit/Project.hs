@@ -12,9 +12,6 @@ import Kit.Util
 import Kit.Util.FSAction
 import Kit.Xcode.Builder
 import Kit.Xcode.XCConfig
-import Kit.FlaggedFilePath
-import Data.List
-import Data.Function
 import Data.Maybe
 import qualified Data.Map as M
 

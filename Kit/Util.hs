@@ -30,6 +30,8 @@ module Kit.Util(
   import Control.Monad.Trans
   import System.Cmd
 
+  import Kit.FilePath
+
   import System.Console.ANSI
 
   import qualified "mtl" Control.Monad.State as S
@@ -95,6 +97,11 @@ module Kit.Util(
     v <- actions
     liftIO $ setCurrentDirectory cwd
     return v
+
+  findFiles :: (MonadIO m, FilePathM p) => p -> FilePath -> String -> m [AbsolutePath]
+  findFiles kitDir dir tpe = liftIO $ inDirectory kitDir $ do
+                                files <- glob (dir </> "**/*" ++ tpe)
+                                T.mapM absolutePath files
 
   glob :: String -> IO [String]
   glob pattern = globDir1 (compile pattern) ""

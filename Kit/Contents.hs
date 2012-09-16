@@ -32,11 +32,11 @@ namedPrefix kc = fmap (\s -> "//" ++ packageFileName kc ++ "\n" ++ s) $ contentP
 readKitContents :: (Applicative m, MonadIO m) => AbsolutePath -> KitSpec -> m KitContents
 readKitContents absKitDir spec =
   let kitDir = filePath absKitDir 
-      flags = (if (specWithARC spec) then "-fobjc-arc" else "-fno-objc-arc")
+      -- We need to flag every file with objc-arc or not, if we do it
+      -- project wide things get really messy.
+      flags = if specWithARC spec then "-fobjc-arc" else "-fno-objc-arc"
       flgFilePath f = flaggedFile f flags 
-      find dir tpe = liftIO $ inDirectory kitDir $ do
-        files <- glob (dir </> "**/*" ++ tpe)
-        mapM (fmap flgFilePath . absolutePath) files
+      find dir tpe = fmap flgFilePath <$> findFiles kitDir dir tpe
       findSrc = find $ specSourceDirectory spec
       headers = findSrc ".h"
       sources = findSrc .=<<. [".m", ".mm", ".c"]
