@@ -8,6 +8,7 @@ import Kit.Spec
 import Kit.Util
 import Kit.Xcode.XCConfig
 import Kit.FilePath
+import Kit.FlaggedFilePath
 
 -- | The determined contents of a particular Kit
 data KitContents = KitContents { 
@@ -31,6 +32,8 @@ namedPrefix kc = fmap (\s -> "//" ++ packageFileName kc ++ "\n" ++ s) $ contentP
 readKitContents :: (Applicative m, MonadIO m) => AbsolutePath -> KitSpec -> m KitContents
 readKitContents absKitDir spec =
   let kitDir = filePath absKitDir 
+      flags = (if (specWithARC spec) then "-fobjc-arc" else "-fno-objc-arc")
+      ffp f = FlaggedFilePath f flags 
       find dir tpe = liftIO $ inDirectory kitDir $ do
         files <- glob (dir </> "**/*" ++ tpe)
         mapM canonicalizePath files
