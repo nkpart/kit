@@ -1,11 +1,11 @@
-module Kit.FlaggedFilePath (
+module Kit.FlaggedFile (
     FlaggedFile,
     flaggedFile,
     flaggedFilePath,
     flaggedFileFlags
     ) where
 
-import Kit.FilePath as AF
+import Kit.AbsolutePath as AF
 
 data FlaggedFile = FlaggedFile {
                      flaggedFileAbsolutePath :: AbsolutePath,

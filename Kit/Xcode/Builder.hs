@@ -2,7 +2,7 @@
 module Kit.Xcode.Builder (renderXcodeProject) where
   import Kit.Xcode.Common
   import Kit.Xcode.ProjectFileTemplate
-  import Kit.FlaggedFilePath
+  import Kit.FlaggedFile
   import Text.PList
   import qualified Text.PList.PrettyPrint as PList (ppFlat)
   import Kit.Util

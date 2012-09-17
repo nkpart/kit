@@ -7,8 +7,8 @@ module Kit.Contents (
 import Kit.Spec
 import Kit.Util
 import Kit.Xcode.XCConfig
-import Kit.FilePath
-import Kit.FlaggedFilePath
+import Kit.AbsolutePath
+import Kit.FlaggedFile
 
 -- | The determined contents of a particular Kit
 data KitContents = KitContents { 
