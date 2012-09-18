@@ -1,4 +1,4 @@
-module Kit.FilePath (
+module Kit.AbsolutePath (
     AbsolutePath,
     filePath,
     absolutePath

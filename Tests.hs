@@ -11,7 +11,7 @@ module Tests where
   import qualified Kit.Contents as KC
   import Kit.Spec
   import Kit.Util.FSAction as FSA
-  import Kit.FilePath
+  import Kit.AbsolutePath
 
   import qualified Data.Yaml as Y
   import Debug.Trace

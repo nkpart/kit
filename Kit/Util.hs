@@ -30,7 +30,7 @@ module Kit.Util(
   import Control.Monad.Trans
   import System.Cmd
 
-  import Kit.FilePath
+  import Kit.AbsolutePath
 
   import System.Console.ANSI
 
