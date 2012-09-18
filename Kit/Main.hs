@@ -18,7 +18,7 @@ module Kit.Main where
   import Data.Function (on)
   import Kit.Repository (KitRepository, unpackKit, packagesDirectory, publishLocally)
   import Control.Monad.State
-  import Kit.FilePath
+  import Kit.AbsolutePath
 
   kitMain :: IO ()
   kitMain = do
