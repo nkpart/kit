@@ -19,7 +19,7 @@ newtype Command a = Command {
   unCommand :: ReaderT (WorkingCopy, KitRepository) Script a 
 } deriving (Monad, MonadIO, Functor, Applicative)
 
-liftKit :: KitIO a -> Command a
+liftKit :: Script a -> Command a
 liftKit = Command . ReaderT . const
 
 mySpec :: Command KitSpec

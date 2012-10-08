@@ -1,10 +1,7 @@
-{-# LANGUAGE FlexibleInstances, TypeSynonymInstances, PackageImports, ScopedTypeVariables #-}
-
 module Kit.Util(
   module Kit.Util,
   module Exported,
   Color(..),
-  (>>>),
   (</>), takeFileName, takeDirectory,
   tryJust
   ) where
@@ -25,14 +22,13 @@ module Kit.Util(
   import Data.Monoid
   import Data.Traversable as T
 
-  import Control.Arrow
   import System.Cmd
 
   import Kit.AbsolutePath
 
   import System.Console.ANSI
 
-  import qualified "mtl" Control.Monad.State as S
+  import Control.Monad.State as S
 
   popS :: S.State [a] a
   popS = do
@@ -51,11 +47,6 @@ module Kit.Util(
 
   ifTrue :: MonadPlus m => Bool -> a -> m a
   ifTrue p a = if p then return a else mzero
-
-  type KitIO = Script
-
-  maybeToKitIO :: String -> Maybe a -> KitIO a
-  maybeToKitIO = tryJust 
 
   mkdirP :: MonadIO m => FilePath -> m ()
   mkdirP = liftIO . createDirectoryIfMissing True

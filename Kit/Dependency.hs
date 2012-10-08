@@ -8,13 +8,13 @@ module Kit.Dependency (
     dependencyTree
   ) where
 
+import Control.Error
 import Kit.Util
 import Kit.Spec
 import Kit.Repository
 import Kit.WorkingCopy
 import Data.Tree (Tree, levels, unfoldTreeM)
 import Data.List (nub)
-import Data.Maybe (isJust)
 
 data Dependency = Dependency { depSpec :: KitSpec, mbKitPath :: Maybe FilePath } deriving (Eq, Show)
 
@@ -35,10 +35,10 @@ refineDeps :: Eq a => Tree a -> [a]
 refineDeps = nub . concat . reverse . drop 1 . levels
 
 -- todo: check for version ranges :)
-totalSpecDependencies :: KitRepository -> WorkingCopy -> KitIO [Dependency]
+totalSpecDependencies :: KitRepository -> WorkingCopy -> Script [Dependency]
 totalSpecDependencies repo workingCopy = refineDeps <$> dependencyTree repo workingCopy
 
-dependencyTree :: KitRepository -> WorkingCopy -> KitIO (Tree Dependency)
+dependencyTree :: KitRepository -> WorkingCopy -> Script (Tree Dependency)
 dependencyTree repo workingCopy = unfoldTreeM (unfoldDeps repo devPackages) baseSpec
   where devPackages = workingDevPackages workingCopy
         baseSpec = workingKitSpec workingCopy
@@ -50,7 +50,7 @@ lookupDependency devPackages ks = maybe (Dependency ks Nothing) (\(ks',fp) -> De
 findDevKitSpec :: DevPackages -> Kit -> Maybe KitSpec
 findDevKitSpec devPackages kit = fmap fst $ findDevPackage devPackages kit
 
-unfoldDeps :: KitRepository -> DevPackages -> KitSpec -> KitIO (Dependency, [KitSpec])
+unfoldDeps :: KitRepository -> DevPackages -> KitSpec -> Script (Dependency, [KitSpec])
 unfoldDeps kr devPackages spec = let rootDep = lookupDependency devPackages spec
                                      lookup' kit = maybe (readKitSpec kr kit) return $ findDevKitSpec devPackages kit 
                                   in do

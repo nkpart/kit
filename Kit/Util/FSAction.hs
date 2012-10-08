@@ -30,7 +30,7 @@ runAction (Symlink target name) = do
   let relFix = join $ intersperse "/" $ map (const "..") (init $ splitDirectories name)
   mkdirP $ dropFileName name
   let printError e = "An error occured when creating a symlink to " ++ target ++ " called " ++ name ++ ": " ++ show e
-  runScript . mapEitherT printError id . scriptIO $ when' (fileExist target) (createSymbolicLink (relFix </> target) name)
+  runScript . fmapLT printError . scriptIO $ when' (fileExist target) (createSymbolicLink (relFix </> target) name)
 
 runAction (InDir dir action) = do
   mkdirP dir

@@ -40,7 +40,7 @@ module Kit.Main where
                 rawDeps <- totalSpecDependencies repo workingCopy
                 (deps, didResolveConflict) <- unconflict rawDeps
                 let (devPackages, repoPackages) = partition isDevDep deps
-                mapM_ (unpackKit repo) repoPackages
+                mapM_ (liftIO . unpackKit repo) repoPackages
                 mapM_ (sayError . ("Using dev-package: " ++) . packageName) devPackages
                 project <- buildProject repo workingCopy deps
                 reportResources project

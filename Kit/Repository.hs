@@ -12,6 +12,7 @@ module Kit.Repository (
   import Kit.Spec
   import Kit.Util
   import Data.Yaml (decodeFile)
+  import Control.Error
 
   data KitRepository = KitRepository { dotKitDir :: FilePath } deriving (Eq, Show)
 
@@ -23,7 +24,7 @@ module Kit.Repository (
     mkdirP $ localCacheDir repo
     return repo
 
-  readKitSpec :: KitRepository -> Kit -> KitIO KitSpec
+  readKitSpec :: MonadIO m => KitRepository -> Kit -> EitherT String m KitSpec
   readKitSpec repo kit = do
     mbLoaded <- liftIO $ decodeFile (localCacheDir repo </> kitSpecPath kit)
     tryJust ("Invalid KitSpec file for " ++ packageFileName kit) mbLoaded
@@ -40,18 +41,18 @@ module Kit.Repository (
   packagesDirectory :: KitRepository -> FilePath
   packagesDirectory kr = dotKitDir kr </> "packages"
 
-  unpackKit :: (Packageable a, MonadIO m) => KitRepository -> a -> m ()
+  unpackKit :: (Packageable a) => KitRepository -> a -> IO ()
   unpackKit kr kit = do
       let source = localCacheDir kr </> kitPackagePath kit
       let dest = packagesDirectory kr
-      d <- liftIO $ doesDirectoryExist $ dest </> packageFileName kit
+      d <- doesDirectoryExist $ dest </> packageFileName kit
       if not d 
         then do
-          puts $ "Unpacking: " ++ packageFileName kit
+          putStrLn $ "Unpacking: " ++ packageFileName kit
           mkdirP dest 
-          liftIO $ inDirectory dest $ shell ("tar zxf " ++ source)
+          inDirectory dest $ shell ("tar zxf " ++ source)
           return ()
-        else puts $ "Using: " ++ packageFileName kit
+        else putStrLn $ "Using: " ++ packageFileName kit
       return ()
 
   publishLocally :: KitRepository -> KitSpec -> FilePath -> FilePath -> IO ()
