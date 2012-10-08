@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TupleSections, FlexibleContexts #-}
 module Kit.Dependency (
     totalSpecDependencies,
     Dependency,
@@ -47,12 +47,12 @@ lookupDependency :: DevPackages -> KitSpec -> Dependency
 lookupDependency devPackages ks = maybe (Dependency ks Nothing) (\(ks',fp) -> Dependency ks' (Just fp)) thisDev
     where thisDev = findDevPackage devPackages ks
 
-findKitSpec :: DevPackages -> Kit -> Maybe KitSpec
-findKitSpec devPackages kit = fmap fst $ findDevPackage devPackages kit
+findDevKitSpec :: DevPackages -> Kit -> Maybe KitSpec
+findDevKitSpec devPackages kit = fmap fst $ findDevPackage devPackages kit
 
 unfoldDeps :: KitRepository -> DevPackages -> KitSpec -> KitIO (Dependency, [KitSpec])
 unfoldDeps kr devPackages spec = let rootDep = lookupDependency devPackages spec
-                                     lookup' kit = maybe (readKitSpec kr kit) return $ findKitSpec devPackages kit 
+                                     lookup' kit = maybe (readKitSpec kr kit) return $ findDevKitSpec devPackages kit 
                                   in do
                                       children <- mapM lookup' . specDependencies . depSpec $ rootDep
                                       return (rootDep, children)

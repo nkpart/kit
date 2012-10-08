@@ -38,4 +38,4 @@ currentWorkingCopy = do
 readSpec :: FilePath -> KitIO KitSpec
 readSpec path = do
     mbKitSpec <- liftIO $ decodeFile path
-    maybeToKitIO ("Error loading spec file " ++ path) mbKitSpec
+    tryJust ("Error loading spec file " ++ path) mbKitSpec

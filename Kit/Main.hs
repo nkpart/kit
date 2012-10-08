@@ -1,4 +1,3 @@
-{-# LANGUAGE PackageImports #-}
 module Kit.Main where
 
   import qualified Kit.CmdArgs as KA 
@@ -23,10 +22,7 @@ module Kit.Main where
   kitMain :: IO ()
   kitMain = do
     args <- KA.parseArgs
-    let action = runCommand (KA.repositoryDir args) . handleArgs $ args
-    catchSome action $ \e -> do
-        sayError $ show e
-        exitWith $ ExitFailure 1 
+    runCommand (KA.repositoryDir args) . handleArgs $ args
 
   handleArgs :: KA.KitCmdArgs -> Command ()
   handleArgs (KA.Update _) = doUpdate
@@ -107,7 +103,7 @@ module Kit.Main where
         puts " #> Deploying locally"
         doPublishLocal Nothing -- TODO publish with a verify tag
         puts " #> Building temporary parent project"
-        liftIO $ inDirectory getTemporaryDirectory $ do
+        liftIO $ inDirectoryM getTemporaryDirectory $ do
           let kitVerifyDir = "kit-verify"
           cleanOrCreate kitVerifyDir
           inDirectory kitVerifyDir $ do

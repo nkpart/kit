@@ -1,4 +1,3 @@
-{-# LANGUAGE PackageImports #-}
 module Kit.Repository (
     --
     KitRepository,
@@ -27,7 +26,7 @@ module Kit.Repository (
   readKitSpec :: KitRepository -> Kit -> KitIO KitSpec
   readKitSpec repo kit = do
     mbLoaded <- liftIO $ decodeFile (localCacheDir repo </> kitSpecPath kit)
-    maybeToKitIO ("Invalid KitSpec file for " ++ packageFileName kit) mbLoaded
+    tryJust ("Invalid KitSpec file for " ++ packageFileName kit) mbLoaded
 
   baseKitPath :: Packageable a => a -> String
   baseKitPath k = packageName k </> packageVersion k
@@ -43,7 +42,7 @@ module Kit.Repository (
 
   unpackKit :: (Packageable a, MonadIO m) => KitRepository -> a -> m ()
   unpackKit kr kit = do
-      let source = (localCacheDir kr </> kitPackagePath kit)
+      let source = localCacheDir kr </> kitPackagePath kit
       let dest = packagesDirectory kr
       d <- liftIO $ doesDirectoryExist $ dest </> packageFileName kit
       if not d 
@@ -58,12 +57,12 @@ module Kit.Repository (
   publishLocally :: KitRepository -> KitSpec -> FilePath -> FilePath -> IO ()
   publishLocally kr ks specFile packageFile = do
                               let cacheDir = localCacheDir kr
-                              let thisKitDir = cacheDir </> baseKitPath (specKit ks)
+                              let thisKitDir = cacheDir </> baseKitPath ks
                               mkdirP thisKitDir
                               let fname = takeFileName packageFile
                               copyFile packageFile (thisKitDir </> fname)
                               copyFile specFile (thisKitDir </> "KitSpec")
-                              let pkg = packagesDirectory kr </> packageFileName (specKit ks)
+                              let pkg = packagesDirectory kr </> packageFileName ks
                               d <- doesDirectoryExist pkg
                               when d $ removeDirectoryRecursive pkg
 

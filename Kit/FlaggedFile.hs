@@ -12,8 +12,8 @@ data FlaggedFile = FlaggedFile {
                      flaggedFileFlags :: String 
                      } deriving (Show)
 
-flaggedFile :: AbsolutePath -> String -> FlaggedFile
-flaggedFile = FlaggedFile
+flaggedFile :: String -> AbsolutePath -> FlaggedFile
+flaggedFile a b = FlaggedFile b a
 
 flaggedFilePath :: FlaggedFile -> FilePath
 flaggedFilePath = AF.filePath . flaggedFileAbsolutePath

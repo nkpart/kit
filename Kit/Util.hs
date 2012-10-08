@@ -2,32 +2,30 @@
 
 module Kit.Util(
   module Kit.Util,
-  module Control.Applicative,
-  module Control.Monad,
-  module System.Directory,
-  module Control.Monad.Trans,
+  module Exported,
   Color(..),
   (>>>),
-  (</>), takeFileName, takeDirectory
+  (</>), takeFileName, takeDirectory,
+  tryJust
   ) where
+  
+  import Control.Applicative as Exported
+  import Control.Monad.Trans as Exported
+  import Control.Monad as Exported
+  import System.Directory as Exported
 
-  import System.Directory
   import System.FilePath.Posix ((</>), takeFileName, takeDirectory)
   import System.FilePath.Glob (globDir1, compile)
 
   import System.Environment (getEnv)
-  import Control.Exception (try, SomeException)
+
+  import Control.Error
 
   import Data.List
-  import Data.Maybe
   import Data.Monoid
   import Data.Traversable as T
 
   import Control.Arrow
-  import Control.Applicative
-  import Control.Monad
-  import Control.Monad.Error
-  import Control.Monad.Trans
   import System.Cmd
 
   import Kit.AbsolutePath
@@ -36,11 +34,6 @@ module Kit.Util(
 
   import qualified "mtl" Control.Monad.State as S
 
-  import Control.Exception as E (catch)
-
-  catchSome :: IO a -> (SomeException -> IO a) -> IO a
-  catchSome = E.catch
-
   popS :: S.State [a] a
   popS = do
     (x:t) <- S.get
@@ -48,32 +41,21 @@ module Kit.Util(
     return x
 
   shell :: String -> IO ()
-  shell c = do
-    _ <- system c
-    return ()
+  shell = void . system
 
   when' :: Monad m => m Bool -> m () -> m ()
   when' a b = a >>= flip when b
 
   puts :: MonadIO m => String -> m ()
-  puts a = liftIO $ putStrLn a
-
-  maybeRead :: Read a => String -> Maybe a
-  maybeRead = fmap fst . listToMaybe . reads
+  puts = liftIO . putStrLn
 
   ifTrue :: MonadPlus m => Bool -> a -> m a
   ifTrue p a = if p then return a else mzero
 
-  maybeToRight :: b -> Maybe a -> Either b a
-  maybeToRight v = maybe (Left v) Right
+  type KitIO = Script
 
-  maybeToLeft :: b -> Maybe a -> Either a b
-  maybeToLeft v = maybe (Right v) Left
-
-  type KitIO a = ErrorT String IO a
-  
   maybeToKitIO :: String -> Maybe a -> KitIO a
-  maybeToKitIO msg = maybe (throwError msg) return
+  maybeToKitIO = tryJust 
 
   mkdirP :: MonadIO m => FilePath -> m ()
   mkdirP = liftIO . createDirectoryIfMissing True
@@ -83,22 +65,21 @@ module Kit.Util(
     exists <- doesDirectoryExist directory
     when exists $ removeDirectoryRecursive directory
     mkdirP directory
-
-  -- Typeclass so that inDirectory can act on effectful values
-  class FilePathM a where filePathM :: MonadIO m => a -> m FilePath
-  instance FilePathM FilePath where filePathM = return 
-  instance FilePathM (IO FilePath) where filePathM = liftIO . id
     
-  inDirectory :: (FilePathM p, MonadIO m) => p -> m a -> m a
+  inDirectory :: MonadIO m => FilePath -> m a -> m a
   inDirectory fp actions = do
     cwd <- liftIO getCurrentDirectory
-    dir <- filePathM fp
-    liftIO $ setCurrentDirectory dir
+    liftIO $ setCurrentDirectory fp
     v <- actions
     liftIO $ setCurrentDirectory cwd
     return v
 
-  findFiles :: (MonadIO m, FilePathM p) => p -> FilePath -> String -> m [AbsolutePath]
+  inDirectoryM :: (MonadIO m) => m FilePath -> m a -> m a
+  inDirectoryM m a = do
+    v <- m
+    inDirectory v a
+
+  findFiles :: MonadIO m => FilePath -> FilePath -> String -> m [AbsolutePath]
   findFiles kitDir dir tpe = liftIO $ inDirectory kitDir $ do
                                 files <- glob (dir </> "**/*" ++ tpe)
                                 T.mapM absolutePath files
@@ -119,7 +100,7 @@ module Kit.Util(
     liftM join . T.mapM f
 
   getEnv' :: String -> IO (Maybe String)
-  getEnv' = fmap (either (\(_ :: SomeException) -> Nothing) Just) . try . getEnv
+  getEnv' = fmap hush . runEitherT . tryIO . getEnv
 
   isSet :: String -> IO Bool
   isSet = fmap isJust . getEnv'

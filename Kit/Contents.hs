@@ -35,8 +35,7 @@ readKitContents absKitDir spec =
       -- We need to flag every file with objc-arc or not, if we do it
       -- project wide things get really messy.
       flags = if specWithARC spec then "-fobjc-arc" else "-fno-objc-arc"
-      flgFilePath f = flaggedFile f flags 
-      find dir tpe = fmap flgFilePath <$> findFiles kitDir dir tpe
+      find dir tpe = fmap (flaggedFile flags) <$> findFiles kitDir dir tpe
       findSrc = find $ specSourceDirectory spec
       headers = findSrc ".h"
       sources = findSrc .=<<. [".m", ".mm", ".c"]

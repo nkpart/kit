@@ -3,6 +3,8 @@ module Kit.Util.FSAction where
 import System.FilePath
 import System.Posix.Files
 
+import Control.Error
+
 import Kit.Util
 import Data.List (intersperse)
 
@@ -22,13 +24,13 @@ runAction (FileCreate atPath contents) = do
     renameFile tempPath atPath
   where tempPath = atPath ++ "_"
 runAction (Symlink target name) = do
-  catchSome (removeLink name) (\_ -> return ())
+  _ <- runEitherT . scriptIO $ removeLink name
   -- When a `name` has parent directories, symbolic link target needs to be made relative to that file
   -- need to consider "./name"
   let relFix = join $ intersperse "/" $ map (const "..") (init $ splitDirectories name)
   mkdirP $ dropFileName name
-  catchSome (when' (fileExist target) $ createSymbolicLink (relFix </> target) name) $ \e -> do
-    error $ "An error occured when creating a symlink to " ++ target ++ " called " ++ name ++ ": " ++ show e
+  let printError e = "An error occured when creating a symlink to " ++ target ++ " called " ++ name ++ ": " ++ show e
+  runScript . mapEitherT printError id . scriptIO $ when' (fileExist target) (createSymbolicLink (relFix </> target) name)
 
 runAction (InDir dir action) = do
   mkdirP dir

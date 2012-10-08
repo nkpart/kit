@@ -65,7 +65,7 @@ module Kit.Spec (
     toJSON kit = object ["name" .= kitName kit, "version" .= kitVersion kit]
 
   showNum :: Number -> String
-  showNum l = show l
+  showNum = show
 
   instance FromJSON Kit where
     parseJSON (Object obj) = (Kit <$> obj .: "name" <*> (obj .: "version" <|> (showNum <$> obj .: "version"))) <|> case HM.toList obj of
@@ -79,7 +79,7 @@ module Kit.Spec (
     toJSON spec = object ([
          "name" .= (kitName . specKit) spec,
          "version" .= (kitVersion . specKit) spec,
-         "dependencies" .= (map makeDep (specDependencies spec)),
+         "dependencies" .= map makeDep (specDependencies spec),
          "source-directory" .= specSourceDirectory spec,
          "test-directory" .= specTestDirectory spec,
          "lib-directory" .= specLibDirectory spec,
@@ -87,7 +87,7 @@ module Kit.Spec (
          "prefix-header" .= specPrefixFile spec,
          "with-arc" .= specWithARC spec,
          "xcconfig" .= specConfigFile spec
-      ] ++ maybeToList (fmap (("kitdeps-xcode-flags" .=)) (specKitDepsXcodeFlags spec)))
+      ] ++ maybeToList (fmap ("kitdeps-xcode-flags" .=) (specKitDepsXcodeFlags spec)))
       where makeDep dep = object [(T.pack $ kitName dep, String . T.pack $ kitVersion dep)]
 
   instance FromJSON KitSpec where

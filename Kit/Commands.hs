@@ -12,14 +12,11 @@ import Kit.Util
 import Kit.Spec
 import Kit.Repository
 import Kit.WorkingCopy
-
-import System.Exit (exitFailure)
-
-import Control.Monad.Error
 import Control.Monad.Reader
+import Control.Error
 
 newtype Command a = Command { 
-  unCommand :: (ReaderT (WorkingCopy, KitRepository) (ErrorT String IO) a) 
+  unCommand :: ReaderT (WorkingCopy, KitRepository) Script a 
 } deriving (Monad, MonadIO, Functor, Applicative)
 
 liftKit :: KitIO a -> Command a
@@ -34,13 +31,11 @@ myWorkingCopy = Command $ fmap fst ask
 myRepository :: Command KitRepository
 myRepository = Command $ fmap snd ask
 
-runCommand :: Maybe FilePath -> Command a -> IO ()
-runCommand repository (Command cmd) = run $ do
+runCommand :: Maybe FilePath -> Command a -> IO a
+runCommand repository (Command cmd) = runScript $ do
   spec <- currentWorkingCopy
   rep <- liftIO $ maybe defaultLocalRepository makeRepository repository
   runReaderT cmd (spec, rep)
-  where run = (handleFails =<<) . runErrorT
-        handleFails = either (\msg -> putStrLn ("kit error: " ++ msg) >> exitFailure) (const $ return ())
 
 defaultLocalRepository :: IO KitRepository
 defaultLocalRepository = makeRepository =<< (</> ".kit" ) <$> getHomeDirectory
