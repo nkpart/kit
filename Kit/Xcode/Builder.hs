@@ -28,7 +28,7 @@ module Kit.Xcode.Builder (renderXcodeProject) where
     -> [FlaggedFile] -- ^ Static Libs
     -> String     -- ^ Output lib name
     -> String     
-  renderXcodeProject headers sources libs outputLibName = fst . flip runState [1..] $ do
+  renderXcodeProject headers sources libs outputLibName = fst . flip runState [(1::Integer)..] $ do
       headerBuildFiles <- mapM buildFileFromState headers
       sourceBuildFiles <- mapM buildFileFromState sources
       libBuildFiles <- mapM buildFileFromState libs -- Build File Items
@@ -44,7 +44,7 @@ module Kit.Xcode.Builder (renderXcodeProject) where
           srcsPhase = sourcesBuildPhase sourceBuildFiles
           frameworksPhase = frameworksBuildPhase libBuildFiles
           -- UUID indices
-          libDirs = nub $ map dropFileName $ map flaggedFilePath libs 
+          libDirs = nub $ map (dropFileName . flaggedFilePath) libs 
       return . PList.ppFlat $ makeProjectPList (bfs ++ frs ++ [classes, headersPhase, srcsPhase, frameworksPhase, fg]) libDirs
 
   buildFileSection :: [PBXBuildFile] -> [PListObjectItem]
