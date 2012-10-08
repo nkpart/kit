@@ -16,7 +16,7 @@ import Data.Tree (Tree, levels, unfoldTreeM)
 import Data.List (nub)
 import Data.Maybe (isJust)
 
-data Dependency = Dependency { depSpec :: KitSpec, mbKitPath :: (Maybe FilePath) } deriving (Eq, Show)
+data Dependency = Dependency { depSpec :: KitSpec, mbKitPath :: Maybe FilePath } deriving (Eq, Show)
 
 -- Fold over a dependency
 dependency :: (KitSpec -> a) -> (FilePath -> KitSpec -> a) -> Dependency -> a
