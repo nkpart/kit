@@ -1,5 +1,5 @@
 name:           kit
-version:        0.7.10
+version:        0.7.11
 cabal-version:  >=1.6
 build-type:     Simple
 license:        BSD3
@@ -35,7 +35,7 @@ Executable kit
   other-modules:  Kit.Spec Kit.Main Kit.Package Kit.Project Kit.Repository Kit.Util Kit.Xcode.Builder
                   Kit.Xcode.Common Kit.Xcode.ProjectFileTemplate Kit.Xcode.XCConfig Text.PList Text.PList.PrettyPrint
                   Kit.Contents Kit.Commands Kit.CmdArgs Kit.Util.FSAction Kit.WorkingCopy Kit.AbsolutePath
-                  Kit.Dependency
+                  Kit.Dependency Kit.FlaggedFile
   Ghc-options:    -Wall
 
 source-repository head
