@@ -13,7 +13,7 @@ module Kit.Package (package) where
       contents <- filter (fileBelongsInPackage spec) <$> getDirectoryContents "."
       mkdirP distDir
       let escapedContents = map (\x -> "\"" ++ x ++ "\"") contents
-      sh $ envDontCopy ++ " tar -czf " ++ (distDir </> (kitPath ++ ".tar.gz")) ++ " -s ,^," ++ kitPath ++ "/, " ++ join (intersperse " " escapedContents)
+      sh $ envDontCopy ++ " tar -czhf " ++ (distDir </> (kitPath ++ ".tar.gz")) ++ " -s ,^," ++ kitPath ++ "/, " ++ join (intersperse " " escapedContents)
       return ()
     where
       distDir = "dist"
