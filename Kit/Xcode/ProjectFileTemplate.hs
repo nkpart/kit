@@ -95,15 +95,11 @@ buildConfigurations libDirs = let libSearch = librarySearchPaths libDirs in [
               "buildConfigurations" ~> arr [buildConfiguration "Debug" (Just kitConfigRefUUID) [
                                                     "GCC_C_LANGUAGE_STANDARD" ~> val "c99",
                                                     "GCC_OPTIMIZATION_LEVEL" ~> val "0",
-                                                    "GCC_WARN_ABOUT_RETURN_TYPE" ~> val "YES",
-                                                    "GCC_WARN_UNUSED_VARIABLE" ~> val "YES",
                                                     "OTHER_LDFLAGS" ~> val "-ObjC",
                                                     "SDKROOT" ~> val "iphoneos",
                                                     libSearch ]
                                             , buildConfiguration "Release" (Just kitConfigRefUUID) [
                                                     "GCC_C_LANGUAGE_STANDARD" ~> val "c99",
-                                                    "GCC_WARN_ABOUT_RETURN_TYPE" ~> val "YES",
-                                                    "GCC_WARN_UNUSED_VARIABLE" ~> val "YES",
                                                     "OTHER_LDFLAGS" ~> val "-ObjC",
                                                     "SDKROOT" ~> val "iphoneos",
                                                     libSearch
