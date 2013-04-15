@@ -96,12 +96,10 @@ buildConfigurations libDirs = let libSearch = librarySearchPaths libDirs in [
                                                     "GCC_C_LANGUAGE_STANDARD" ~> val "c99",
                                                     "GCC_OPTIMIZATION_LEVEL" ~> val "0",
                                                     "OTHER_LDFLAGS" ~> val "-ObjC",
-                                                    "SDKROOT" ~> val "iphoneos",
                                                     libSearch ]
                                             , buildConfiguration "Release" (Just kitConfigRefUUID) [
                                                     "GCC_C_LANGUAGE_STANDARD" ~> val "c99",
                                                     "OTHER_LDFLAGS" ~> val "-ObjC",
-                                                    "SDKROOT" ~> val "iphoneos",
                                                     libSearch
                                                   ]],
               "defaultConfigurationIsVisible" ~> val "0",
