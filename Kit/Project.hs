@@ -34,9 +34,13 @@ kitUpdateMakeFile = "kit: Kit.xcconfig\n" ++
                     "\tcd .. && kit update && exit 1\n"
 
 prefixDefault :: String
-prefixDefault = "#ifdef __OBJC__\n" ++ 
-                "    #import <Foundation/Foundation.h>\n" ++ 
-                "    #import <UIKit/UIKit.h>\n" ++ 
+prefixDefault = "#ifdef __OBJC__\n" ++
+                "    #import <Foundation/Foundation.h>\n" ++
+                "    #if TARGET_OS_MAC\n" ++
+                "        #import <Cocoa/Cocoa.h>\n" ++
+                "    #else\n" ++
+                "        #import <UIKit/UIKit.h>\n" ++
+                "    #endif\n" ++
                 "#endif\n"
 
 data KitProject = KitProject {
@@ -68,7 +72,7 @@ makeKitProject kitsContents depsOnlyConfig =
       header = createHeader kitsContents
       config = createConfig kitsContents
       -- TODO: Make this specify an xcconfig data type
-      depsConfig = "#include \"" ++ xcodeConfigFile ++ "\"\n\nSKIP_INSTALL=YES\n\n" ++ fromMaybe "" depsOnlyConfig 
+      depsConfig = "#include \"" ++ xcodeConfigFile ++ "\"\n\nSKIP_INSTALL=YES\nSDKROOT=iphoneos\n\n" ++ fromMaybe "" depsOnlyConfig 
       resources = mapMaybe resourceLink kitsContents
    in KitProject pf header config depsConfig resources
   where createProjectFile cs = let
