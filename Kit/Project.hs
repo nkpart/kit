@@ -6,6 +6,7 @@ module Kit.Project (
   )
     where
 
+import Kit.AbsolutePath (filePath)
 import Kit.Spec
 import Kit.Contents
 import Kit.Util
@@ -14,6 +15,7 @@ import Kit.Xcode.Builder
 import Kit.Xcode.XCConfig
 import Data.Maybe
 import qualified Data.Map as M
+import Kit.FlaggedFile
 
 -- Paths
 
@@ -27,6 +29,7 @@ xcodeConfigFile = "Kit.xcconfig"
 depsConfigFile = "DepsOnly.xcconfig"
 kitUpdateMakeFilePath = "Makefile"
 kitResourceDir = "Resources"
+kitFrameworksDir = "Frameworks"
 
 kitUpdateMakeFile :: String
 kitUpdateMakeFile = "kit: Kit.xcconfig\n" ++
@@ -34,9 +37,13 @@ kitUpdateMakeFile = "kit: Kit.xcconfig\n" ++
                     "\tcd .. && kit update && exit 1\n"
 
 prefixDefault :: String
-prefixDefault = "#ifdef __OBJC__\n" ++ 
-                "    #import <Foundation/Foundation.h>\n" ++ 
-                "    #import <UIKit/UIKit.h>\n" ++ 
+prefixDefault = "#ifdef __OBJC__\n" ++
+                "    #import <Foundation/Foundation.h>\n" ++
+                "    #if TARGET_OS_MAC\n" ++
+                "        #import <Cocoa/Cocoa.h>\n" ++
+                "    #else\n" ++
+                "        #import <UIKit/UIKit.h>\n" ++
+                "    #endif\n" ++
                 "#endif\n"
 
 data KitProject = KitProject {
@@ -62,20 +69,26 @@ resourceLink :: KitContents -> Maybe (FilePath, FilePath)
 resourceLink contents =  fmap (,linkName) $ contentResourceDir contents where 
                             linkName = kitResourceDir </> packageName contents
 
+frameworkLink :: KitContents -> [(FilePath, FilePath)]
+frameworkLink contents =  fmap f $ contentFrameworks contents where 
+							f absFilePath = let fp = filePath absFilePath in (fp,kitFrameworksDir </> takeFileName fp)
+
 makeKitProject :: [KitContents] -> Maybe String -> KitProject
 makeKitProject kitsContents depsOnlyConfig = 
   let pf = createProjectFile kitsContents
       header = createHeader kitsContents
       config = createConfig kitsContents
       -- TODO: Make this specify an xcconfig data type
-      depsConfig = "#include \"" ++ xcodeConfigFile ++ "\"\n\nSKIP_INSTALL=YES\n\n" ++ fromMaybe "" depsOnlyConfig 
+      depsConfig = "#include \"" ++ xcodeConfigFile ++ "\"\n\nSKIP_INSTALL=YES\nSDKROOT=iphoneos\n\n" ++ fromMaybe "" depsOnlyConfig 
+      frameworks = concatMap frameworkLink kitsContents
       resources = mapMaybe resourceLink kitsContents
-   in KitProject pf header config depsConfig resources
+   in KitProject pf header config depsConfig (frameworks ++ resources)
   where createProjectFile cs = let
                  headers = concatMap contentHeaders cs
                  sources = concatMap contentSources cs
                  libs = concatMap contentLibs cs
-              in renderXcodeProject headers sources libs "libKitDeps.a"
+                 frameworks = map (flaggedFile "") (concatMap contentFrameworks cs)
+              in renderXcodeProject headers sources libs frameworks "libKitDeps.a"
         createHeader cs = let
                  headers = mapMaybe namedPrefix cs
                  combinedHeader = stringJoin "\n" headers

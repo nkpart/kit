@@ -26,26 +26,29 @@ module Kit.Xcode.Builder (renderXcodeProject) where
     [FlaggedFile]    -- ^ Headers  
     -> [FlaggedFile] -- ^ Sources
     -> [FlaggedFile] -- ^ Static Libs
+    -> [FlaggedFile] -- ^ Frameworks
     -> String     -- ^ Output lib name
     -> String     
-  renderXcodeProject headers sources libs outputLibName = fst . flip runState [(1::Integer)..] $ do
+  renderXcodeProject headers sources libs frameworks outputLibName = fst . flip runState [(1::Integer)..] $ do
       headerBuildFiles <- mapM buildFileFromState headers
       sourceBuildFiles <- mapM buildFileFromState sources
       libBuildFiles <- mapM buildFileFromState libs -- Build File Items
-      let allBuildFiles = sourceBuildFiles ++ headerBuildFiles ++ libBuildFiles
+      frameworkBuildFiles <- mapM buildFileFromState frameworks -- copy Framework File Items
+      let allBuildFiles = sourceBuildFiles ++ headerBuildFiles ++ libBuildFiles ++ frameworkBuildFiles
           -- Build And FileRef sections
           bfs = buildFileSection allBuildFiles
           frs = fileReferenceSection (map buildFileReference allBuildFiles) outputLibName 
           -- Groups
           classes = classesGroup $ sortBy (compare `on` (takeFileName . fileReferencePath)) $ map buildFileReference (sourceBuildFiles ++ headerBuildFiles)
-          fg = frameworksGroup $ map buildFileReference libBuildFiles
+          fg = frameworksGroup $ map buildFileReference (libBuildFiles ++ frameworkBuildFiles)
           -- Phases
           headersPhase = headersBuildPhase headerBuildFiles
           srcsPhase = sourcesBuildPhase sourceBuildFiles
-          frameworksPhase = frameworksBuildPhase libBuildFiles
+          frameworksPhase = frameworksBuildPhase (libBuildFiles ++ frameworkBuildFiles)
+          copyFrameworksPhase = copyFrameworksBuildPhase frameworkBuildFiles
           -- UUID indices
           libDirs = nub $ map (dropFileName . flaggedFilePath) libs 
-      return . PList.ppFlat $ makeProjectPList (bfs ++ frs ++ [classes, headersPhase, srcsPhase, frameworksPhase, fg]) libDirs
+      return . PList.ppFlat $ makeProjectPList (bfs ++ frs ++ [classes, headersPhase, srcsPhase, frameworksPhase, copyFrameworksPhase, fg]) libDirs
 
   buildFileSection :: [PBXBuildFile] -> [PListObjectItem]
   buildFileSection bfs = map buildFileItem bfs ++ [
@@ -116,3 +119,13 @@ module Kit.Xcode.Builder (renderXcodeProject) where
     "runOnlyForDeploymentPostprocessing" ~> val "0"
     ]
 
+  copyFrameworksBuildPhase :: [PBXBuildFile] -> PListObjectItem
+  copyFrameworksBuildPhase frameworks = copyFrameworksBuildPhaseUUID ~> obj [
+    "isa" ~> val "PBXCopyFilesBuildPhase",
+    "buildActionMask" ~> val "2147483647",
+    "files" ~> arr (map (val . buildFileId) frameworks),
+    "name" ~> val "Copy Frameworks",
+    "dstPath" ~> val "\"\"",
+    "dstSubfolderSpec" ~> val "10", -- this is the "Frameworks" destination, whatever
+    "runOnlyForDeploymentPostprocessing" ~> val "0"
+    ]

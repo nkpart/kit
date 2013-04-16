@@ -1,3 +1,8 @@
+0.7.13
+-----
+* Added support for Mac OS X kits
+* Added support for custom frameworks
+
 0.7.7
 -----
 * No longer crashes Xcode when a new kit project is generated.
