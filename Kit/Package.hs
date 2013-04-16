@@ -5,7 +5,7 @@ module Kit.Package (package) where
 
   fileBelongsInPackage :: KitSpec -> FilePath -> Bool
   fileBelongsInPackage config fp = isCore || isProject where
-    isCore = fp `elem` [specResourcesDirectory config, specSourceDirectory config, specTestDirectory config, specLibDirectory config, "KitSpec"]
+    isCore = fp `elem` [specResourcesDirectory config, specSourceDirectory config, specTestDirectory config, specLibDirectory config, specFrameworksDirectory config, "KitSpec"]
     isProject = any (`isSuffixOf` fp) ["xcodeproj", "xcconfig", ".pch"] -- TODO this could just check for the defined config and prefi header
 
   package :: KitSpec -> IO ()

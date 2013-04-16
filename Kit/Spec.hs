@@ -24,6 +24,7 @@ module Kit.Spec (
     specSourceDirectory :: FilePath,
     specTestDirectory :: FilePath,
     specLibDirectory :: FilePath,
+    specFrameworksDirectory :: FilePath,
     specResourcesDirectory :: FilePath,
     specPrefixFile :: FilePath,
     specConfigFile :: FilePath,
@@ -55,7 +56,7 @@ module Kit.Spec (
     packageVersion = kitVersion . specKit
 
   defaultSpec :: String -> String -> KitSpec
-  defaultSpec name version = KitSpec (Kit name version) [] "src" "test" "lib" "resources" "Prefix.pch" "Config.xcconfig" False Nothing 
+  defaultSpec name version = KitSpec (Kit name version) [] "src" "test" "lib" "frameworks" "resources" "Prefix.pch" "Config.xcconfig" False Nothing 
   -- TODO make this and the json reading use the same defaults
   -- I suspect that to do this I'll need update functions for each of
   -- fields in the KitSpec record.
@@ -83,6 +84,7 @@ module Kit.Spec (
          "source-directory" .= specSourceDirectory spec,
          "test-directory" .= specTestDirectory spec,
          "lib-directory" .= specLibDirectory spec,
+         "frameworks-directory" .= specFrameworksDirectory spec,
          "resources-directory" .= specResourcesDirectory spec,
          "prefix-header" .= specPrefixFile spec,
          "with-arc" .= specWithARC spec,
@@ -96,6 +98,7 @@ module Kit.Spec (
                                     <*> (obj .:? "source-directory" .!= "src")
                                     <*> (obj .:? "test-directory" .!= "test")
                                     <*> (obj .:? "lib-directory" .!= "lib")
+                                    <*> (obj .:? "frameworks-directory" .!= "frameworks")
                                     <*> (obj .:? "resources-directory" .!= "resources")
                                     <*> (obj .:? "prefix-header" .!= "Prefix.pch")
                                     <*> (obj .:? "xcconfig" .!= "Config.xcconfig")

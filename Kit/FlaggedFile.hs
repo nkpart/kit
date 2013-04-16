@@ -10,7 +10,7 @@ import Kit.AbsolutePath as AF
 data FlaggedFile = FlaggedFile {
                      flaggedFileAbsolutePath :: AbsolutePath,
                      flaggedFileFlags :: String 
-                     } deriving (Show)
+                     } deriving (Eq, Show)
 
 flaggedFile :: String -> AbsolutePath -> FlaggedFile
 flaggedFile a b = FlaggedFile b a
