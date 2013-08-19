@@ -2,7 +2,6 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE ImplicitParams #-}
 
 module Kit.Xcode.Builder (renderXcodeProject, SourceGroup(..)) where
   import Prelude hiding (mapM)
@@ -25,9 +24,6 @@ module Kit.Xcode.Builder (renderXcodeProject, SourceGroup(..)) where
                                  sourceGroupSources :: [a],
                                  sourceGroupLibs :: [a]
                                  } deriving (Functor, Foldable, Traversable)
-
-  collapseSourceGroup :: SourceGroup a -> [a]
-  collapseSourceGroup (SourceGroup _ a b c) = a ++ b ++ c
 
   createBuildFile :: Integer -> FlaggedFile -> PBXBuildFile
   createBuildFile i ffpath = PBXBuildFile uuid1 (PBXFileReference uuid2 path) compileFlags
@@ -57,7 +53,8 @@ module Kit.Xcode.Builder (renderXcodeProject, SourceGroup(..)) where
           -- Groups
           classes = classesGroup $ filter (not . null . snd) $ map groupFileRefs buildFileGroups
             where groupFileRefs (SourceGroup n hs ss _) = (n, sortBy (compare `on` (takeFileName . fileReferencePath)) $ map buildFileReference (hs ++ ss))
-          fg = frameworksGroup $ filter (not . null . snd) $ map (\(SourceGroup n _ _ ls) -> (n, (map buildFileReference ls))) $ buildFileGroups 
+          fg = frameworksGroup $ filter (not . null . snd) $ map groupLibRefs buildFileGroups 
+            where groupLibRefs (SourceGroup n _ _ ls) = (n, map buildFileReference ls)
           -- Phases
           headersPhase = headersBuildPhase headerBuildFiles
           srcsPhase = sourcesBuildPhase sourceBuildFiles
@@ -107,11 +104,11 @@ module Kit.Xcode.Builder (renderXcodeProject, SourceGroup(..)) where
 
   classesGroup :: [(String, [PBXFileReference])] -> PListObjectItem 
   classesGroup files = classesGroupUUID ~> group "Classes" (map renderGroup files)
-    where renderGroup ( groupName, files) = group groupName $ map (val . fileReferenceId) files
+    where renderGroup (groupName, fs) = group groupName $ map (val . fileReferenceId) fs
 	
   frameworksGroup :: [(String, [PBXFileReference])] -> PListObjectItem
   frameworksGroup files = frameworksGroupUUID ~> group "Frameworks" (val "AACBBE490F95108600F1A2B1" :  map renderGroup files)
-    where renderGroup (groupName, files) = group groupName $ map (val . fileReferenceId) files
+    where renderGroup (groupName, fs) = group groupName $ map (val . fileReferenceId) fs
 
   frameworksBuildPhase :: [PBXBuildFile] -> PListObjectItem  
   frameworksBuildPhase libs = frameworksBuildPhaseUUID ~> obj [
