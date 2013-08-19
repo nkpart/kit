@@ -72,10 +72,8 @@ makeKitProject kitsContents depsOnlyConfig =
       resources = mapMaybe resourceLink kitsContents
    in KitProject pf header config depsConfig resources
   where createProjectFile cs = let
-                 headers = concatMap contentHeaders cs
-                 sources = concatMap contentSources cs
-                 libs = concatMap contentLibs cs
-              in renderXcodeProject headers sources libs "libKitDeps.a"
+                 toSourceGroup kc = SourceGroup (packageName kc) (contentHeaders kc) (contentSources kc) (contentLibs kc)
+              in renderXcodeProject (map toSourceGroup cs) "libKitDeps.a"
         createHeader cs = let
                  headers = mapMaybe namedPrefix cs
                  combinedHeader = stringJoin "\n" headers

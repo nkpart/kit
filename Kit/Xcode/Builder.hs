@@ -1,5 +1,13 @@
 {-# LANGUAGE PackageImports #-}
-module Kit.Xcode.Builder (renderXcodeProject) where
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE ImplicitParams #-}
+
+module Kit.Xcode.Builder (renderXcodeProject, SourceGroup(..)) where
+  import Prelude hiding (mapM)
+  import Data.Traversable as T (mapM, Traversable)
+  import Data.Foldable (Foldable)
   import Kit.Xcode.Common
   import Kit.Xcode.ProjectFileTemplate
   import Kit.FlaggedFile
@@ -10,6 +18,16 @@ module Kit.Xcode.Builder (renderXcodeProject) where
   import "mtl" Control.Monad.State
   import System.FilePath
   import Data.Function (on)
+
+  data SourceGroup a = SourceGroup { 
+                                 sourceGroupName :: String,
+                                 sourceGroupHeaders :: [a],
+                                 sourceGroupSources :: [a],
+                                 sourceGroupLibs :: [a]
+                                 } deriving (Functor, Foldable, Traversable)
+
+  collapseSourceGroup :: SourceGroup a -> [a]
+  collapseSourceGroup (SourceGroup _ a b c) = a ++ b ++ c
 
   createBuildFile :: Integer -> FlaggedFile -> PBXBuildFile
   createBuildFile i ffpath = PBXBuildFile uuid1 (PBXFileReference uuid2 path) compileFlags
@@ -23,21 +41,22 @@ module Kit.Xcode.Builder (renderXcodeProject) where
 
   -- | Render an Xcode project!
   renderXcodeProject :: 
-    [FlaggedFile]    -- ^ Headers  
-    -> [FlaggedFile] -- ^ Sources
-    -> [FlaggedFile] -- ^ Static Libs
+       [SourceGroup FlaggedFile]
     -> String     -- ^ Output lib name
     -> String     
-  renderXcodeProject headers sources libs outputLibName = fst . flip runState [(1::Integer)..] $ do
-      headerBuildFiles <- mapM buildFileFromState headers
-      sourceBuildFiles <- mapM buildFileFromState sources
-      libBuildFiles <- mapM buildFileFromState libs -- Build File Items
+  renderXcodeProject sourceGroups outputLibName = fst . flip runState [(1::Integer)..] $ do
+      let headers = concatMap sourceGroupHeaders sourceGroups
+          sources = concatMap sourceGroupSources sourceGroups
+          libs = concatMap sourceGroupLibs sourceGroups
+      headerBuildFiles <- T.mapM buildFileFromState headers
+      sourceBuildFiles <- T.mapM buildFileFromState sources
+      libBuildFiles <- T.mapM buildFileFromState libs -- Build File Items
       let allBuildFiles = sourceBuildFiles ++ headerBuildFiles ++ libBuildFiles
           -- Build And FileRef sections
           bfs = buildFileSection allBuildFiles
           frs = fileReferenceSection (map buildFileReference allBuildFiles) outputLibName 
           -- Groups
-          classes = classesGroup $ sortBy (compare `on` (takeFileName . fileReferencePath)) $ map buildFileReference (sourceBuildFiles ++ headerBuildFiles)
+          classes = classesGroup [("all",sortBy (compare `on` (takeFileName . fileReferencePath)) $ map buildFileReference (sourceBuildFiles ++ headerBuildFiles))]
           fg = frameworksGroup $ map buildFileReference libBuildFiles
           -- Phases
           headersPhase = headersBuildPhase headerBuildFiles
@@ -86,8 +105,9 @@ module Kit.Xcode.Builder (renderXcodeProject) where
       ]
     ]
 
-  classesGroup :: [PBXFileReference] -> PListObjectItem 
-  classesGroup files = classesGroupUUID ~> group "Classes" (map (val . fileReferenceId) files)
+  classesGroup :: [(String, [PBXFileReference])] -> PListObjectItem 
+  classesGroup files = classesGroupUUID ~> group "Classes" (map renderGroup files)
+    where renderGroup ( groupName, files) = group groupName $ map (val . fileReferenceId) files
 	
   frameworksGroup :: [PBXFileReference] -> PListObjectItem
   frameworksGroup files = frameworksGroupUUID ~> group "Frameworks" (val "AACBBE490F95108600F1A2B1" :  map (val . fileReferenceId) files)
