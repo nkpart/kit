@@ -45,18 +45,18 @@ module Kit.Xcode.Builder (renderXcodeProject, SourceGroup(..)) where
     -> String     -- ^ Output lib name
     -> String     
   renderXcodeProject sourceGroups outputLibName = fst . flip runState [(1::Integer)..] $ do
-      let headers = concatMap sourceGroupHeaders sourceGroups
-          sources = concatMap sourceGroupSources sourceGroups
-          libs = concatMap sourceGroupLibs sourceGroups
-      headerBuildFiles <- T.mapM buildFileFromState headers
-      sourceBuildFiles <- T.mapM buildFileFromState sources
-      libBuildFiles <- T.mapM buildFileFromState libs -- Build File Items
+      let libs = concatMap sourceGroupLibs sourceGroups
+      buildFileGroups <- T.mapM (T.mapM buildFileFromState) sourceGroups
+      let headerBuildFiles = concatMap sourceGroupHeaders buildFileGroups
+          sourceBuildFiles = concatMap sourceGroupSources buildFileGroups
+          libBuildFiles = concatMap sourceGroupLibs buildFileGroups -- Build File Items
       let allBuildFiles = sourceBuildFiles ++ headerBuildFiles ++ libBuildFiles
           -- Build And FileRef sections
           bfs = buildFileSection allBuildFiles
           frs = fileReferenceSection (map buildFileReference allBuildFiles) outputLibName 
           -- Groups
-          classes = classesGroup [("all",sortBy (compare `on` (takeFileName . fileReferencePath)) $ map buildFileReference (sourceBuildFiles ++ headerBuildFiles))]
+          classes = classesGroup $ map groupFileRefs buildFileGroups -- [("all",sortBy (compare `on` (takeFileName . fileReferencePath)) $ map buildFileReference (sourceBuildFiles ++ headerBuildFiles))]
+          groupFileRefs (SourceGroup n hs ss _) = (n, sortBy (compare `on` (takeFileName . fileReferencePath)) $ map buildFileReference (hs ++ ss))
           fg = frameworksGroup $ map buildFileReference libBuildFiles
           -- Phases
           headersPhase = headersBuildPhase headerBuildFiles
