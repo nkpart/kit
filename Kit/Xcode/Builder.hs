@@ -55,9 +55,9 @@ module Kit.Xcode.Builder (renderXcodeProject, SourceGroup(..)) where
           bfs = buildFileSection allBuildFiles
           frs = fileReferenceSection (map buildFileReference allBuildFiles) outputLibName 
           -- Groups
-          classes = classesGroup $ map groupFileRefs buildFileGroups -- [("all",sortBy (compare `on` (takeFileName . fileReferencePath)) $ map buildFileReference (sourceBuildFiles ++ headerBuildFiles))]
-          groupFileRefs (SourceGroup n hs ss _) = (n, sortBy (compare `on` (takeFileName . fileReferencePath)) $ map buildFileReference (hs ++ ss))
-          fg = frameworksGroup $ map buildFileReference libBuildFiles
+          classes = classesGroup $ filter (not . null . snd) $ map groupFileRefs buildFileGroups
+            where groupFileRefs (SourceGroup n hs ss _) = (n, sortBy (compare `on` (takeFileName . fileReferencePath)) $ map buildFileReference (hs ++ ss))
+          fg = frameworksGroup $ filter (not . null . snd) $ map (\(SourceGroup n _ _ ls) -> (n, (map buildFileReference ls))) $ buildFileGroups 
           -- Phases
           headersPhase = headersBuildPhase headerBuildFiles
           srcsPhase = sourcesBuildPhase sourceBuildFiles
@@ -109,8 +109,9 @@ module Kit.Xcode.Builder (renderXcodeProject, SourceGroup(..)) where
   classesGroup files = classesGroupUUID ~> group "Classes" (map renderGroup files)
     where renderGroup ( groupName, files) = group groupName $ map (val . fileReferenceId) files
 	
-  frameworksGroup :: [PBXFileReference] -> PListObjectItem
-  frameworksGroup files = frameworksGroupUUID ~> group "Frameworks" (val "AACBBE490F95108600F1A2B1" :  map (val . fileReferenceId) files)
+  frameworksGroup :: [(String, [PBXFileReference])] -> PListObjectItem
+  frameworksGroup files = frameworksGroupUUID ~> group "Frameworks" (val "AACBBE490F95108600F1A2B1" :  map renderGroup files)
+    where renderGroup (groupName, files) = group groupName $ map (val . fileReferenceId) files
 
   frameworksBuildPhase :: [PBXBuildFile] -> PListObjectItem  
   frameworksBuildPhase libs = frameworksBuildPhaseUUID ~> obj [
