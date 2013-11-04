@@ -17,10 +17,11 @@ data KitContents = KitContents {
   contentHeaders :: [FlaggedFile],     -- ^ Paths to headers
   contentSources :: [FlaggedFile],     -- ^ Paths to source files
   contentLibs :: [FlaggedFile],        -- ^ Paths to static libs
+  contentFrameworks :: [AbsolutePath],  -- ^ Paths to frameworks
   contentConfig :: Maybe XCConfig,  -- ^ Contents of the xcconfig base file
   contentPrefix :: Maybe String,     -- ^ Contents of the prefix header
   contentResourceDir :: Maybe FilePath
-}
+} deriving (Eq, Show)
 
 instance Packageable KitContents where
   packageName = packageName . contentSpec
@@ -35,11 +36,13 @@ readKitContents absKitDir spec =
       -- We need to flag every file with objc-arc or not, if we do it
       -- project wide things get really messy.
       flags = if specWithARC spec then "-fobjc-arc" else "-fno-objc-arc"
-      find dir tpe = fmap (flaggedFile flags) <$> findFiles kitDir dir tpe
-      findSrc = find $ specSourceDirectory spec
+      find dir tpe = findFiles kitDir dir tpe
+      findFlagged dir tpe = fmap (flaggedFile flags) <$> find dir tpe
+      findSrc = findFlagged $ specSourceDirectory spec
       headers = findSrc ".h"
       sources = findSrc .=<<. [".m", ".mm", ".c"]
-      libs = find (specLibDirectory spec) ".a" 
+      libs = findFlagged (specLibDirectory spec) ".a" 
+      frameworks = find (specFrameworksDirectory spec) ".framework" 
       config = liftIO $ readConfig kitDir spec
       prefix = liftIO $ readHeader kitDir spec
       resourceDir = liftIO $ do
@@ -48,7 +51,7 @@ readKitContents absKitDir spec =
         if b 
           then Just <$> canonicalizePath r
           else return Nothing
-   in KitContents spec kitDir <$> headers <*> sources <*> libs <*> config <*> prefix <*> resourceDir
+   in KitContents spec kitDir <$> headers <*> sources <*> libs <*> frameworks <*> config <*> prefix <*> resourceDir
 
 -- TODO report missing file
 readHeader :: FilePath -> KitSpec -> IO (Maybe String)

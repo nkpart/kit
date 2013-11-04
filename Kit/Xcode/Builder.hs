@@ -22,7 +22,8 @@ module Kit.Xcode.Builder (renderXcodeProject, SourceGroup(..)) where
                                  sourceGroupName :: String,
                                  sourceGroupHeaders :: [a],
                                  sourceGroupSources :: [a],
-                                 sourceGroupLibs :: [a]
+                                 sourceGroupLibs :: [a],
+                                 sourceGroupFrameworks :: [a]
                                  } deriving (Functor, Foldable, Traversable)
 
   createBuildFile :: Integer -> FlaggedFile -> PBXBuildFile
@@ -46,22 +47,26 @@ module Kit.Xcode.Builder (renderXcodeProject, SourceGroup(..)) where
       let headerBuildFiles = concatMap sourceGroupHeaders buildFileGroups
           sourceBuildFiles = concatMap sourceGroupSources buildFileGroups
           libBuildFiles = concatMap sourceGroupLibs buildFileGroups -- Build File Items
-      let allBuildFiles = sourceBuildFiles ++ headerBuildFiles ++ libBuildFiles
+          frameworkBuildFiles = concatMap sourceGroupFrameworks buildFileGroups
+      let allBuildFiles = sourceBuildFiles ++ headerBuildFiles ++ libBuildFiles ++ frameworkBuildFiles
           -- Build And FileRef sections
           bfs = buildFileSection allBuildFiles
           frs = fileReferenceSection (map buildFileReference allBuildFiles) outputLibName 
           -- Groups
           classes = classesGroup $ filter (not . null . snd) $ map groupFileRefs buildFileGroups
-            where groupFileRefs (SourceGroup n hs ss _) = (n, sortBy (compare `on` (takeFileName . fileReferencePath)) $ map buildFileReference (hs ++ ss))
+            where groupFileRefs (SourceGroup n hs ss _ _) = (n, sortBy (compare `on` (takeFileName . fileReferencePath)) $ map buildFileReference (hs ++ ss))
           fg = frameworksGroup $ filter (not . null . snd) $ map groupLibRefs buildFileGroups 
-            where groupLibRefs (SourceGroup n _ _ ls) = (n, map buildFileReference ls)
+            where groupLibRefs (SourceGroup n _ _ ls fs) = (n, map buildFileReference (ls ++ fs))
+          -- classes = classesGroup $ sortBy (compare `on` (takeFileName . fileReferencePath)) $ map buildFileReference (sourceBuildFiles ++ headerBuildFiles)
+          -- fg = frameworksGroup $ map buildFileReference (libBuildFiles ++ frameworkBuildFiles)
           -- Phases
           headersPhase = headersBuildPhase headerBuildFiles
           srcsPhase = sourcesBuildPhase sourceBuildFiles
-          frameworksPhase = frameworksBuildPhase libBuildFiles
+          frameworksPhase = frameworksBuildPhase (libBuildFiles ++ frameworkBuildFiles)
+          copyFrameworksPhase = copyFrameworksBuildPhase frameworkBuildFiles
           -- UUID indices
           libDirs = nub $ map (dropFileName . flaggedFilePath) libs 
-      return . PList.ppFlat $ makeProjectPList (bfs ++ frs ++ [classes, headersPhase, srcsPhase, frameworksPhase, fg]) libDirs
+      return . PList.ppFlat $ makeProjectPList (bfs ++ frs ++ [classes, headersPhase, srcsPhase, frameworksPhase, copyFrameworksPhase, fg]) libDirs
 
   buildFileSection :: [PBXBuildFile] -> [PListObjectItem]
   buildFileSection bfs = map buildFileItem bfs ++ [
@@ -134,3 +139,13 @@ module Kit.Xcode.Builder (renderXcodeProject, SourceGroup(..)) where
     "runOnlyForDeploymentPostprocessing" ~> val "0"
     ]
 
+  copyFrameworksBuildPhase :: [PBXBuildFile] -> PListObjectItem
+  copyFrameworksBuildPhase frameworks = copyFrameworksBuildPhaseUUID ~> obj [
+    "isa" ~> val "PBXCopyFilesBuildPhase",
+    "buildActionMask" ~> val "2147483647",
+    "files" ~> arr (map (val . buildFileId) frameworks),
+    "name" ~> val "Copy Frameworks",
+    "dstPath" ~> val "\"\"",
+    "dstSubfolderSpec" ~> val "10", -- this is the "Frameworks" destination, whatever
+    "runOnlyForDeploymentPostprocessing" ~> val "0"
+    ]

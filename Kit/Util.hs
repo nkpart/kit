@@ -73,7 +73,10 @@ module Kit.Util(
   findFiles :: MonadIO m => FilePath -> FilePath -> String -> m [AbsolutePath]
   findFiles kitDir dir tpe = liftIO $ inDirectory kitDir $ do
                                 files <- glob (dir </> "**/*" ++ tpe)
-                                T.mapM absolutePath files
+                                -- The glob above wasn't finding folders with the 'tpe' extension
+                                -- in the top level directory. This one does:
+                                files' <- glob (dir </> "*" ++ tpe)
+                                T.mapM absolutePath (nub $ files ++ files')
 
   glob :: String -> IO [String]
   glob pattern = globDir1 (compile pattern) ""

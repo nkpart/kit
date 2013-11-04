@@ -1,5 +1,5 @@
 name:           kit
-version:        0.7.12
+version:        0.7.13
 cabal-version:  >=1.6
 build-type:     Simple
 license:        BSD3

@@ -5,6 +5,7 @@ module Kit.Xcode.ProjectFileTemplate (
     , productRefUUID
     , headersBuildPhaseUUID
     , frameworksBuildPhaseUUID
+    , copyFrameworksBuildPhaseUUID
     , classesGroupUUID
     , frameworksGroupUUID
     , sourcesBuildPhaseUUID
@@ -37,6 +38,7 @@ kitConfigRefUUID = "4728C52F117C02B10027D7D1"
 
 headersBuildPhaseUUID = "D2AAC07A0554694100DB518D"
 sourcesBuildPhaseUUID = "D2AAC07B0554694100DB518D"
+copyFrameworksBuildPhaseUUID = "DZAAC07B0554694100DB518Z"
 frameworksBuildPhaseUUID = "D2AAC07C0554694100DB518D"
 
 projectBuildConfigurationsUUID = "1DEB922208733DC00010E9CD"
@@ -72,7 +74,7 @@ staticLibTargetUUID = "D2AAC07D0554694100DB518D"
 staticLibTarget = staticLibTargetUUID ~> obj [
             "isa" ~> val "PBXNativeTarget",
             "buildConfigurationList" ~> val staticLibBuildConfigurationsUUID,
-            "buildPhases" ~> val_arr [ headersBuildPhaseUUID, sourcesBuildPhaseUUID, frameworksBuildPhaseUUID ],
+            "buildPhases" ~> val_arr [ headersBuildPhaseUUID, sourcesBuildPhaseUUID, frameworksBuildPhaseUUID, copyFrameworksBuildPhaseUUID ],
             "buildRules" ~> arr [],
             "dependencies" ~> arr [],
             "name" ~> val "KitDeps",
@@ -96,12 +98,10 @@ buildConfigurations libDirs = let libSearch = librarySearchPaths libDirs in [
                                                     "GCC_C_LANGUAGE_STANDARD" ~> val "c99",
                                                     "GCC_OPTIMIZATION_LEVEL" ~> val "0",
                                                     "OTHER_LDFLAGS" ~> val "-ObjC",
-                                                    "SDKROOT" ~> val "iphoneos",
                                                     libSearch ]
                                             , buildConfiguration "Release" (Just kitConfigRefUUID) [
                                                     "GCC_C_LANGUAGE_STANDARD" ~> val "c99",
                                                     "OTHER_LDFLAGS" ~> val "-ObjC",
-                                                    "SDKROOT" ~> val "iphoneos",
                                                     libSearch
                                                   ]],
               "defaultConfigurationIsVisible" ~> val "0",
