@@ -39,7 +39,7 @@ kitUpdateMakeFile = "kit: Kit.xcconfig\n" ++
 prefixDefault :: String
 prefixDefault = "#ifdef __OBJC__\n" ++
                 "    #import <Foundation/Foundation.h>\n" ++
-                "    #if TARGET_OS_MAC\n" ++
+                "    #if (TARGET_OS_MAC && !TARGET_OS_IPHONE)\n" ++
                 "        #import <Cocoa/Cocoa.h>\n" ++
                 "    #else\n" ++
                 "        #import <UIKit/UIKit.h>\n" ++
